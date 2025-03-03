@@ -1,0 +1,23 @@
+{
+   "$schema": "https://alirezanet.github.io/Husky.Net/schema.json",
+   "tasks": [
+      {
+         "name": "Run CSharpier",
+         "group": "pre-commit",
+         "command": "dotnet",
+         "args": [
+            "csharpier",
+            "."
+         ]
+      },
+      {
+         "name": "Conventional Commit Linter",
+         "command": "bash",
+         "group": "commit-msg",
+         "args": [
+            ".husky/commit-msg.sh",
+            "${args}"
+         ]
+      }
+   ]
+}
