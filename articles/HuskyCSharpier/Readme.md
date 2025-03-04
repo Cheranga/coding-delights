@@ -39,9 +39,12 @@ Use code analyzers for code quality and a formatting tool such as CSharpier for 
 
 `CSharpier` is implemented as a dotnet tool.
 
-* If you dont any dotnet tools configured, create a tool manifest
+* If you dont have any dotnet tools configured, create a tool manifest
 
 `dotnet new tool-manifest`
+
+At this point, unless we run `CSharpier` explicitly, we can commit unformatted code.
+Also nothing stops us using any text as a commit message when commiting.
 
 * Installing CSharpier as a tool
 
