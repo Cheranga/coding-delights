@@ -1,13 +1,13 @@
-﻿# Using Husky with CSharpier
+﻿# :sparkles: Using Husky with CSharpier
 
-## Context
+## :medal_military: Context
 This article is about using Husky to automate the enforcing of
 
 :white_check_mark: Code formatting before commiting changes
 
 :white_check_mark:Enforcing commit message pattern
 
-## What is Husky.NET?
+## :raising_hand: What is Husky.NET?
 
 [Husky.Net](https://alirezanet.github.io/Husky.Net/guide/#features) is a tool which can be used to run tasks integrated with git hooks.
 For the purpose of this article, we will use Husky to run tasks in the `pre-commit` and `commit-msg` hooks.
@@ -17,7 +17,7 @@ For the purpose of this article, we will use Husky to run tasks in the `pre-comm
 :white_check_mark: In the `commit-msg` hook, we will run a script to check if the commit message follows the conventional 
 commit message format.
 
-## What is CSharpier and why do we need it?
+## :raising_hand: What is CSharpier and why do we need it?
 
 [CSharpier](https://csharpier.com/docs/About) is an opinionated code formatter for C#.
 It is a tool that can be used to format the C# code in a consistent way.
@@ -28,14 +28,14 @@ Also developers have their personal preferences as well.
 But when working in a team, it is important to have a consistent code style in your code, and use it throughout
 your repositories.
 
-## Why not StyleCop?
+## :thinking: Why not StyleCop?
 Simply StyleCop does too many things in my opinion.
 After the more mature analyzers introduced by Microsoft and other open source community, I think 
 we can finally separate code analyzers and code formatters.
 
 Use code analyzers for code quality and a formatting tool such as CSharpier for code formatting.
 
-## Installing CSharpier
+## :hammer_and_pick: Installing CSharpier
 
 `CSharpier` is implemented as a dotnet tool.
 
@@ -67,7 +67,7 @@ The preference will be given to the `.csharpierrc` file based on the location of
 
 [Read the docs for more details](https://csharpier.com/docs/Configuration)
 
-## Installing Husky.Net
+## :hammer_and_pick: Installing Husky.Net
 
 `Husky.Net` is also implemented as a dotnet tool.
 
@@ -93,7 +93,7 @@ There can be many tasks which you might need to execute for a single hook.
 
 So a better approach is to organize the tasks in the `task-runner.json` file.
 
-* Configuring task-runner.json
+### :abacus: Configuring task-runner.json
 
 ```json
 {
@@ -184,7 +184,7 @@ exit 1
 fi
 ```
 
-* Using C# code in your git hooks
+## :sunglasses: Using C# code in your git hooks
 
 Best thing is you can write C# scripts and use them in your git hooks.
 
