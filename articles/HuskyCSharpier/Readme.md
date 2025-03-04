@@ -1,4 +1,40 @@
-﻿# Making CSharpier Husky
+﻿# Using Husky with CSharpier
+
+## Context
+This article is about using Husky to automate the enforcing of
+
+:white_check_mark: Code formatting before commiting changes
+:white_check_mark:Enforcing commit message pattern
+
+## What is Husky.NET?
+
+[Husky.Net] is a tool which can be used to run tasks integrated with git hooks.
+For the purpose of this article, we will use Husky to run tasks in the `pre-commit` and `commit-msg` hooks.
+
+:white_check_mark: In the `pre-commit` hook, we will run CSharpier to format the C# code before commiting the changes.
+:white_check_mark: In the `commit-msg` hook, we will run a script to check if the commit message follows the conventional 
+commit message format.
+
+## What is CSharpier and why do we need it?
+
+[CSharpier](https://csharpier.com/docs/About) is an opinionated code formatter for C#.
+It is a tool that can be used to format the C# code in a consistent way.
+
+Developers share different IDEs and editors, and each of them has its own code formatting rules.
+There can be personal preferences as well.
+
+But when working in a team, it is important to have a consistent code style, and use it through out
+your repositories.
+
+## Why not StyleCop?
+Simply StyleCop does too many things in my opinion.
+After the more mature analyzers introduced by Microsoft and other open source community, I think 
+we can finally separate code analyzers and code formatters.
+
+In my opinion, use analyzers for code quality and CSharpier for code formatting.
+
+
+
 
 ## Notes
 
