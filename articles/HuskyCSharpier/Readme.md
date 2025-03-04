@@ -9,7 +9,7 @@ This article is about using Husky to automate the enforcing of
 
 ## What is Husky.NET?
 
-[Husky.Net] is a tool which can be used to run tasks integrated with git hooks.
+[Husky.Net](https://alirezanet.github.io/Husky.Net/guide/#features) is a tool which can be used to run tasks integrated with git hooks.
 For the purpose of this article, we will use Husky to run tasks in the `pre-commit` and `commit-msg` hooks.
 
 :white_check_mark: In the `pre-commit` hook, we will run CSharpier to format the C# code before commiting the changes.
@@ -23,9 +23,9 @@ commit message format.
 It is a tool that can be used to format the C# code in a consistent way.
 
 Developers share different IDEs and editors, and each of them has its own code formatting rules.
-There can be personal preferences as well.
+Also developers have their personal preferences as well.
 
-But when working in a team, it is important to have a consistent code style, and use it through out
+But when working in a team, it is important to have a consistent code style in your code, and use it throughout
 your repositories.
 
 ## Why not StyleCop?
@@ -33,14 +33,13 @@ Simply StyleCop does too many things in my opinion.
 After the more mature analyzers introduced by Microsoft and other open source community, I think 
 we can finally separate code analyzers and code formatters.
 
-In my opinion, use analyzers for code quality and CSharpier for code formatting.
+Use code analyzers for code quality and a formatting tool such as CSharpier for code formatting.
 
+## Installing CSharpier
 
+`CSharpier` is implemented as a dotnet tool.
 
-
-## Notes
-
-* Creating a tool manifest
+* If you dont any dotnet tools configured, create a tool manifest
 
 `dotnet new tool-manifest`
 
@@ -48,19 +47,51 @@ In my opinion, use analyzers for code quality and CSharpier for code formatting.
 
 `dotnet tool install csharpier`
 
-* Installing Husky
+* CSharpier is ready to use now
+
+Running the below command from your root directory will format, all the C# files.
+
+`dotnet csharpier .`
+
+* Configuring CSharpier for your preferences
+
+`CSharpier` can be configured using any of the below configuration files.
+
+:white_check_mark: `.csharpierrc` file in `JSON` or `YAML`
+
+:white_check_mark: `.csharpierrc.json` file or `.csharpierrc.yaml` file
+
+:white_check_mark: `.editorconfig` file
+
+The preference will be given to the `.csharpierrc` file based on the location of the file being formatted.
+
+[Read the docs for more details](https://csharpier.com/docs/Configuration)
+
+## Installing Husky.Net
+
+`Husky.Net` is also implemented as a dotnet tool.
+
+* Installing Husky.Net as a dotnet tool
 
 `dotnet tool install husky`
+
+* Integrate git hooks with Husky.Net
+
 `dotnet husky install`
 
 * Adding a pre-commit hook
 
 `dotnet husky add pre-commit -c "echo 'Hi Husky!'"`
 
-After adding this a file is created with the hook name. In this case pre-commit.
-In here you can write the command that you want to run before commiting.
-A better approach is to organize the tasks in the tasj-runner.json file.
-This is used by Husky.NET to run the tasks.
+* Adding a commit-msg hook
+
+`dotnet husky add commit-msg -c "echo 'Hi Husky!'"`
+
+After running these commands respective files are created with the hook name.
+In this file you can write the command to execute.
+There can be many tasks which you might need to execute for a single hook.
+
+So a better approach is to organize the tasks in the `task-runner.json` file.
 
 * Configuring task-runner.json
 
@@ -90,8 +121,12 @@ This is used by Husky.NET to run the tasks.
 }
 ```
 
-* There are two tasks, Run CSharpier and Conventional Commit Linter.
-* The Run CSharpier belongs to the group pre-commit, and in the pre-commit hook we have configured to run this task
+There are two tasks, `Run CSharpier` and `Conventional Commit Linter`.
+As you can see both these tasks belong to the groups `pre-commit` and `commit-msg` respectively.
+
+* Configuring the pre-commit hook
+
+Edit the `pre-commit` file to run the tasks in the `pre-commit` group.
 
 ```shell
 #!/bin/sh
@@ -100,11 +135,7 @@ This is used by Husky.NET to run the tasks.
 dotnet husky run --group pre-commit
 ```
 
-So if you need to run another task before you commit changes, add it to the task-runner.json
-with the group pre-commit.
-
-* The Conventional Commit Linter belongs to the group commit-msg, and in the commit-msg hook we have configured to run
-  this task
+Edit the `commit-msg` file to run the tasks in the `commit-msg` group.
 
 ```shell
 #!/bin/sh
@@ -113,9 +144,16 @@ with the group pre-commit.
 dotnet husky run --group commit-msg -a $1
 ```
 
-In here it passes the first argument to the tasks which belong in the commit-msg group.
-Then this argument is passed into the commit-msg.sh script.
-In here we evaluate the commit message to see if it follows the conventional commit message format.
+```shell
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+dotnet husky run --group pre-commit
+```
+
+I am using a commit standard called [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/).
+
+In here I am using a bash script to be executed in the `commit-msg` hook
 
 ```shell
 #!/usr/bin/env bash
@@ -146,18 +184,9 @@ exit 1
 fi
 ```
 
-## Installing CSharpier
+* Using C# code in your git hooks
 
-### Configuring CSharpier
+Best thing is you can write C# scripts and use them in your git hooks.
 
-## Installing Husky
-
-### Configuring Husky
-
-## Using them together
-
-## Enforcing to run before commiting
-
-### Git Hooks
-
-### Configuring CSharpier to run before commiting
+I have included the same script as in the [documentation](https://alirezanet.github.io/Husky.Net/guide/csharp-script.html)
+ as an example.

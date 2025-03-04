@@ -18,6 +18,12 @@
             ".husky/commit-msg.sh",
             "${args}"
          ]
+      },
+      {
+         "name": "Conventional Commit Linter C#",
+         "command": "dotnet",
+         "group": "commit-msg",
+         "args": ["husky", "exec", ".husky/csx/conventionalcommit.csx", "--args", "${args}"]
       }
    ]
 }
