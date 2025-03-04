@@ -4,6 +4,7 @@
 This article is about using Husky to automate the enforcing of
 
 :white_check_mark: Code formatting before commiting changes
+
 :white_check_mark:Enforcing commit message pattern
 
 ## What is Husky.NET?
@@ -12,6 +13,7 @@ This article is about using Husky to automate the enforcing of
 For the purpose of this article, we will use Husky to run tasks in the `pre-commit` and `commit-msg` hooks.
 
 :white_check_mark: In the `pre-commit` hook, we will run CSharpier to format the C# code before commiting the changes.
+
 :white_check_mark: In the `commit-msg` hook, we will run a script to check if the commit message follows the conventional 
 commit message format.
 
