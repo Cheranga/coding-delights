@@ -193,3 +193,16 @@ Best thing is you can write C# scripts and use them in your git hooks.
 
 I have included the same script as in the [documentation](https://alirezanet.github.io/Husky.Net/guide/csharp-script.html)
  as an example.
+
+## What to do when you clone this repository for the first time?
+
+If you clone this repository for the first time, you don't have the relevant tools installed,
+and you don't have the git hooks associated with you.
+
+So you MUST run the below commands to properly integrate the tools and the git hooks.
+You only need to do this once.
+
+```shell
+dotnet tool restore
+dotnet husky install
+```
