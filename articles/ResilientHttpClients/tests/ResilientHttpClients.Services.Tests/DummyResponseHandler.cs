@@ -2,7 +2,7 @@
 
 namespace ResilientHttpClients.Services.Tests;
 
-public class FakeResponseHandler(HttpStatusCode statusCode, Func<HttpContent> contentFunc)
+public class DummyResponseHandler(HttpStatusCode statusCode, Func<HttpContent> contentFunc)
     : HttpMessageHandler
 {
     protected override Task<HttpResponseMessage> SendAsync(
@@ -10,7 +10,6 @@ public class FakeResponseHandler(HttpStatusCode statusCode, Func<HttpContent> co
         CancellationToken cancellationToken
     )
     {
-        // On retry, simulate a successful response.
         var httpResponse = new HttpResponseMessage(statusCode) { Content = contentFunc() };
         return Task.FromResult(httpResponse);
     }

@@ -37,7 +37,7 @@ public class TokenHeaderMiddlewareTests
 
                 services.AddSingleton<TokenHeaderMiddleware>();
                 services.AddSingleton(
-                    new FakeResponseHandler(HttpStatusCode.OK, () => new StringContent("Orders"))
+                    new DummyResponseHandler(HttpStatusCode.OK, () => new StringContent("Orders"))
                 );
 
                 services
@@ -49,7 +49,7 @@ public class TokenHeaderMiddlewareTests
                         }
                     )
                     .AddHttpMessageHandler<TokenHeaderMiddleware>()
-                    .ConfigurePrimaryHttpMessageHandler<FakeResponseHandler>();
+                    .ConfigurePrimaryHttpMessageHandler<DummyResponseHandler>();
 
                 var httpClient = services
                     .BuildServiceProvider()
