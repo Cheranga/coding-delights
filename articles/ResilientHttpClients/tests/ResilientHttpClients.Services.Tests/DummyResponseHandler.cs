@@ -1,16 +1,26 @@
-﻿using System.Net;
+﻿using System.Collections.Immutable;
+using System.Net;
 
 namespace ResilientHttpClients.Services.Tests;
 
-public class DummyResponseHandler(HttpStatusCode statusCode, Func<HttpContent> contentFunc)
+public class DummyResponseHandler(Queue<Func<HttpResponseMessage>> responseFuncs)
     : HttpMessageHandler
 {
+    private readonly List<HttpRequestMessage> _capturedRequests = new();
+
+    public IReadOnlyList<HttpRequestMessage> CapturedRequests => _capturedRequests;
+
     protected override Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
         CancellationToken cancellationToken
     )
     {
-        var httpResponse = new HttpResponseMessage(statusCode) { Content = contentFunc() };
-        return Task.FromResult(httpResponse);
+        if (responseFuncs.TryDequeue(out var responseFunc))
+        {
+            _capturedRequests.Add(request);
+            return Task.FromResult(responseFunc());
+        }
+
+        throw new Exception("No response handlers");
     }
 }
