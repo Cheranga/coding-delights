@@ -11,11 +11,12 @@ public interface ITokenService
 
 internal sealed class TokenService(
     IOptionsMonitor<TokenSettings> options,
-    HttpClient client,
+    IHttpClientFactory clientFactory,
     IDistributedCache cache
 ) : ITokenService
 {
     private readonly TokenSettings _tokenSettings = options.CurrentValue;
+    private readonly HttpClient _client = clientFactory.CreateClient("tokenservice");
 
     public async Task<TokenResponse> GetTokenAsync(
         CancellationToken token,
@@ -30,7 +31,7 @@ internal sealed class TokenService(
             return new TokenResponse { Token = cachedToken };
         }
 
-        var apiToken = await client.GetStringAsync("/api/token", token);
+        var apiToken = await _client.GetStringAsync("/api/token", token);
         await cache.SetStringAsync(
             "ApiToken",
             apiToken,

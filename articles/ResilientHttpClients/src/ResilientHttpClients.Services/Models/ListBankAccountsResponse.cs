@@ -1,8 +1,6 @@
-﻿using ResilientHttpClients.Services.Models;
-
-namespace ResilientHttpClients.Services;
+﻿namespace ResilientHttpClients.Services.Models;
 
 public sealed class ListBankAccountsResponse
 {
-    public required IReadOnlyList<BankAccountResponse> BankAccounts { get; init; }
+    public required IReadOnlyList<BankAccountResponse> BankAccounts { get; set; }
 }
