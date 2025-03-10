@@ -30,9 +30,14 @@ public class TokenHeaderMiddlewareTests
                         == Task.FromResult(Encoding.UTF8.GetBytes(Token))
                     )
                 );
-                services.AddSingleton(Mock.Of<IOptionsMonitor<TokenSettings>>());
+                services.AddSingleton(
+                    Mock.Of<IOptionsMonitor<TokenSettings>>(monitor =>
+                        monitor.CurrentValue == new TokenSettings { TokenExpirationMinutes = 30 }
+                    )
+                );
+                services.AddSingleton<ITokenService, TokenService>();
                 services
-                    .AddHttpClient<ITokenService, TokenService>()
+                    .AddHttpClient("tokenservice")
                     .ConfigurePrimaryHttpMessageHandler(() => mockedHttp);
 
                 services.AddSingleton<TokenHeaderMiddleware>();

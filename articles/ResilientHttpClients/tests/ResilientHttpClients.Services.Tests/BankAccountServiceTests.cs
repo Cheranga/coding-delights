@@ -1,55 +1,62 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
+using System.Text;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
 using Moq;
 using Polly;
 using ResilientHttpClients.Services.Models;
 using RichardSzalay.MockHttp;
+using WireMock;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
+using WireMock.ResponseProviders;
 using WireMock.Server;
+using WireMock.Types;
+using WireMock.Util;
 
 namespace ResilientHttpClients.Services.Tests;
 
 public class BankAccountServiceTests
 {
-    private const string BaseUrl = "https://gothamnationalbank.com";
-
     [Fact]
     public async Task Test1()
     {
+        var capturedRequests = new List<IRequestMessage>();
         var wireMockServer = WireMockServer.Start();
-        wireMockServer
-            .Given(Request.Create().WithPath("/api/token"))
-            .InScenario(0)
-            .WillSetStateTo(1)
-            .RespondWith(Response.Create().WithStatusCode(HttpStatusCode.OK).WithBody("old-token"));
 
         wireMockServer
             .Given(Request.Create().WithPath("/api/token"))
-            .InScenario(0)
-            .WhenStateIs(1)
             .RespondWith(Response.Create().WithStatusCode(HttpStatusCode.OK).WithBody("new-token"));
 
-        var services = new ServiceCollection();
-        services.AddDistributedMemoryCache();
+        var calledTokens = new List<string>();
+        var mockedCache = new Mock<IDistributedCache>();
+        mockedCache
+            .Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("old-token"u8.ToArray());
+        mockedCache
+            .Setup(x =>
+                x.SetAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<byte[]>(),
+                    It.IsAny<DistributedCacheEntryOptions>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Callback<string, byte[], DistributedCacheEntryOptions, CancellationToken>(
+                (_, value, _, _) =>
+                {
+                    calledTokens.Add(Encoding.UTF8.GetString(value));
+                }
+            );
 
-        var mockedTokenService = new Mock<ITokenService>();
-        mockedTokenService
-            .SetupSequence(x => x.GetTokenAsync(It.IsAny<CancellationToken>(), It.IsAny<bool>()))
-            .ReturnsAsync(new TokenResponse { Token = "old-token" })
-            .ReturnsAsync(new TokenResponse { Token = "new-token" });
-        services.AddSingleton(mockedTokenService.Object);
+        var services = new ServiceCollection();
+        services.AddSingleton(mockedCache.Object);
+
+        services.AddSingleton<ITokenService, TokenService>();
         services.AddSingleton<TokenHeaderMiddleware>();
 
-        // var mockedTokenHttp = new MockHttpMessageHandler();
-        // mockedTokenHttp
-        //     .When(HttpMethod.Get, $"{BaseUrl}/api/token")
-        //     .Respond(HttpStatusCode.OK, new StringContent("old-token"));
-        // mockedTokenHttp
-        //     .When(HttpMethod.Get, $"{BaseUrl}/api/token")
-        //     .Respond(HttpStatusCode.OK, new StringContent("new-token"));
         services.AddHttpClient(
             "tokenservice",
             client =>
@@ -57,25 +64,6 @@ public class BankAccountServiceTests
                 client.BaseAddress = new Uri(wireMockServer.Urls[0]);
             }
         );
-
-        // var mockedBankAccountHttp = new MockHttpMessageHandler();
-        // mockedBankAccountHttp
-        //     .When(HttpMethod.Get, $"{BaseUrl}/api/accounts")
-        //     .Respond(HttpStatusCode.Unauthorized);
-        // mockedBankAccountHttp
-        //     .When(HttpMethod.Get, $"{BaseUrl}/api/accounts")
-        //     .Respond(HttpStatusCode.OK, JsonContent.Create(new ListBankAccountsResponse
-        //     {
-        //         BankAccounts = new List<BankAccountResponse>
-        //         {
-        //             new()
-        //             {
-        //                 AccountName = "Bruce Wayne",
-        //                 AccountNumber = "1234567890",
-        //                 Balance = 5000000
-        //             }
-        //         }
-        //     }));
 
         wireMockServer
             .Given(Request.Create().WithPath("/api/accounts"))
@@ -111,7 +99,6 @@ public class BankAccountServiceTests
             .AddHttpClient<IBankAccountService, BankAccountService>(client =>
                 client.BaseAddress = new Uri(wireMockServer.Urls[0])
             )
-            // .AddHttpClient("bankaccounts", client => { client.BaseAddress = new Uri(wireMockServer.Urls[0]); })
             .AddHttpMessageHandler<TokenHeaderMiddleware>()
             .AddResilienceHandler(
                 "retryPipeline",
@@ -138,17 +125,26 @@ public class BankAccountServiceTests
                 }
             );
 
-        // var httpClient = services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>().CreateClient("bankaccounts");
-        // var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl}/api/accounts");
-        // var httpResponse = await httpClient.SendAsync(request);
-
         var response = await services
             .BuildServiceProvider()
             .GetRequiredService<IBankAccountService>()
             .ListBankAccountsAsync(CancellationToken.None);
-        mockedTokenService.Verify(
-            x => x.GetTokenAsync(It.IsAny<CancellationToken>(), It.IsAny<bool>()),
-            Times.Exactly(2)
+
+        // Assert that "calledTokens" contains "old-token" and "new-token" in order
+        mockedCache.Verify(
+            x => x.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Once
         );
+        mockedCache.Verify(
+            x =>
+                x.SetAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<byte[]>(),
+                    It.IsAny<DistributedCacheEntryOptions>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+        Assert.Equal(new[] { "new-token" }, calledTokens);
     }
 }
