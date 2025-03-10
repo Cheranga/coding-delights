@@ -1,48 +1,44 @@
 ﻿using System.Net;
-using System.Text;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using Moq;
-using ResilientHttpClients.Services.Models;
-using RichardSzalay.MockHttp;
+using WireMock.RequestBuilders;
+using WireMock.ResponseBuilders;
+using WireMock.Server;
 
 namespace ResilientHttpClients.Services.Tests;
 
-public class TokenHeaderMiddlewareTests
+public class TokenHeaderMiddlewareTests : IDisposable
 {
-    private const string BaseAddress = "https://blah.com";
+    private readonly WireMockServer _wireMockServer = WireMockServer.Start();
     private const string Token = nameof(Token);
 
-    [Fact]
+    [Fact(DisplayName = "Token is added to request headers")]
     public async Task Test1() =>
         await Arrange(() =>
             {
-                var mockedHttp = new MockHttpMessageHandler();
-                mockedHttp
-                    .When(HttpMethod.Get, $"{BaseAddress}/api/token")
-                    .Respond(HttpStatusCode.OK, new StringContent(Token));
+                _wireMockServer
+                    .Given(Request.Create().WithPath("/api/token"))
+                    .RespondWith(
+                        Response.Create().WithStatusCode(HttpStatusCode.OK).WithBody(Token)
+                    );
 
+                _wireMockServer
+                    .Given(Request.Create().UsingGet().WithPath("/api/orders"))
+                    .RespondWith(
+                        Response.Create().WithStatusCode(HttpStatusCode.OK).WithBody("orders")
+                    );
+
+                return _wireMockServer.Urls[0];
+            })
+            .And(data =>
+            {
                 var services = new ServiceCollection();
-                services.AddSingleton(
-                    Mock.Of<IDistributedCache>(cache =>
-                        cache.GetAsync("ApiToken", It.IsAny<CancellationToken>())
-                        == Task.FromResult(Encoding.UTF8.GetBytes(Token))
-                    )
-                );
-                services.AddSingleton(
-                    Mock.Of<IOptionsMonitor<TokenSettings>>(monitor =>
-                        monitor.CurrentValue == new TokenSettings { TokenExpirationMinutes = 30 }
-                    )
-                );
-                services.AddSingleton<ITokenService, TokenService>();
-                services
-                    .AddHttpClient("tokenservice")
-                    .ConfigurePrimaryHttpMessageHandler(() => mockedHttp);
-
+                services.AddDistributedMemoryCache();
                 services.AddSingleton<TokenHeaderMiddleware>();
-                services.AddSingleton(
-                    new DummyResponseHandler(HttpStatusCode.OK, () => new StringContent("Orders"))
+                services.AddSingleton<ITokenService, TokenService>();
+
+                services.AddHttpClient(
+                    "tokenservice",
+                    client => client.BaseAddress = new Uri(data)
                 );
 
                 services
@@ -50,33 +46,27 @@ public class TokenHeaderMiddlewareTests
                         "orders",
                         client =>
                         {
-                            client.BaseAddress = new Uri(BaseAddress);
+                            client.BaseAddress = new Uri(data);
                         }
                     )
-                    .AddHttpMessageHandler<TokenHeaderMiddleware>()
-                    .ConfigurePrimaryHttpMessageHandler<DummyResponseHandler>();
+                    .AddHttpMessageHandler<TokenHeaderMiddleware>();
 
                 var httpClient = services
                     .BuildServiceProvider()
                     .GetRequiredService<IHttpClientFactory>()
                     .CreateClient("orders");
 
-                var httpRequest = new HttpRequestMessage(
-                    HttpMethod.Get,
-                    $"{BaseAddress}/api/orders"
-                );
+                var httpRequest = new HttpRequestMessage(HttpMethod.Get, "/api/orders");
 
                 return (httpClient, httpRequest);
             })
             .Act(async data => await data.httpClient.SendAsync(data.httpRequest))
             .Assert(result => result.IsSuccessStatusCode)
             .And(async result =>
-                string.Equals(
-                    "Orders",
-                    await result.Content.ReadAsStringAsync(),
-                    StringComparison.Ordinal
-                )
-            )
+            {
+                var responseContent = await result.Content.ReadAsStringAsync();
+                Assert.Equal("orders", responseContent);
+            })
             .And(
                 (data, _) =>
                 {
@@ -86,4 +76,10 @@ public class TokenHeaderMiddlewareTests
                     Assert.Equal($"Bearer {Token}", headerValues.Single());
                 }
             );
+
+    public void Dispose()
+    {
+        _wireMockServer.Stop();
+        _wireMockServer.Dispose();
+    }
 }
