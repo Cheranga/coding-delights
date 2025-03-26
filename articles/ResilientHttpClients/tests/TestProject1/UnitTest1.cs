@@ -1,50 +1,16 @@
 using System.Net;
-using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using Bogus;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
 using Polly;
 using Polly.Registry;
-using Polly.Retry;
+using ResilientHttpClients.Services.Models;
+using WireMock.RequestBuilders;
+using WireMock.ResponseBuilders;
+using WireMock.Server;
 
 namespace TestProject1;
-
-public class TokenHeaderMiddleware : DelegatingHandler
-{
-    protected override async Task<HttpResponseMessage> SendAsync(
-        HttpRequestMessage request,
-        CancellationToken cancellationToken
-    )
-    {
-        // Add token header if it's not already present
-        request.Headers.Authorization = new AuthenticationHeaderValue(
-            "Bearer",
-            Guid.NewGuid().ToString("N")
-        );
-        return await base.SendAsync(request, cancellationToken);
-    }
-}
-
-public class ResilienceHandlerMiddleware : DelegatingHandler
-{
-    // For example, a Polly retry policy that retries once on 401 Unauthorized.
-    // private readonly AsyncRetryPolicy<HttpResponseMessage> _retryPolicy = Policy
-    //     .HandleResult<HttpResponseMessage>(r => r.StatusCode == System.Net.HttpStatusCode.Forbidden)
-    //     .RetryAsync(1);
-
-    protected override Task<HttpResponseMessage> SendAsync(
-        HttpRequestMessage request,
-        CancellationToken cancellationToken
-    )
-    {
-        return base.SendAsync(request, cancellationToken);
-        // return await _retryPolicy.ExecuteAsync(async (ct) =>
-        // {
-        //     // Clone the request for each execution to re-trigger the pipeline.
-        //     var clonedRequest = await request.CloneAsync();
-        //     return await base.SendAsync(clonedRequest, ct);
-        // }, cancellationToken);
-    }
-}
 
 public class UnitTest1
 {
@@ -53,14 +19,12 @@ public class UnitTest1
     {
         var services = new ServiceCollection();
         services.AddSingleton<TokenHeaderMiddleware>();
-        services.AddSingleton<ResilienceHandlerMiddleware>();
         services
             .AddHttpClient("test")
             .ConfigureHttpClient(builder =>
                 builder.BaseAddress = new Uri("https://api.github.com/users")
             )
-            .AddHttpMessageHandler<TokenHeaderMiddleware>()
-            .AddHttpMessageHandler<ResilienceHandlerMiddleware>();
+            .AddHttpMessageHandler<TokenHeaderMiddleware>();
 
         var httpResponse = await services
             .BuildServiceProvider()
@@ -75,7 +39,6 @@ public class UnitTest1
         var baseUrl = "https://api.github.com/users";
         var services = new ServiceCollection();
         services.AddSingleton<TokenHeaderMiddleware>();
-        services.AddSingleton<ResilienceHandlerMiddleware>();
         services
             .AddHttpClient("test")
             .ConfigureHttpClient(builder => builder.BaseAddress = new Uri(baseUrl))
@@ -120,5 +83,80 @@ public class UnitTest1
         });
 
         Assert.True(count == 2);
+    }
+
+    [Fact]
+    public async Task Test3()
+    {
+        var wiremockServer = WireMockServer.Start();
+        var baseUrl = wiremockServer.Urls[0];
+
+        wiremockServer
+            .Given(Request.Create().UsingGet().WithPath("/api/token"))
+            .InScenario(0)
+            .WillSetStateTo(1)
+            .RespondWith(
+                Response
+                    .Create()
+                    .WithStatusCode(200)
+                    .WithBodyAsJson(new TokenResponse { Token = "old-token" })
+            );
+
+        wiremockServer
+            .Given(Request.Create().UsingGet().WithPath("/api/token"))
+            .InScenario(0)
+            .WhenStateIs(1)
+            .RespondWith(
+                Response
+                    .Create()
+                    .WithStatusCode(200)
+                    .WithBodyAsJson(new TokenResponse { Token = "new-token" })
+            );
+
+        wiremockServer
+            .Given(Request.Create().UsingGet().WithPath("/api/orders"))
+            .InScenario(1)
+            .WillSetStateTo(1)
+            .RespondWith(Response.Create().WithStatusCode(HttpStatusCode.Unauthorized));
+
+        var bankAccounts = new Faker<BankAccountResponse>().Generate(3);
+
+        wiremockServer
+            .Given(Request.Create().UsingGet().WithPath("/api/orders"))
+            .InScenario(1)
+            .WhenStateIs(1)
+            .RespondWith(
+                Response
+                    .Create()
+                    .WithStatusCode(200)
+                    .WithBodyAsJson(new ListBankAccountsResponse { BankAccounts = bankAccounts })
+            );
+
+        var services = new ServiceCollection();
+    }
+}
+
+public class OrderService(
+    HttpClient httpClient,
+    ResiliencePipelineProvider<string> pipelineProvider
+)
+{
+    public async Task<ListBankAccountsResponse?> GetBankAccountsAsync()
+    {
+        var pipeline = pipelineProvider.GetPipeline<HttpResponseMessage>("pipeline");
+        var response = await pipeline.ExecuteAsync<HttpResponseMessage>(async ct =>
+        {
+            var response = await httpClient.GetAsync("/api/orders", ct);
+            return response;
+        });
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            throw new UnauthorizedAccessException();
+        }
+
+        var bankAccountsResponse =
+            await response.Content.ReadFromJsonAsync<ListBankAccountsResponse>();
+        return bankAccountsResponse;
     }
 }

@@ -34,12 +34,10 @@ public class TokenHeaderMiddlewareTests : IDisposable
                 var services = new ServiceCollection();
                 services.AddDistributedMemoryCache();
                 services.AddSingleton<TokenHeaderMiddleware>();
-                services.AddSingleton<ITokenService, TokenService>();
 
-                services.AddHttpClient(
-                    "tokenservice",
-                    client => client.BaseAddress = new Uri(data)
-                );
+                services
+                    .AddHttpClient<ITokenService, TokenService>()
+                    .ConfigureHttpClient(client => client.BaseAddress = new Uri(data));
 
                 services
                     .AddHttpClient(
