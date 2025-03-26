@@ -1,16 +1,13 @@
-﻿using System.Collections;
-using System.Net;
+﻿using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AutoBogus;
-using Bogus;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Options;
 using Moq;
 using Polly;
-using Polly.Registry;
 using ResilientHttpClients.Services.Models;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
@@ -49,14 +46,6 @@ public class NewBankAccountServiceTests
 
         wiremockServer
             .Given(Request.Create().UsingGet().WithPath("/api/accounts"))
-            .InScenario(1)
-            .WillSetStateTo(1)
-            .RespondWith(bankAccountResponseProvider);
-
-        wiremockServer
-            .Given(Request.Create().UsingGet().WithPath("/api/accounts"))
-            .InScenario(1)
-            .WhenStateIs(1)
             .RespondWith(bankAccountResponseProvider);
 
         var services = new ServiceCollection();
@@ -76,7 +65,6 @@ public class NewBankAccountServiceTests
             "pipeline",
             (builder, context) =>
             {
-                // You can access the service provider through the context
                 var sp = context.ServiceProvider;
                 builder.AddRetry(
                     new HttpRetryStrategyOptions
@@ -132,14 +120,16 @@ public class NewBankAccountServiceTests
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         };
-        var expected = JsonSerializer.Serialize(expectedBankAccountsResponse.BankAccounts);
-        var actual = JsonSerializer.Serialize(bankAccountsResponse.BankAccounts);
+        var expected = JsonSerializer.Serialize(
+            expectedBankAccountsResponse.BankAccounts,
+            serializerOptions
+        );
+        var actual = JsonSerializer.Serialize(bankAccountsResponse.BankAccounts, serializerOptions);
         Assert.Equal(expected, actual);
 
         var capturedRequests = bankAccountResponseProvider.CapturedRequests;
         Assert.True(capturedRequests.Count == 2);
 
-        // Assert whether "capturedRequests" each request's header contains the bearer tokens
         Assert.Equal("Bearer old-token", capturedRequests[0].Headers?["Authorization"].ToString());
         Assert.Equal("Bearer new-token", capturedRequests[1].Headers?["Authorization"].ToString());
     }
