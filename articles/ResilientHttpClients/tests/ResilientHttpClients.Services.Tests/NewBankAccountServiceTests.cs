@@ -17,37 +17,69 @@ namespace ResilientHttpClients.Services.Tests;
 
 public class NewBankAccountServiceTests
 {
+    private readonly JsonSerializerOptions _serializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    };
+
     [Fact]
     public async Task Test1()
     {
         var wiremockServer = WireMockServer.Start();
         var baseUrl = wiremockServer.Urls[0];
 
-        var tokenResponseProvider = CustomResponseProvider.New(
-            () => Response.Create().WithStatusCode(HttpStatusCode.OK).WithBody("new-token")
+        var tokenResponseProvider = SetupTokenResponseProvider(wiremockServer);
+
+        var expectedBankAccountsResponse = new AutoFaker<ListBankAccountsResponse>().Generate();
+        var bankAccountResponseProvider = SetupBankAccountResponseProvider(
+            wiremockServer,
+            expectedBankAccountsResponse
         );
 
-        var expectedBankAccountsResponse = new ListBankAccountsResponse
-        {
-            BankAccounts = new AutoFaker<BankAccountResponse>().Generate(3),
-        };
-        var bankAccountResponseProvider = CustomResponseProvider.New(
-            () => Response.Create().WithStatusCode(HttpStatusCode.Unauthorized),
-            () =>
-                Response
-                    .Create()
-                    .WithStatusCode(HttpStatusCode.OK)
-                    .WithBodyAsJson(expectedBankAccountsResponse)
+        var services = RegisterServicesAndGetApplication(baseUrl);
+        var serviceProvider = services.BuildServiceProvider();
+        await SetCache(serviceProvider);
+
+        var bankAccountService = serviceProvider.GetRequiredService<IBankAccountService>();
+        var bankAccountsResponse = await bankAccountService.ListBankAccountsAsync(
+            CancellationToken.None
         );
 
-        wiremockServer
-            .Given(Request.Create().UsingGet().WithPath("/api/token"))
-            .RespondWith(tokenResponseProvider);
+        var expected = JsonSerializer.Serialize(
+            expectedBankAccountsResponse.BankAccounts,
+            _serializerOptions
+        );
+        var actual = JsonSerializer.Serialize(
+            bankAccountsResponse.BankAccounts,
+            _serializerOptions
+        );
+        Assert.Equal(expected, actual);
 
-        wiremockServer
-            .Given(Request.Create().UsingGet().WithPath("/api/accounts"))
-            .RespondWith(bankAccountResponseProvider);
+        var capturedRequests = bankAccountResponseProvider.CapturedRequests;
+        Assert.True(capturedRequests.Count == 2);
 
+        Assert.Equal("Bearer old-token", capturedRequests[0].Headers?["Authorization"].ToString());
+        Assert.Equal("Bearer new-token", capturedRequests[1].Headers?["Authorization"].ToString());
+    }
+
+    private static async Task SetCache(ServiceProvider serviceProvider)
+    {
+        var cache = serviceProvider.GetRequiredService<IDistributedCache>();
+
+        await cache.SetStringAsync(
+            "ApiToken",
+            "old-token",
+            new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(60),
+            },
+            CancellationToken.None
+        );
+    }
+
+    private static ServiceCollection RegisterServicesAndGetApplication(string baseUrl)
+    {
         var services = new ServiceCollection();
         services.AddDistributedMemoryCache();
         services.AddSingleton(
@@ -96,41 +128,40 @@ public class NewBankAccountServiceTests
             .AddHttpClient<IBankAccountService, BankAccountService>()
             .ConfigureHttpClient(builder => builder.BaseAddress = new Uri(baseUrl))
             .AddHttpMessageHandler<TokenHeaderMiddleware>();
+        return services;
+    }
 
-        var serviceProvider = services.BuildServiceProvider();
-        var cache = serviceProvider.GetRequiredService<IDistributedCache>();
-
-        await cache.SetStringAsync(
-            "ApiToken",
-            "old-token",
-            new DistributedCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(60),
-            },
-            CancellationToken.None
+    private static CustomResponseProvider SetupBankAccountResponseProvider(
+        WireMockServer server,
+        ListBankAccountsResponse expectedBankAccountsResponse
+    )
+    {
+        var bankAccountResponseProvider = CustomResponseProvider.New(
+            () => Response.Create().WithStatusCode(HttpStatusCode.Unauthorized),
+            () =>
+                Response
+                    .Create()
+                    .WithStatusCode(HttpStatusCode.OK)
+                    .WithBodyAsJson(expectedBankAccountsResponse)
         );
 
-        var bankAccountService = serviceProvider.GetRequiredService<IBankAccountService>();
-        var bankAccountsResponse = await bankAccountService.ListBankAccountsAsync(
-            CancellationToken.None
+        server
+            .Given(Request.Create().UsingGet().WithPath("/api/accounts"))
+            .RespondWith(bankAccountResponseProvider);
+
+        return bankAccountResponseProvider;
+    }
+
+    private static CustomResponseProvider SetupTokenResponseProvider(WireMockServer server)
+    {
+        var tokenResponseProvider = CustomResponseProvider.New(
+            () => Response.Create().WithStatusCode(HttpStatusCode.OK).WithBody("new-token")
         );
 
-        var serializerOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        };
-        var expected = JsonSerializer.Serialize(
-            expectedBankAccountsResponse.BankAccounts,
-            serializerOptions
-        );
-        var actual = JsonSerializer.Serialize(bankAccountsResponse.BankAccounts, serializerOptions);
-        Assert.Equal(expected, actual);
+        server
+            .Given(Request.Create().UsingGet().WithPath("/api/token"))
+            .RespondWith(tokenResponseProvider);
 
-        var capturedRequests = bankAccountResponseProvider.CapturedRequests;
-        Assert.True(capturedRequests.Count == 2);
-
-        Assert.Equal("Bearer old-token", capturedRequests[0].Headers?["Authorization"].ToString());
-        Assert.Equal("Bearer new-token", capturedRequests[1].Headers?["Authorization"].ToString());
+        return tokenResponseProvider;
     }
 }
