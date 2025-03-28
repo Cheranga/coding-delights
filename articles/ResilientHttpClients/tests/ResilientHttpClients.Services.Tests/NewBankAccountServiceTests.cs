@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
-using AutoBogus;
+﻿using AutoBogus;
 using Microsoft.Extensions.DependencyInjection;
 using ResilientHttpClients.Services.Models;
 
@@ -8,39 +6,68 @@ namespace ResilientHttpClients.Services.Tests;
 
 public partial class NewBankAccountServiceTests
 {
-    private readonly JsonSerializerOptions _serializerOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    };
-
     [Fact]
     public async Task Test1()
     {
-        var tokenResponseProvider = SetupTokenResponseProvider();
+        await Arrange(() =>
+            {
+                var tokenResponseProvider = SetupTokenResponseProvider();
+                return tokenResponseProvider;
+            })
+            .And(data =>
+            {
+                var expectedBankAccountsResponse =
+                    new AutoFaker<ListBankAccountsResponse>().Generate();
+                var bankAccountResponseProvider = SetupBankAccountResponseProvider(
+                    expectedBankAccountsResponse
+                );
 
-        var expectedBankAccountsResponse = new AutoFaker<ListBankAccountsResponse>().Generate();
-        var bankAccountResponseProvider = SetupBankAccountResponseProvider(
-            expectedBankAccountsResponse
-        );
-
-        var serviceProvider = RegisterServicesAndGetApplication();
-        await SetCache(serviceProvider, "old-token");
-
-        var bankAccountService = serviceProvider.GetRequiredService<IBankAccountService>();
-        var actualBankAccountsResponse = await bankAccountService.ListBankAccountsAsync(
-            CancellationToken.None
-        );
-
-        Assert.True(
-            AssertExtensions.AreSame(expectedBankAccountsResponse, actualBankAccountsResponse)
-        );
-
-        var capturedRequests = bankAccountResponseProvider.CapturedRequests;
-        Assert.True(capturedRequests.Count == 2);
-        Assert.Equal("Bearer old-token", capturedRequests[0].Headers?["Authorization"].ToString());
-        Assert.Equal("Bearer new-token", capturedRequests[1].Headers?["Authorization"].ToString());
-
-        Assert.Single(tokenResponseProvider.CapturedRequests);
+                return (
+                    tokenResponseProvider: data,
+                    bankAccountResponseProvider,
+                    expectedBankAccountsResponse
+                );
+            })
+            .And(data =>
+            {
+                var serviceProvider = RegisterServicesAndGetApplication();
+                return (
+                    data.tokenResponseProvider,
+                    data.bankAccountResponseProvider,
+                    data.expectedBankAccountsResponse,
+                    serviceProvider
+                );
+            })
+            .And(async data =>
+            {
+                await SetCache(data.serviceProvider, "old-token");
+                return data;
+            })
+            .Act(async data =>
+            {
+                var bankService = data.serviceProvider.GetRequiredService<IBankAccountService>();
+                return await bankService.ListBankAccountsAsync(CancellationToken.None);
+            })
+            .Assert(
+                (data, response) =>
+                    AssertExtensions.AreSame(data.expectedBankAccountsResponse, response)
+            )
+            .And((data, _) => data.tokenResponseProvider.CapturedRequests.Count == 1)
+            .And((data, _) => data.bankAccountResponseProvider.CapturedRequests.Count == 2)
+            .And(
+                (data, _) =>
+                {
+                    var capturedRequests = data.bankAccountResponseProvider.CapturedRequests;
+                    Assert.True(capturedRequests.Count == 2);
+                    Assert.Equal(
+                        "Bearer old-token",
+                        capturedRequests[0].Headers?["Authorization"].ToString()
+                    );
+                    Assert.Equal(
+                        "Bearer new-token",
+                        capturedRequests[1].Headers?["Authorization"].ToString()
+                    );
+                }
+            );
     }
 }
