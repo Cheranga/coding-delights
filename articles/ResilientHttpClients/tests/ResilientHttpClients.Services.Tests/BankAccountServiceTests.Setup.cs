@@ -22,29 +22,19 @@ public partial class BankAccountServiceTests(WiremockFixture wiremockFixture) : 
             () => Response.Create().WithStatusCode(HttpStatusCode.OK).WithBody("new-token")
         );
 
-        Server
-            .Given(Request.Create().UsingGet().WithPath("/api/token"))
-            .RespondWith(tokenResponseProvider);
+        Server.Given(Request.Create().UsingGet().WithPath("/api/token")).RespondWith(tokenResponseProvider);
 
         return tokenResponseProvider;
     }
 
-    private CustomResponseProvider SetupBankAccountResponseProvider(
-        ListBankAccountsResponse expectedBankAccountsResponse
-    )
+    private CustomResponseProvider SetupBankAccountResponseProvider(ListBankAccountsResponse expectedBankAccountsResponse)
     {
         var bankAccountResponseProvider = CustomResponseProvider.New(
             () => Response.Create().WithStatusCode(HttpStatusCode.Unauthorized),
-            () =>
-                Response
-                    .Create()
-                    .WithStatusCode(HttpStatusCode.OK)
-                    .WithBodyAsJson(expectedBankAccountsResponse)
+            () => Response.Create().WithStatusCode(HttpStatusCode.OK).WithBodyAsJson(expectedBankAccountsResponse)
         );
 
-        Server
-            .Given(Request.Create().UsingGet().WithPath("/api/accounts"))
-            .RespondWith(bankAccountResponseProvider);
+        Server.Given(Request.Create().UsingGet().WithPath("/api/accounts")).RespondWith(bankAccountResponseProvider);
 
         return bankAccountResponseProvider;
     }
@@ -60,7 +50,6 @@ public partial class BankAccountServiceTests(WiremockFixture wiremockFixture) : 
             )
         );
 
-
         services.AddResiliencePipeline<string, HttpResponseMessage>(
             "pipeline",
             (builder, context) =>
@@ -73,20 +62,13 @@ public partial class BankAccountServiceTests(WiremockFixture wiremockFixture) : 
                         BackoffType = DelayBackoffType.Linear,
                         Delay = TimeSpan.FromSeconds(1),
                         ShouldHandle = args =>
-                            args.Outcome.Result
-                                is {
-                                    StatusCode: HttpStatusCode.Forbidden
-                                        or HttpStatusCode.Unauthorized
-                                }
+                            args.Outcome.Result is { StatusCode: HttpStatusCode.Forbidden or HttpStatusCode.Unauthorized }
                                 ? PredicateResult.True()
                                 : PredicateResult.False(),
                         OnRetry = async arguments =>
                         {
                             var cacheService = sp.GetRequiredService<ITokenService>();
-                            await cacheService.GetTokenAsync(
-                                arguments.Context.CancellationToken,
-                                true
-                            );
+                            await cacheService.GetTokenAsync(arguments.Context.CancellationToken, true);
                         },
                     }
                 );
@@ -96,7 +78,7 @@ public partial class BankAccountServiceTests(WiremockFixture wiremockFixture) : 
         services
             .AddHttpClient<ITokenService, TokenService>()
             .ConfigureHttpClient(builder => builder.BaseAddress = new Uri(baseUrl));
-       
+
         services.AddSingleton<TokenHeaderMiddleware>();
 
         services
@@ -113,10 +95,7 @@ public partial class BankAccountServiceTests(WiremockFixture wiremockFixture) : 
         await cache.SetStringAsync(
             "ApiToken",
             token,
-            new DistributedCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(60),
-            },
+            new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(60) },
             CancellationToken.None
         );
     }

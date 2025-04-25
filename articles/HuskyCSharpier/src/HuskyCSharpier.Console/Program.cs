@@ -11,14 +11,9 @@ var host = Host.CreateDefaultBuilder()
 
 var notificationService = host.Services.GetRequiredService<INotificationService>();
 
-await SendNotificationAsync(
-    notificationService,
-    new NotificationOptions("James Gordon", "Batman", "Bat Signal!")
-);
+await SendNotificationAsync(notificationService, new NotificationOptions("James Gordon", "Batman", "Bat Signal!"));
 
 await host.RunAsync();
 
-static Task SendNotificationAsync(
-    INotificationService notificationService,
-    NotificationOptions options
-) => notificationService.SendNotificationAsync(options);
+static Task SendNotificationAsync(INotificationService notificationService, NotificationOptions options) =>
+    notificationService.SendNotificationAsync(options);

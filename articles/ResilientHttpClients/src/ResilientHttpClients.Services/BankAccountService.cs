@@ -20,14 +20,9 @@ internal sealed class BankAccountService(
     {
         var policy = pipelineProvider.GetPipeline<HttpResponseMessage>("pipeline");
 
-        var httpResponse = await policy.ExecuteAsync(
-            async ct => await client.GetAsync("/api/accounts", ct),
-            token
-        );
+        var httpResponse = await policy.ExecuteAsync(async ct => await client.GetAsync("/api/accounts", ct), token);
 
-        var bankAccounts = await httpResponse.Content.ReadFromJsonAsync<ListBankAccountsResponse>(
-            token
-        );
+        var bankAccounts = await httpResponse.Content.ReadFromJsonAsync<ListBankAccountsResponse>(token);
         return bankAccounts ?? ListBankAccountsResponse.Empty;
     }
 }

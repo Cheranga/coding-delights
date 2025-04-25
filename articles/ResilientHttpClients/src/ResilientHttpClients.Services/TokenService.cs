@@ -9,23 +9,14 @@ public interface ITokenService
     Task<TokenResponse> GetTokenAsync(CancellationToken token, bool forceRefresh = false);
 }
 
-internal sealed class TokenService(
-    IOptionsMonitor<TokenSettings> options,
-    HttpClient client,
-    IDistributedCache cache
-) : ITokenService
+internal sealed class TokenService(IOptionsMonitor<TokenSettings> options, HttpClient client, IDistributedCache cache)
+    : ITokenService
 {
     private readonly TokenSettings _tokenSettings = options.CurrentValue;
 
-    public async Task<TokenResponse> GetTokenAsync(
-        CancellationToken token,
-        bool forceRefresh = false
-    )
+    public async Task<TokenResponse> GetTokenAsync(CancellationToken token, bool forceRefresh = false)
     {
-        if (
-            !forceRefresh
-            && await cache.GetStringAsync("ApiToken", token) is { Length: > 0 } cachedToken
-        )
+        if (!forceRefresh && await cache.GetStringAsync("ApiToken", token) is { Length: > 0 } cachedToken)
         {
             return new TokenResponse { Token = cachedToken };
         }
@@ -36,9 +27,7 @@ internal sealed class TokenService(
             apiToken,
             new DistributedCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(
-                    _tokenSettings.TokenExpirationMinutes
-                ),
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(_tokenSettings.TokenExpirationMinutes),
             },
             token
         );

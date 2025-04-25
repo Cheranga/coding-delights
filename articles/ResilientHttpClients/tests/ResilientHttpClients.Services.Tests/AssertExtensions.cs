@@ -19,6 +19,5 @@ internal static class AssertExtensions
         return expectedJson == actualJson;
     }
 
-    public static bool AreSame<T>(T expected, T actual) =>
-        AreSame(expected, actual, DefaultOptions);
+    public static bool AreSame<T>(T expected, T actual) => AreSame(expected, actual, DefaultOptions);
 }

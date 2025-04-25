@@ -17,15 +17,11 @@ public class TokenHeaderMiddlewareTests : IDisposable
             {
                 _wireMockServer
                     .Given(Request.Create().WithPath("/api/token"))
-                    .RespondWith(
-                        Response.Create().WithStatusCode(HttpStatusCode.OK).WithBody(Token)
-                    );
+                    .RespondWith(Response.Create().WithStatusCode(HttpStatusCode.OK).WithBody(Token));
 
                 _wireMockServer
                     .Given(Request.Create().UsingGet().WithPath("/api/orders"))
-                    .RespondWith(
-                        Response.Create().WithStatusCode(HttpStatusCode.OK).WithBody("orders")
-                    );
+                    .RespondWith(Response.Create().WithStatusCode(HttpStatusCode.OK).WithBody("orders"));
 
                 return _wireMockServer.Urls[0];
             })
@@ -49,10 +45,7 @@ public class TokenHeaderMiddlewareTests : IDisposable
                     )
                     .AddHttpMessageHandler<TokenHeaderMiddleware>();
 
-                var httpClient = services
-                    .BuildServiceProvider()
-                    .GetRequiredService<IHttpClientFactory>()
-                    .CreateClient("orders");
+                var httpClient = services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>().CreateClient("orders");
 
                 var httpRequest = new HttpRequestMessage(HttpMethod.Get, "/api/orders");
 
@@ -68,9 +61,7 @@ public class TokenHeaderMiddlewareTests : IDisposable
             .And(
                 (data, _) =>
                 {
-                    Assert.True(
-                        data.httpRequest.Headers.TryGetValues("Authorization", out var headerValues)
-                    );
+                    Assert.True(data.httpRequest.Headers.TryGetValues("Authorization", out var headerValues));
                     Assert.Equal($"Bearer {Token}", headerValues.Single());
                 }
             );

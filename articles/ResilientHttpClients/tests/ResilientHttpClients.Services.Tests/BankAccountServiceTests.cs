@@ -16,17 +16,10 @@ public partial class BankAccountServiceTests
             })
             .And(data =>
             {
-                var expectedBankAccountsResponse =
-                    new AutoFaker<ListBankAccountsResponse>().Generate();
-                var bankAccountResponseProvider = SetupBankAccountResponseProvider(
-                    expectedBankAccountsResponse
-                );
+                var expectedBankAccountsResponse = new AutoFaker<ListBankAccountsResponse>().Generate();
+                var bankAccountResponseProvider = SetupBankAccountResponseProvider(expectedBankAccountsResponse);
 
-                return (
-                    tokenResponseProvider: data,
-                    bankAccountResponseProvider,
-                    expectedBankAccountsResponse
-                );
+                return (tokenResponseProvider: data, bankAccountResponseProvider, expectedBankAccountsResponse);
             })
             .And(data =>
             {
@@ -48,10 +41,7 @@ public partial class BankAccountServiceTests
                 var bankService = data.serviceProvider.GetRequiredService<IBankAccountService>();
                 return await bankService.ListBankAccountsAsync(CancellationToken.None);
             })
-            .Assert(
-                (data, response) =>
-                    AssertExtensions.AreSame(data.expectedBankAccountsResponse, response)
-            )
+            .Assert((data, response) => AssertExtensions.AreSame(data.expectedBankAccountsResponse, response))
             .And((data, _) => data.tokenResponseProvider.CapturedRequests.Count == 1)
             .And((data, _) => data.bankAccountResponseProvider.CapturedRequests.Count == 2)
             .And(
@@ -59,14 +49,8 @@ public partial class BankAccountServiceTests
                 {
                     var capturedRequests = data.bankAccountResponseProvider.CapturedRequests;
                     Assert.True(capturedRequests.Count == 2);
-                    Assert.Equal(
-                        "Bearer old-token",
-                        capturedRequests[0].Headers?["Authorization"].ToString()
-                    );
-                    Assert.Equal(
-                        "Bearer new-token",
-                        capturedRequests[1].Headers?["Authorization"].ToString()
-                    );
+                    Assert.Equal("Bearer old-token", capturedRequests[0].Headers?["Authorization"].ToString());
+                    Assert.Equal("Bearer new-token", capturedRequests[1].Headers?["Authorization"].ToString());
                 }
             );
     }
