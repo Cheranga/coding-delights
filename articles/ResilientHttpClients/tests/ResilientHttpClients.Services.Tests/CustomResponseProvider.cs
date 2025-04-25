@@ -7,8 +7,8 @@ namespace ResilientHttpClients.Services.Tests;
 
 internal sealed class CustomResponseProvider : IResponseProvider
 {
-    private readonly Queue<Func<IResponseBuilder>> _responses = new();
-    private readonly List<IRequestMessage> _capturedRequests = new();
+    private readonly Queue<Func<IResponseBuilder>> _responses;
+    private readonly List<IRequestMessage> _capturedRequests = [];
 
     private CustomResponseProvider(Queue<Func<IResponseBuilder>> responses)
     {

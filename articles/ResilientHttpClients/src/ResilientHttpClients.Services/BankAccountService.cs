@@ -28,7 +28,6 @@ internal sealed class BankAccountService(
         var bankAccounts = await httpResponse.Content.ReadFromJsonAsync<ListBankAccountsResponse>(
             token
         );
-        return bankAccounts
-            ?? new ListBankAccountsResponse { BankAccounts = new List<BankAccountResponse>() };
+        return bankAccounts ?? ListBankAccountsResponse.Empty;
     }
 }
