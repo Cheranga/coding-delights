@@ -5,7 +5,9 @@ namespace ToDo.Api.Features.Create;
 
 public record CreateToDoCommand(string Title, string Description, DateTimeOffset DueDate) : ICommand
 {
-    private string Id => Guid.NewGuid().ToString("N").ToUpper(CultureInfo.InvariantCulture);
+    private string Id => _id;
+
+    private readonly string _id = Guid.NewGuid().ToString("N").ToUpper(CultureInfo.InvariantCulture);
 
     internal record Handler(TodoDbContext Context) : ICommandHandler<CreateToDoCommand>
     {
