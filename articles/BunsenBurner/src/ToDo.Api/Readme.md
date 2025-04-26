@@ -1,10 +1,10 @@
-# Bunsen Burner 🔥
+# :fire: Bunsen Burner
 
 A [testing library](https://github.com/bmazzarol/Bunsen-Burner) which makes it easier to write
 well-structured test cases in both `Arrange, Act, Assert (AAA)`, and `Given, When, Then (BDD)`
 testing patterns.
 
-## Context :dart:
+## :dart: Context
 
 When it comes to testing .NET applications, there are many options, and opinions.
 
@@ -16,7 +16,7 @@ always been important, and this is where `Bunsen Burner` comes in.
 
 `Bunsen Burner` makes writing well-structured tests easier.
 
-## Why Bunsen Burner?
+## :thinking: Why Bunsen Burner?
 
 - [x] Can easily write tests in a more structured and organized manner
 - [x] If you can write basic C#, that's it! Nothing new to learn
@@ -27,12 +27,12 @@ always been important, and this is where `Bunsen Burner` comes in.
 - [x] `Async` first design so that you can write synchronous or asynchronous tests with ease (this is as per design
   in `Bunsen Burner`)
 
-## Let's write some fun math tests
+## :test_tube: Let's write some fun math tests
 
 You can find these tests in the [`ExampleTests.cs`](../../tests/LetsDoIt.ToDoApi.BunsenBurner.Tests/ExampleTests.cs)
 file in the `LetsDoIt.ToDoApi.BunsenBurner.Tests` project.
 
-### Adding numbers
+### :abacus: Adding numbers
 
 Using `Bunsen Burner`
 
@@ -69,7 +69,7 @@ public static void TestAdd(int a, int b, int expected)
 - [x] You can have predicate expressions in the `Assert` section. This is not possible without using `Bunsen Burner`
 - [x] The function chaining pattern, makes it easier to read, and understand the "flow" of the test
 
-### Division by zero
+### :heavy_division_sign: Division by zero
 
 Using `Bunsen Burner`
 
@@ -110,7 +110,7 @@ public static void DivisionByZero()
 
 Well enough with the math tests, let's move on to something more interesting! :tada: :heart:
 
-## System Under Test :tada:
+## :tada: System Under Test
 
 It's a simple task management API, where you can perform,
 
@@ -123,7 +123,7 @@ To keep things simple, we are using entity framework's in-memory database for th
 And to make things interesting we are adding `distributed caching` when getting all tasks,
 and an `endpoint filter` for validation when adding a task.
 
-### Adding a Task
+### :construction_worker: Adding a Task
 
 We will include an `endpoint filter` to perform validation on the input request.
 
@@ -144,7 +144,7 @@ else
 end
 ```
 
-### Geting All Tasks
+### :book: Getting All Tasks
 
 In here we'll use an `endpoint filter` to cache the tasks retrieved from the database.
 To implement distributed caching, we are using `Microsoft.Extensions.Caching.Memory`
@@ -170,7 +170,7 @@ else
 end
 ```
 
-### Searching Tasks by Id
+### :mag_right: Searching Tasks by Id
 
 ```mermaid
 sequenceDiagram
@@ -184,14 +184,14 @@ else
 end
 ```
 
-## Testing `Getting All Tasks`
+## :test_tube: Testing `Getting All Tasks`
 
 We'll use unit tests to test the internal operations, and an integration test approach
 to test the behaviour of this feature from an endpoint perspective.
 
 For unit tests, let's use the `AAA` pattern, and for integration tests the `behavioural` pattern.
 
-### Unit tests for the `GetAll.Operations` class
+### :test_tube: Unit tests for the `GetAll.Operations` class
 
 > Cache only if tasks are in the database
 
@@ -288,7 +288,7 @@ There are some striking differences with this approach.
 > Please refer to the other tests for the `Operations` class with and without using `Bunsen Burner`.
 >
 
-### Integration tests of the `GetAll` endpoint
+### :test_tube: Integration tests of the `GetAll` endpoint
 
 Here we are using `Microsoft.AspNetCore.Mvc.Testing` to set up integration tests using Test server, and we'll be using
 the `behavioural` pattern.
@@ -439,13 +439,13 @@ If you want to extend the functionality simply create your own methods.
 > [Tests without using BunsenBurner](../../tests/LetsDoIt.ToDoApi.Tests) can be found here, for you to compare and
 > reference.
 
-### References :clap:
+### :clap: References
 
 * [Bunsen Burner on GitHub](https://github.com/bmazzarol/Bunsen-Burner)
 
-### Feedback :heart:
+### :heart: Feedback
 
-If you have any feedbacks, or suggestions, please feel free to open an issue on the GitHub repository.
+If you have any feedback or suggestions, please feel free to open an issue on the GitHub repository.
 
 If you want to create a PR, please feel free to do so.
 When you create the PR, please make sure to follow the guidelines provided in the repository.
