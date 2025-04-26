@@ -2,6 +2,14 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToDo.Api", "src\ToDo.Api\ToDo.Api.csproj", "{247CBF1D-3B48-4C11-ACBD-3272D5B3906B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToDoApi.Tests", "tests\ToDoApi.Tests\ToDoApi.Tests.csproj", "{4CF8424D-BD89-40E9-8D25-034B6F667C3A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToDoApi.BunsenBurner.Tests", "tests\ToDoApi.BunsenBurner.Tests\ToDoApi.BunsenBurner.Tests.csproj", "{17691B98-C157-41AB-B837-720FA66906A1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "API", "API", "{5A3BDEA2-9B78-40A7-A155-85F72EA2C406}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{8271F065-5B55-49A9-90B4-2F2692E66779}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +20,18 @@ Global
 		{247CBF1D-3B48-4C11-ACBD-3272D5B3906B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{247CBF1D-3B48-4C11-ACBD-3272D5B3906B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{247CBF1D-3B48-4C11-ACBD-3272D5B3906B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4CF8424D-BD89-40E9-8D25-034B6F667C3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4CF8424D-BD89-40E9-8D25-034B6F667C3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4CF8424D-BD89-40E9-8D25-034B6F667C3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4CF8424D-BD89-40E9-8D25-034B6F667C3A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{17691B98-C157-41AB-B837-720FA66906A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{17691B98-C157-41AB-B837-720FA66906A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{17691B98-C157-41AB-B837-720FA66906A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{17691B98-C157-41AB-B837-720FA66906A1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{247CBF1D-3B48-4C11-ACBD-3272D5B3906B} = {5A3BDEA2-9B78-40A7-A155-85F72EA2C406}
+		{17691B98-C157-41AB-B837-720FA66906A1} = {8271F065-5B55-49A9-90B4-2F2692E66779}
+		{4CF8424D-BD89-40E9-8D25-034B6F667C3A} = {8271F065-5B55-49A9-90B4-2F2692E66779}
 	EndGlobalSection
 EndGlobal
