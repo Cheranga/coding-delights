@@ -3,17 +3,17 @@
 ## :book: Context
 
 Resiliency is a key aspect of modern software development, especially when dealing with external services.
-This project demonstrates how to build resilient HTTP clients using various patterns and techniques.
+This project demonstrates how to build resilient HTTP clients in a real world scenario.
 
 We will explore the `microsoft.extensions.http.resilience` library, which provide mechanisms for handling
-transient faults and ensuring that our application can gracefully recover from failures.
+resiliency and ensuring that our application can gracefully recover from failures.
 
-Let's list down what we will explore in this illustration:
+Let's list down what we will explore in here:
 * A user requests bank accounts from a third party banking service
 * The third party service requires a token for authentication
-* Using a cache to store the token for a certain period of time
+* Use a cache to store the token for a certain period of time
 * The third party can purge the active tokens at any time
-  * Once the token is purged, you'll need to invalidate the token in your cache because the token is no longer valid
+  * Once the token is purged, the cached token needs to be invalidated because the token is no longer valid
 
 ## :muscle: Designing Resiliency
 
@@ -25,7 +25,10 @@ The problem happens when we have a valid token which is cached.
 By default, the cache will not be invalidated until the expiration time, and until then we will keep getting an 
 unauthorized response from the third party service.
 
-To solve this problem, we need to design our resiliency in a way that we can detect when to invalidate the token, 
+So our application can't just want until the token expires to get a new one, our application should detect this and then
+must take measures to rectify this as soon as possible.
+
+So to solve this challenge, we need to design our resiliency in a way that we can detect when to invalidate the token, 
 get a new one and use it in consecutive requests.
 
 ## :sparkles: Technical Design
@@ -154,7 +157,7 @@ This will ensure that;
 As you can see the `BankAccountService` client is completely separated from the resiliency logic and contains only
 the business logic of calling the third party service.
 
-#### :thinking: Why is the resiliency applied in BankAccountService?
+#### :thinking: Why is resiliency applied in BankAccountService?
 
 Simply because it depends on "how and when" you want to apply the resiliency logic. 
 According to our scenario explained above, we want to handle token invalidation from the third party service at 
@@ -223,7 +226,13 @@ services
     );
 ```
 
-We have a test case implemented which simulates the problem. In there we assert whether a new token was included in
+Notice that the `TokenHeaderMiddleware` is registered to add the token to the request header, and the
+resiliency handler is registered after that. When using this approach, you must register your middlewares first 
+before the resiliency handler. When a retry happens since HTTP requests are reused, this will NOT go through the same
+middlewares again. This is what stumps most engineers thinking that the middleware will be executed again.
+
+
+We have a test case implemented which simulates the problem. In there, we assert whether a new token was included in
 the header, and the test fails because the same request is reused with the old token.
 
 Please refer [Test2](tests/ResilientHttpClients.Services.Tests/BankAccountServiceTests.cs) which illustrates this.
@@ -337,7 +346,7 @@ Refer the [Test1](tests/ResilientHttpClients.Services.Tests/BankAccountServiceTe
 Most importantly, refer to the [Test2](tests/ResilientHttpClients.Services.Tests/BankAccountServiceTests.cs).
 This illustrates why this approach is wrong to be used in this scenario.
 
-For the sake of passing the test, I have commented the real assertion
+For the sake of passing the test, I have commented on the real assertion
 
 ![fake-assertion](images/fake-assertion.png)
 
