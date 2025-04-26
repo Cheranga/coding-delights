@@ -1,0 +1,32 @@
+
+# @name = createTask
+POST {{todoUrl}}
+Content-Type: application/json
+
+{
+  "title": "Pay bills",
+  "description": "Pay all the utility bills",
+  "dueDate": "2025-04-30T00:00:00"
+}
+
+###
+
+# @name = invalidTask
+POST {{todoUrl}}
+Content-Type: application/json
+
+{
+  "invalid": "blah!"
+}
+
+###
+
+# @name getAll
+GET {{todoUrl}}
+Accept: application/json
+
+###
+
+# @name getToDoById
+GET {{todoUrl}}/E90E5F3869E14083AE88857D54FD2A14
+Accept: application/json
