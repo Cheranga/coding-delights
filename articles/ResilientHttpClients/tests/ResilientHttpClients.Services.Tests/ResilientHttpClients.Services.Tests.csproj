@@ -10,6 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="AutoBogus" Version="2.13.1" />
         <PackageReference Include="BunsenBurner" Version="7.0.2" />
         <PackageReference Include="coverlet.collector" Version="6.0.0"/>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.2" />

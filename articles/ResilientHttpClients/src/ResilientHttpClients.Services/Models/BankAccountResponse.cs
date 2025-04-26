@@ -2,14 +2,14 @@
 
 public sealed class BankAccountResponse
 {
-    public required string AccountNumber { get; init; }
-    public required string AccountName { get; init; }
-    public required decimal Balance { get; init; }
+    public required string AccountNumber { get; set; }
+    public required string AccountName { get; set; }
+    public required decimal Balance { get; set; }
 }
 
 public sealed class TokenResponse
 {
-    public required string Token { get; init; }
+    public required string Token { get; set; }
 }
 
 public sealed class TokenSettings

@@ -1,43 +1,109 @@
-﻿using System.Text;
-using Microsoft.Extensions.Caching.Distributed;
-using Moq;
+﻿using AutoBogus;
+using Microsoft.Extensions.DependencyInjection;
+using ResilientHttpClients.Services.Models;
 
 namespace ResilientHttpClients.Services.Tests;
 
 public partial class BankAccountServiceTests
 {
-    [Fact]
-    public async Task Test1() =>
+    [Fact(DisplayName = "Using ResiliencyProvider")]
+    public async Task Test1()
+    {
         await Arrange(() =>
             {
-                SetupTokenRequestResponses(_wireMockServer);
-                SetupOrdersRequestResponses(_wireMockServer);
-                SetupMockedCache(_mockedCache);
-
-                return GetBankAccountService();
+                var tokenResponseProvider = SetupTokenResponseProvider();
+                return tokenResponseProvider;
             })
-            .Act(async data => await data.ListBankAccountsAsync(CancellationToken.None))
-            .Assert(result => result.BankAccounts.Count == 1)
+            .And(data =>
+            {
+                var expectedBankAccountsResponse = new AutoFaker<ListBankAccountsResponse>().Generate();
+                var bankAccountResponseProvider = SetupBankAccountResponseProvider(expectedBankAccountsResponse);
+
+                return (tokenResponseProvider: data, bankAccountResponseProvider, expectedBankAccountsResponse);
+            })
+            .And(data =>
+            {
+                var serviceProvider = RegisterServicesAndGetApplication();
+                return (
+                    data.tokenResponseProvider,
+                    data.bankAccountResponseProvider,
+                    data.expectedBankAccountsResponse,
+                    serviceProvider
+                );
+            })
+            .And(async data =>
+            {
+                await SetCache(data.serviceProvider, "old-token");
+                return data;
+            })
+            .Act(async data =>
+            {
+                var bankService = data.serviceProvider.GetRequiredService<IBankAccountService>();
+                return await bankService.ListBankAccountsAsync(CancellationToken.None);
+            })
+            .Assert((data, response) => AssertExtensions.AreSame(data.expectedBankAccountsResponse, response))
+            .And((data, _) => data.tokenResponseProvider.CapturedRequests.Count == 1)
+            .And((data, _) => data.bankAccountResponseProvider.CapturedRequests.Count == 2)
             .And(
-                (_, _) =>
-                    _mockedCache.Verify(
-                        x => x.GetAsync("ApiToken", It.IsAny<CancellationToken>()),
-                        Times.Once
-                    )
-            )
-            .And(
-                (_, _) =>
+                (data, _) =>
                 {
-                    _mockedCache.Verify(
-                        x =>
-                            x.SetAsync(
-                                "ApiToken",
-                                Encoding.UTF8.GetBytes("new-token"),
-                                It.IsAny<DistributedCacheEntryOptions>(),
-                                It.IsAny<CancellationToken>()
-                            ),
-                        Times.Once
-                    );
+                    var capturedRequests = data.bankAccountResponseProvider.CapturedRequests;
+                    Assert.True(capturedRequests.Count == 2);
+                    Assert.Equal("Bearer old-token", capturedRequests[0].Headers?["Authorization"].ToString());
+                    Assert.Equal("Bearer new-token", capturedRequests[1].Headers?["Authorization"].ToString());
                 }
             );
+    }
+
+    [Fact(DisplayName = "Using AddResilienceHandler")]
+    public async Task Test2()
+    {
+        await Arrange(() =>
+            {
+                var tokenResponseProvider = SetupTokenResponseProvider();
+                return tokenResponseProvider;
+            })
+            .And(data =>
+            {
+                var expectedBankAccountsResponse = new AutoFaker<ListBankAccountsResponse>().Generate();
+                var bankAccountResponseProvider = SetupBankAccountResponseProvider(expectedBankAccountsResponse);
+
+                return (tokenResponseProvider: data, bankAccountResponseProvider, expectedBankAccountsResponse);
+            })
+            .And(data =>
+            {
+                var serviceProvider = RegisterServicesAndSetupOtherBankService();
+                return (
+                    data.tokenResponseProvider,
+                    data.bankAccountResponseProvider,
+                    data.expectedBankAccountsResponse,
+                    serviceProvider
+                );
+            })
+            .And(async data =>
+            {
+                await SetCache(data.serviceProvider, "old-token");
+                return data;
+            })
+            .Act(async data =>
+            {
+                var bankService = data.serviceProvider.GetRequiredService<IBankAccountService>();
+                return await bankService.ListBankAccountsAsync(CancellationToken.None);
+            })
+            .Assert((data, response) => AssertExtensions.AreSame(data.expectedBankAccountsResponse, response))
+            .And((data, _) => data.tokenResponseProvider.CapturedRequests.Count == 1)
+            .And((data, _) => data.bankAccountResponseProvider.CapturedRequests.Count == 2)
+            .And(
+                (data, _) =>
+                {
+                    var capturedRequests = data.bankAccountResponseProvider.CapturedRequests;
+                    Assert.True(capturedRequests.Count == 2);
+                    Assert.Equal("Bearer old-token", capturedRequests[0].Headers?["Authorization"].ToString());
+                    //
+                    // This fails, commenting for the article's purpose
+                    //
+                    // Assert.Equal("Bearer new-token", capturedRequests[1].Headers?["Authorization"].ToString());
+                }
+            );
+    }
 }

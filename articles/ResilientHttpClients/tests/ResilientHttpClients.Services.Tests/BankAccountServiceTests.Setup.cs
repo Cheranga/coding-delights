@@ -2,8 +2,10 @@
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
+using Microsoft.Extensions.Options;
 using Moq;
 using Polly;
+using ProtoBuf.Meta;
 using ResilientHttpClients.Services.Models;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
@@ -11,85 +13,107 @@ using WireMock.Server;
 
 namespace ResilientHttpClients.Services.Tests;
 
-public partial class BankAccountServiceTests : IDisposable
+public partial class BankAccountServiceTests(WiremockFixture wiremockFixture) : IClassFixture<WiremockFixture>
 {
-    private readonly WireMockServer _wireMockServer = WireMockServer.Start();
-    private readonly Mock<IDistributedCache> _mockedCache = new();
+    public WireMockServer Server => wiremockFixture.Server;
 
-    private static void SetupTokenRequestResponses(WireMockServer server)
+    private CustomResponseProvider SetupTokenResponseProvider()
     {
-        server
-            .Given(Request.Create().WithPath("/api/token"))
-            .RespondWith(Response.Create().WithStatusCode(HttpStatusCode.OK).WithBody("new-token"));
+        var tokenResponseProvider = CustomResponseProvider.New(
+            () => Response.Create().WithStatusCode(HttpStatusCode.OK).WithBody("new-token")
+        );
+
+        Server.Given(Request.Create().UsingGet().WithPath("/api/token")).RespondWith(tokenResponseProvider);
+
+        return tokenResponseProvider;
     }
 
-    private static void SetupOrdersRequestResponses(WireMockServer server)
+    private CustomResponseProvider SetupBankAccountResponseProvider(ListBankAccountsResponse expectedBankAccountsResponse)
     {
-        server
-            .Given(Request.Create().WithPath("/api/accounts"))
-            .InScenario(1)
-            .WillSetStateTo(1)
-            .RespondWith(Response.Create().WithStatusCode(HttpStatusCode.Unauthorized));
+        var bankAccountResponseProvider = CustomResponseProvider.New(
+            () => Response.Create().WithStatusCode(HttpStatusCode.Unauthorized),
+            () => Response.Create().WithStatusCode(HttpStatusCode.OK).WithBodyAsJson(expectedBankAccountsResponse)
+        );
+        Server.Given(Request.Create().UsingGet().WithPath("/api/accounts")).RespondWith(bankAccountResponseProvider);
 
-        server
-            .Given(Request.Create().WithPath("/api/accounts"))
-            .InScenario(1)
-            .WhenStateIs(1)
-            .RespondWith(
-                Response
-                    .Create()
-                    .WithStatusCode(HttpStatusCode.OK)
-                    .WithBodyAsJson(
-                        new ListBankAccountsResponse
-                        {
-                            BankAccounts = new List<BankAccountResponse>
-                            {
-                                new()
-                                {
-                                    AccountName = "Bruce Wayne",
-                                    AccountNumber = "1234567890",
-                                    Balance = 5000000,
-                                },
-                            },
-                        }
-                    )
-            );
+        return bankAccountResponseProvider;
     }
 
-    private static void SetupMockedCache(Mock<IDistributedCache> cache)
+    private IServiceProvider RegisterServicesAndGetApplication()
     {
-        cache
-            .Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync("old-token"u8.ToArray());
-    }
-
-    private IBankAccountService GetBankAccountService()
-    {
-        var baseUrl = _wireMockServer.Urls[0];
+        var baseUrl = Server.Urls[0];
         var services = new ServiceCollection();
-        services.AddSingleton(_mockedCache.Object);
-        services.AddSingleton<ITokenService, TokenService>();
-        services.AddSingleton<TokenHeaderMiddleware>();
+        services.AddDistributedMemoryCache();
+        services.AddSingleton(
+            Mock.Of<IOptionsMonitor<TokenSettings>>(builder =>
+                builder.CurrentValue == new TokenSettings { TokenExpirationMinutes = 60 }
+            )
+        );
 
-        services.AddHttpClient(
-            "tokenservice",
-            client =>
+        services.AddResiliencePipeline<string, HttpResponseMessage>(
+            "pipeline",
+            (builder, context) =>
             {
-                client.BaseAddress = new Uri(baseUrl);
+                var sp = context.ServiceProvider;
+                builder.AddRetry(
+                    new HttpRetryStrategyOptions
+                    {
+                        MaxRetryAttempts = 1,
+                        BackoffType = DelayBackoffType.Linear,
+                        Delay = TimeSpan.FromSeconds(1),
+                        ShouldHandle = args =>
+                            args.Outcome.Result is { StatusCode: HttpStatusCode.Forbidden or HttpStatusCode.Unauthorized }
+                                ? PredicateResult.True()
+                                : PredicateResult.False(),
+                        OnRetry = async arguments =>
+                        {
+                            var cacheService = sp.GetRequiredService<ITokenService>();
+                            await cacheService.GetTokenAsync(arguments.Context.CancellationToken, true);
+                        },
+                    }
+                );
             }
         );
 
         services
-            .AddHttpClient<IBankAccountService, BankAccountService>(client =>
-                client.BaseAddress = new Uri(baseUrl)
+            .AddHttpClient<ITokenService, TokenService>()
+            .ConfigureHttpClient(builder => builder.BaseAddress = new Uri(baseUrl));
+
+        services.AddSingleton<TokenHeaderMiddleware>();
+
+        services
+            .AddHttpClient<IBankAccountService, BankAccountService>()
+            .ConfigureHttpClient(builder => builder.BaseAddress = new Uri(baseUrl))
+            .AddHttpMessageHandler<TokenHeaderMiddleware>();
+        return services.BuildServiceProvider();
+    }
+
+    private IServiceProvider RegisterServicesAndSetupOtherBankService()
+    {
+        var baseUrl = Server.Urls[0];
+        var services = new ServiceCollection();
+        services.AddDistributedMemoryCache();
+        services.AddSingleton(
+            Mock.Of<IOptionsMonitor<TokenSettings>>(builder =>
+                builder.CurrentValue == new TokenSettings { TokenExpirationMinutes = 60 }
             )
+        );
+
+        services
+            .AddHttpClient<ITokenService, TokenService>()
+            .ConfigureHttpClient(builder => builder.BaseAddress = new Uri(baseUrl));
+
+        services.AddSingleton<TokenHeaderMiddleware>();
+
+        services
+            .AddHttpClient<IBankAccountService, OtherBankAccountService>()
+            .ConfigureHttpClient(builder => builder.BaseAddress = new Uri(baseUrl))
             .AddHttpMessageHandler<TokenHeaderMiddleware>()
             .AddResilienceHandler(
-                "retryPipeline",
+                "pipeline",
                 (builder, context) =>
                 {
-                    var tokenService = context.ServiceProvider.GetRequiredService<ITokenService>();
-
+                    var sp = context.ServiceProvider;
                     builder.AddRetry(
                         new HttpRetryStrategyOptions
                         {
@@ -100,21 +124,27 @@ public partial class BankAccountServiceTests : IDisposable
                                 args.Outcome.Result is { StatusCode: HttpStatusCode.Unauthorized }
                                     ? PredicateResult.True()
                                     : PredicateResult.False(),
-                            OnRetry = async _ =>
+                            OnRetry = async arguments =>
                             {
-                                await tokenService.GetTokenAsync(CancellationToken.None, true);
+                                var cacheService = sp.GetRequiredService<ITokenService>();
+                                await cacheService.GetTokenAsync(arguments.Context.CancellationToken, true);
                             },
                         }
                     );
                 }
             );
-
-        return services.BuildServiceProvider().GetRequiredService<IBankAccountService>();
+        return services.BuildServiceProvider();
     }
 
-    public void Dispose()
+    private static async Task SetCache(IServiceProvider serviceProvider, string token)
     {
-        _wireMockServer.Stop();
-        _wireMockServer.Dispose();
+        var cache = serviceProvider.GetRequiredService<IDistributedCache>();
+
+        await cache.SetStringAsync(
+            "ApiToken",
+            token,
+            new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(60) },
+            CancellationToken.None
+        );
     }
 }
