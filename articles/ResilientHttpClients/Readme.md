@@ -180,3 +180,69 @@ If the token is available, it will be used, otherwise a new token will be genera
 In here we will use the `microsoft.extensions.caching.memory` library to cache the token.
 Depending on your needs, you can use other caching libraries like `microsoft.extensions.caching.redis` 
 or `microsoft.extensions.caching.sqlserver`.
+
+## Why not use `HttpClient`s `AddResiliencyHandler` for this?
+
+With latest versions in `microsoft.extensions.http.client` you can add resiliency handlers to your HTTP client using
+`AddResiliencyHandler`.
+
+You can use this in scenarios where you need to perform a retry with some logic,
+but the problem with it is as designed, **it will reuse the same `HTTPRequest` in your consecutive requests.**
+This is not going to work in our situation because we need the new token to be included in the header of the request.
+
+Let's explore the below code which adds resiliency to the `HttpClient`:
+
+```csharp
+services
+    .AddHttpClient<IBankAccountService, OtherBankAccountService>()
+    .ConfigureHttpClient(builder => builder.BaseAddress = new Uri(baseUrl))
+    .AddHttpMessageHandler<TokenHeaderMiddleware>() // register the token middleware
+    .AddResilienceHandler( // register the resiliency handler
+        "pipeline",
+        (builder, context) =>
+        {
+            var sp = context.ServiceProvider;
+            builder.AddRetry(
+                new HttpRetryStrategyOptions
+                {
+                    MaxRetryAttempts = 1,
+                    BackoffType = DelayBackoffType.Linear,
+                    Delay = TimeSpan.FromSeconds(1),
+                    ShouldHandle = args => // retry only on unauthorized or forbidden
+                        args.Outcome.Result is { StatusCode: HttpStatusCode.Unauthorized }
+                            ? PredicateResult.True()
+                            : PredicateResult.False(),
+                    OnRetry = async arguments => // on retry, get a new token
+                    {
+                        var cacheService = sp.GetRequiredService<ITokenService>();
+                        await cacheService.GetTokenAsync(arguments.Context.CancellationToken, true);
+                    },
+                }
+            );
+        }
+    );
+```
+
+We have a test case implemented which simulates the problem. In there we assert whether a new token was included in
+the header, and the test fails because the same request is reused with the old token.
+
+Please refer [Test2](tests/ResilientHttpClients.Services.Tests/BankAccountServiceTests.cs) which illustrates this.
+
+Read the next section how we can test this.
+
+## Testing
+
+Our main focus in this article is to test the resiliency, and the best way to test this is through integration tests.
+
+Main nuget packages used for testing:
+
+* `WireMock.Net` for mocking the third party service
+* `BunsenBurner` for writing beautifully organized tests
+* `AutoBogus` for generating realistic test data
+
+### Handling different scenarios with WireMock.Net
+
+When using WireMock.Net, you can create stateful scenarios to test different cases. This is crucial for our testing
+because we need to return different responses to simulate the resiliency.
+
+
