@@ -5,6 +5,7 @@ using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Options;
 using Moq;
 using Polly;
+using ProtoBuf.Meta;
 using ResilientHttpClients.Services.Models;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
@@ -33,7 +34,6 @@ public partial class BankAccountServiceTests(WiremockFixture wiremockFixture) : 
             () => Response.Create().WithStatusCode(HttpStatusCode.Unauthorized),
             () => Response.Create().WithStatusCode(HttpStatusCode.OK).WithBodyAsJson(expectedBankAccountsResponse)
         );
-
         Server.Given(Request.Create().UsingGet().WithPath("/api/accounts")).RespondWith(bankAccountResponseProvider);
 
         return bankAccountResponseProvider;

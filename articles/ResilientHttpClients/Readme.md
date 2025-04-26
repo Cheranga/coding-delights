@@ -1,6 +1,6 @@
-﻿# Resilient HTTP Clients
+﻿# :rocket: Resilient HTTP Clients
 
-## Context
+## :book: Context
 
 Resiliency is a key aspect of modern software development, especially when dealing with external services.
 This project demonstrates how to build resilient HTTP clients using various patterns and techniques.
@@ -15,7 +15,7 @@ Let's list down what we will explore in this illustration:
 * The third party can purge the active tokens at any time
   * Once the token is purged, you'll need to invalidate the token in your cache because the token is no longer valid
 
-## Designing Resiliency
+## :muscle: Designing Resiliency
 
 Designing resiliency does not mean just retrying, it means you need to design your resiliency to be specific and 
 tailored to your need.
@@ -28,7 +28,7 @@ unauthorized response from the third party service.
 To solve this problem, we need to design our resiliency in a way that we can detect when to invalidate the token, 
 get a new one and use it in consecutive requests.
 
-## Technical Design
+## :sparkles: Technical Design
 
 ```mermaid
 sequenceDiagram
@@ -57,9 +57,9 @@ autonumber
     bas -->> u: bank accounts
 ```
 
-## Components
+## :cake: Components
 
-### ResiliencePipeline
+### :straight_ruler: ResiliencePipeline
 
 This is a pipeline that will be used to define the resiliency logic.
 The benefit of completely separating the resiliency logic from other components is that you can reuse with 
@@ -108,7 +108,7 @@ Let's break down the above code:
 you want and reuse them in different components.
 * The pipeline is registered with its associated expected output type
 
-### BankAccountService
+### :bank: BankAccountService
 
 This is a typed HTTP client that integrates with the third party banking service.
 Also, this is where we will use the resiliency logic.
@@ -154,7 +154,7 @@ This will ensure that;
 As you can see the `BankAccountService` client is completely separated from the resiliency logic and contains only
 the business logic of calling the third party service.
 
-#### Why is the resiliency applied in BankAccountService?
+#### :thinking: Why is the resiliency applied in BankAccountService?
 
 Simply because it depends on "how and when" you want to apply the resiliency logic. 
 According to our scenario explained above, we want to handle token invalidation from the third party service at 
@@ -162,26 +162,26 @@ any given time.
 This can be known only, when the third party service returns `Forbidden` or an `Unauthorized` response, and then only 
 we could apply resiliency.
 
-### TokenHandlerMiddleware
+### :receipt: TokenHandlerMiddleware
 
 This is a middleware that will be used to add the token to the request header.
 This middleware will be used in the `BankAccountService` client.
 The reason to do this is to separate the concerns of including a token in the header of each request 
 sent through the `BacnkAccountService`.
 
-### TokenService
+### :receipt: TokenService
 
 Another typed HTTP client which involves the token generation and caching it.
 It integrates with the `Cache` to store the token for a certain period of time.
 If the token is available, it will be used, otherwise a new token will be generated and stored in the cache.
 
-### Cache
+### :department_store: Cache
 
 In here we will use the `microsoft.extensions.caching.memory` library to cache the token.
 Depending on your needs, you can use other caching libraries like `microsoft.extensions.caching.redis` 
 or `microsoft.extensions.caching.sqlserver`.
 
-## Why not use `HttpClient`s `AddResiliencyHandler` for this?
+## :exploding_head: Why not use `HttpClient`s `AddResiliencyHandler` for this?
 
 With latest versions in `microsoft.extensions.http.client` you can add resiliency handlers to your HTTP client using
 `AddResiliencyHandler`.
@@ -228,9 +228,9 @@ the header, and the test fails because the same request is reused with the old t
 
 Please refer [Test2](tests/ResilientHttpClients.Services.Tests/BankAccountServiceTests.cs) which illustrates this.
 
-Read the next section how we can test this.
+Now let's explore how we can test this scenario.
 
-## Testing
+## :test_tube: Testing
 
 Our main focus in this article is to test the resiliency, and the best way to test this is through integration tests.
 
@@ -240,9 +240,106 @@ Main nuget packages used for testing:
 * `BunsenBurner` for writing beautifully organized tests
 * `AutoBogus` for generating realistic test data
 
-### Handling different scenarios with WireMock.Net
+### :rescue_worker_helmet: Handling different scenarios with WireMock.Net
 
 When using WireMock.Net, you can create stateful scenarios to test different cases. This is crucial for our testing
 because we need to return different responses to simulate the resiliency.
+
+According to `WireMock.Net` documentation, you can do this like below
+
+```csharp
+Server
+    .Given(Request.Create().UsingGet().WithPath("/api/accounts"))
+    .InScenario("testing")
+    .WhenStateIs("started")
+    .WillSetStateTo("next")
+    .RespondWith(Response.Create().WithStatusCode(HttpStatusCode.Unauthorized));
+
+Server
+    .Given(Request.Create().UsingGet().WithPath("/api/accounts"))
+    .InScenario("testing")
+    .WhenStateIs("next")
+    .RespondWith(Response.Create().WithStatusCode(HttpStatusCode.OK).WithBodyAsJson(expectedBankAccountsResponse));
+```
+
+In my opinion, this is too much boilerplate code, just to achieve this. So in here I have implemented a 
+custom response provider which can be easily hooked up to the `WireMock.Net` server.
+
+```csharp
+internal sealed class CustomResponseProvider : IResponseProvider
+{
+    private readonly Queue<Func<IResponseBuilder>> _responses;
+    private readonly List<IRequestMessage> _capturedRequests = [];
+
+    private CustomResponseProvider(Queue<Func<IResponseBuilder>> responses)
+    {
+        _responses = responses;
+    }
+
+    public static CustomResponseProvider New(params Func<IResponseBuilder>[] funcs)
+    {
+        return new CustomResponseProvider(new Queue<Func<IResponseBuilder>>(funcs));
+    }
+
+    public IReadOnlyList<IRequestMessage> CapturedRequests => _capturedRequests;
+
+    public async Task<(IResponseMessage Message, IMapping? Mapping)> ProvideResponseAsync(
+        IMapping mapping,
+        IRequestMessage requestMessage,
+        WireMockServerSettings settings
+    )
+    {
+        if (_responses.TryDequeue(out var responseFunc))
+        {
+            _capturedRequests.Add(requestMessage);
+            return await responseFunc().ProvideResponseAsync(mapping, requestMessage, settings);
+        }
+
+        throw new Exception("No response queued");
+    }
+}
+```
+
+What it does basically is storing the responses you would like to return in a queue, and also keep a track of the
+requests that were sent to the server.
+
+Below is how you use it.
+
+```csharp
+private CustomResponseProvider SetupBankAccountResponseProvider(ListBankAccountsResponse expectedBankAccountsResponse)
+{
+    var bankAccountResponseProvider = CustomResponseProvider.New(
+        () => Response.Create().WithStatusCode(HttpStatusCode.Unauthorized),
+        () => Response.Create().WithStatusCode(HttpStatusCode.OK).WithBodyAsJson(expectedBankAccountsResponse)
+    );
+    Server.Given(Request.Create().UsingGet().WithPath("/api/accounts")).RespondWith(bankAccountResponseProvider);
+
+    return bankAccountResponseProvider;
+}
+```
+
+### :man_health_worker: Testing resiliency with token generation, caching and invalidation
+
+This is the scenario we are testing.
+
+* There's a token in the cache
+* The API returns an `Unauthorized` response
+* Resiliency is applied
+* A new token is generated
+* The new token is cached
+* The new token is used in the next request
+* The API returns a successful response
+
+Refer the [Test1](tests/ResilientHttpClients.Services.Tests/BankAccountServiceTests.cs) for the full test case.
+
+### :index_pointing_at_the_viewer: Important
+
+Most importantly, refer to the [Test2](tests/ResilientHttpClients.Services.Tests/BankAccountServiceTests.cs).
+This illustrates why this approach is wrong to be used in this scenario.
+
+For the sake of passing the test, I have commented the real assertion
+
+![fake-assertion](images/fake-assertion.png)
+
 
 
