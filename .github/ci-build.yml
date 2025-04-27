@@ -6,6 +6,7 @@ on:
     paths:
       - 'articles/**'     
       - '.github/**'
+  workflow_dispatch:
 
 jobs:  
   build:
