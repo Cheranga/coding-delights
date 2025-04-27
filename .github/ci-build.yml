@@ -1,7 +1,8 @@
 ﻿name: Isolated Functions
 concurrency: Isolated Functions
 
-on:
+on: 
+  workflow_dispatch:
   push:
     paths:
       - 'articles/**'     
