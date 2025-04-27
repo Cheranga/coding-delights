@@ -4,8 +4,8 @@ concurrency: Isolated Functions
 on:
   push:
     paths:
-      - './articles/**'     
-      - './.github/**'
+      - 'articles/**'     
+      - '.github/**'
   workflow_dispatch:
 
 jobs:  
