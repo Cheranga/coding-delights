@@ -1,0 +1,13 @@
+﻿name: Isolated Functions
+concurrency: Isolated Functions
+
+on:
+  push:
+    paths:
+      - 'articles/**'     
+      - '.github/**'
+
+jobs:  
+  build:
+    name: CI Validations
+    uses: ./.github/workflows/ci-validation-checks.yml
