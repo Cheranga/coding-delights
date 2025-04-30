@@ -2,7 +2,7 @@
 
 namespace ResilientHttpClients.Services.Tests;
 
-public class WiremockFixture : IDisposable
+public sealed class WiremockFixture : IDisposable
 {
     public WireMockServer Server { get; }
 

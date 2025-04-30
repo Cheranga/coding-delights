@@ -1,5 +1,4 @@
-﻿using FluentAssertions;
-using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -34,6 +33,6 @@ public static class OperationsTests
             Times.Never()
         );
 
-        response.Result.Should().BeOfType<NoContent>();
+        Assert.True(response.Result.GetType() == typeof(NoContent));
     }
 }

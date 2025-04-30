@@ -7,20 +7,26 @@
 
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
+        <WarningsAsErrors>true</WarningsAsErrors>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AutoBogus" Version="2.13.1" />
-        <PackageReference Include="BunsenBurner" Version="7.0.2" />
-        <PackageReference Include="coverlet.collector" Version="6.0.0"/>
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.2" />
-        <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.2.0" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0"/>
-        <PackageReference Include="Moq" Version="4.20.72" />
-        <PackageReference Include="RichardSzalay.MockHttp" Version="7.0.0" />
-        <PackageReference Include="WireMock.Net" Version="1.7.4" />
-        <PackageReference Include="xunit" Version="2.5.3"/>
-        <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3"/>
+        <PackageReference Include="AsyncFixer"/>
+        <PackageReference Include="Meziantou.Analyzer"/>
+        <PackageReference Include="Roslynator.Analyzers"/>
+        <PackageReference Include="SonarAnalyzer.CSharp"/>
+        <PackageReference Include="AutoBogus"/>
+        <PackageReference Include="BunsenBurner"/>
+        <PackageReference Include="coverlet.collector"/>
+        <PackageReference Include="coverlet.msbuild"/>
+        <PackageReference Include="Microsoft.Extensions.Hosting"/>
+        <PackageReference Include="Microsoft.Extensions.Http.Resilience"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk"/>
+        <PackageReference Include="Moq"/>
+        <PackageReference Include="WireMock.Net"/>
+        <PackageReference Include="xunit"/>
+        <PackageReference Include="xunit.runner.visualstudio"/>
     </ItemGroup>
 
     <ItemGroup>

@@ -136,11 +136,11 @@ public partial class BankAccountServiceTests(WiremockFixture wiremockFixture) : 
         return services.BuildServiceProvider();
     }
 
-    private static async Task SetCache(IServiceProvider serviceProvider, string token)
+    private static Task SetCache(IServiceProvider serviceProvider, string token)
     {
         var cache = serviceProvider.GetRequiredService<IDistributedCache>();
 
-        await cache.SetStringAsync(
+        return cache.SetStringAsync(
             "ApiToken",
             token,
             new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(60) },

@@ -1,6 +1,5 @@
 ﻿using System.Net;
-using AutoFixture;
-using FluentAssertions;
+using AutoBogus;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,12 +16,8 @@ public partial class GetAllTasksFilterTests(WebApplicationFactory<Program> facto
     public async Task GetAllTasksWhenCached()
     {
         // Given
-        var fixture = new Fixture();
-        var mockedQueryHandler = GetMockedQueryHandler(
-            [],
-            fixture.CreateMany<TodoDataModel>(5).ToList(),
-            fixture.CreateMany<TodoDataModel>(10).ToList()
-        );
+        var fixture = new AutoFaker<TodoDataModel>();
+        var mockedQueryHandler = GetMockedQueryHandler([], fixture.Generate(5), fixture.Generate(10));
         var httpClient = factory
             .WithWebHostBuilder(builder =>
             {
@@ -44,16 +39,18 @@ public partial class GetAllTasksFilterTests(WebApplicationFactory<Program> facto
         mockedQueryHandler.Verify(x => x.QueryAsync(It.IsAny<SearchAllQuery>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
         // The first response must be 204 No Content
         // The second and third responses must be 200 OK
-        httpResponse1.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        httpResponse2.StatusCode.Should().Be(HttpStatusCode.OK);
-        httpResponse3.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.NoContent, httpResponse1.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, httpResponse2.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, httpResponse3.StatusCode);
 
         var todoListResponse = await GetToDoListResponse(httpResponse2);
-        todoListResponse.Should().NotBeNull();
-        todoListResponse!.Tasks.Should().NotBeNull().And.HaveCount(5);
+        Assert.NotNull(todoListResponse);
+        Assert.NotNull(todoListResponse.Tasks);
+        Assert.Equal(5, todoListResponse.Tasks.Count);
 
         todoListResponse = await GetToDoListResponse(httpResponse3);
-        todoListResponse.Should().NotBeNull();
-        todoListResponse!.Tasks.Should().NotBeNull().And.HaveCount(5);
+        Assert.NotNull(todoListResponse);
+        Assert.NotNull(todoListResponse.Tasks);
+        Assert.Equal(5, todoListResponse.Tasks.Count);
     }
 }

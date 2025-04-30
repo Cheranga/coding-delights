@@ -4,6 +4,8 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <WarningsAsErrors>true</WarningsAsErrors>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <ItemGroup>
@@ -18,9 +20,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.2" />
-      <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.2" />
-      <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.2.0" />
+        <PackageReference Include="AsyncFixer"/>
+        <PackageReference Include="Meziantou.Analyzer"/>
+        <PackageReference Include="Roslynator.Analyzers"/>
+        <PackageReference Include="SonarAnalyzer.CSharp"/>
+        <PackageReference Include="Microsoft.Extensions.Caching.Memory"/>
+        <PackageReference Include="Microsoft.Extensions.Http"/>
+        <PackageReference Include="Microsoft.Extensions.Http.Resilience"/>
     </ItemGroup>
 
 </Project>

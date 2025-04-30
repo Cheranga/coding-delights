@@ -1,13 +1,12 @@
 ﻿using System.Net;
-using AutoFixture;
-using FluentAssertions;
+using AutoBogus;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using ToDo.Api.Features.GetAll;
 using ToDo.Api.Infrastructure.DataAccess;
-using static BunsenBurner.Bdd;
+using static BunsenBurner.GivenWhenThen;
 
 namespace ToDoApi.BunsenBurner.Tests.GetAllTasks;
 
@@ -18,12 +17,8 @@ public partial class GetAllTasksFilterTests(WebApplicationFactory<Program> facto
     public async Task GetAllTasksWhenCached() =>
         await Given(() =>
             {
-                var fixture = new Fixture();
-                return GetMockedQueryHandler(
-                    [],
-                    fixture.CreateMany<TodoDataModel>(5).ToList(),
-                    fixture.CreateMany<TodoDataModel>(10).ToList()
-                );
+                var fixture = new AutoFaker<TodoDataModel>();
+                return GetMockedQueryHandler([], fixture.Generate(5).ToList(), fixture.Generate(10).ToList());
             })
             .And(qh =>
             {
@@ -59,11 +54,10 @@ public partial class GetAllTasksFilterTests(WebApplicationFactory<Program> facto
                 }
             )
             .Then(responses =>
-            {
-                responses.httpResponse1.StatusCode.Should().Be(HttpStatusCode.NoContent);
-                responses.httpResponse2.StatusCode.Should().Be(HttpStatusCode.OK);
-                responses.httpResponse3.StatusCode.Should().Be(HttpStatusCode.OK);
-            })
+                responses.httpResponse1.StatusCode == HttpStatusCode.NoContent
+                && responses.httpResponse2.StatusCode == HttpStatusCode.OK
+                && responses.httpResponse3.StatusCode == HttpStatusCode.OK
+            )
             .And(
                 (data, _) =>
                 {
@@ -76,13 +70,13 @@ public partial class GetAllTasksFilterTests(WebApplicationFactory<Program> facto
             .And(async responses =>
             {
                 var todoListResponse = await GetToDoListFromResponse(responses.httpResponse2);
-                todoListResponse.Should().NotBeNull();
-                todoListResponse!.Tasks.Should().NotBeNull().And.HaveCount(5);
+                Assert.NotNull(todoListResponse);
+                Assert.Equal(5, todoListResponse.Tasks.Count);
             })
             .And(async responses =>
             {
                 var todoListResponse = await GetToDoListFromResponse(responses.httpResponse3);
-                todoListResponse.Should().NotBeNull();
-                todoListResponse!.Tasks.Should().NotBeNull().And.HaveCount(5);
+                Assert.NotNull(todoListResponse);
+                Assert.Equal(5, todoListResponse.Tasks.Count);
             });
 }

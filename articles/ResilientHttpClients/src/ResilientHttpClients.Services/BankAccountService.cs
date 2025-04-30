@@ -5,11 +5,6 @@ using ResilientHttpClients.Services.Models;
 
 namespace ResilientHttpClients.Services;
 
-public interface IBankAccountService
-{
-    Task<ListBankAccountsResponse> ListBankAccountsAsync(CancellationToken token);
-}
-
 internal sealed class BankAccountService(
     HttpClient client,
     ResiliencePipelineProvider<string> pipelineProvider,
@@ -23,6 +18,7 @@ internal sealed class BankAccountService(
         var httpResponse = await policy.ExecuteAsync(async ct => await client.GetAsync("/api/accounts", ct), token);
 
         var bankAccounts = await httpResponse.Content.ReadFromJsonAsync<ListBankAccountsResponse>(token);
+        logger.LogInformation("Received bank accounts {@BankAccounts}", bankAccounts);
         return bankAccounts ?? ListBankAccountsResponse.Empty;
     }
 }

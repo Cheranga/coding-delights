@@ -16,7 +16,7 @@ internal static class AssertExtensions
         var expectedJson = JsonSerializer.Serialize(expected, options);
         var actualJson = JsonSerializer.Serialize(actual, options);
 
-        return expectedJson == actualJson;
+        return string.Equals(expectedJson, actualJson, StringComparison.Ordinal);
     }
 
     public static bool AreSame<T>(T expected, T actual) => AreSame(expected, actual, DefaultOptions);
