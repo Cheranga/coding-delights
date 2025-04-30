@@ -2,13 +2,9 @@
 <RunSettings>
   <DataCollectionRunSettings>
     <DataCollectors>
-      <DataCollector friendlyName="XPlat code coverage">
+      <DataCollector friendlyName="XPlat Code Coverage">
         <Configuration>
-          <Format>cobertura,json</Format>
-          <Include>CodingDelights</Include>
-          <ExcludeByFile>**/obj/**/*.cs,**/Program.cs</ExcludeByFile>
-          <SingleHit>false</SingleHit>
-          <UseSourceLink>true</UseSourceLink>
+          <Format>cobertura</Format>
         </Configuration>
       </DataCollector>
     </DataCollectors>
