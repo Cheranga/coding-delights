@@ -19,7 +19,7 @@ public class ValidateTodoFilterTests(WebApplicationFactory<Program> factory) : I
     {
         await Given(() =>
             {
-                var dto = new AutoFaker<AddTodoDto>().Generate() with {Title = string.Empty};
+                var dto = new AutoFaker<AddTodoDto>().Generate() with { Title = string.Empty };
                 return dto;
             })
             .When(async dto =>
@@ -27,8 +27,7 @@ public class ValidateTodoFilterTests(WebApplicationFactory<Program> factory) : I
                 var httpResponse = await _client.PostAsJsonAsync("/todos", dto);
                 return httpResponse;
             })
-            .Then(
-                (_, response) => response.StatusCode == HttpStatusCode.BadRequest)
+            .Then((_, response) => response.StatusCode == HttpStatusCode.BadRequest)
             .And(async response =>
             {
                 var problemResponse = await JsonSerializer.DeserializeAsync<HttpValidationProblemDetails>(
@@ -38,7 +37,7 @@ public class ValidateTodoFilterTests(WebApplicationFactory<Program> factory) : I
                 Assert.NotEmpty(problemResponse.Errors);
                 Assert.NotEmpty(problemResponse.Errors);
                 Assert.Contains(problemResponse.Errors, x => x.Key == "Title");
-                Assert.Single(problemResponse.Errors["Title"], x=> string.Equals(x, "Title cannot be empty"));
+                Assert.Single(problemResponse.Errors["Title"], x => string.Equals(x, "Title cannot be empty"));
             });
     }
 
@@ -47,10 +46,7 @@ public class ValidateTodoFilterTests(WebApplicationFactory<Program> factory) : I
     {
         await Given(() =>
             {
-                var dto = new AutoFaker<AddTodoDto>().Generate() with
-                {
-                    DueDate = DateTimeOffset.Now.AddDays(1)
-                };
+                var dto = new AutoFaker<AddTodoDto>().Generate() with { DueDate = DateTimeOffset.Now.AddDays(1) };
                 return dto;
             })
             .When(async dto =>
@@ -58,8 +54,7 @@ public class ValidateTodoFilterTests(WebApplicationFactory<Program> factory) : I
                 var httpResponse = await _client.PostAsJsonAsync("/todos", dto);
                 return httpResponse;
             })
-            .Then(
-                (_, response) => response.StatusCode == HttpStatusCode.Created)
+            .Then((_, response) => response.StatusCode == HttpStatusCode.Created)
             .And(async response =>
             {
                 Assert.True(response.Headers.TryGetValues("Location", out var location));

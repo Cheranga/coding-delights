@@ -17,11 +17,7 @@ public partial class GetAllTasksFilterTests(WebApplicationFactory<Program> facto
     {
         // Given
         var fixture = new AutoFaker<TodoDataModel>();
-        var mockedQueryHandler = GetMockedQueryHandler(
-            [],
-            fixture.Generate(5),
-            fixture.Generate(10)
-        );
+        var mockedQueryHandler = GetMockedQueryHandler([], fixture.Generate(5), fixture.Generate(10));
         var httpClient = factory
             .WithWebHostBuilder(builder =>
             {

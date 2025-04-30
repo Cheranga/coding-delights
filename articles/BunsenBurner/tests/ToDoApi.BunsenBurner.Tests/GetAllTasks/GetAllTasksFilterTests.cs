@@ -18,16 +18,18 @@ public partial class GetAllTasksFilterTests(WebApplicationFactory<Program> facto
         await Given(() =>
             {
                 var fixture = new AutoFaker<TodoDataModel>();
-                return GetMockedQueryHandler(
-                    [],
-                    fixture.Generate(5).ToList(),
-                    fixture.Generate(10).ToList()
-                );
+                return GetMockedQueryHandler([], fixture.Generate(5).ToList(), fixture.Generate(10).ToList());
             })
             .And(qh =>
             {
                 var client = factory
-                    .WithWebHostBuilder(builder => { builder.ConfigureTestServices(services => { services.AddSingleton(qh.Object); }); })
+                    .WithWebHostBuilder(builder =>
+                    {
+                        builder.ConfigureTestServices(services =>
+                        {
+                            services.AddSingleton(qh.Object);
+                        });
+                    })
                     .CreateClient();
 
                 return (queryHandler: qh, client);
@@ -37,22 +39,27 @@ public partial class GetAllTasksFilterTests(WebApplicationFactory<Program> facto
                 var httpResponse1 = await GetAllTasks(data.client);
                 return httpResponse1;
             })
-            .And(async (data, httpResponse1) =>
+            .And(
+                async (data, httpResponse1) =>
                 {
                     var httpResponse2 = await GetAllTasks(data.client);
                     return (httpResponse1, httpResponse2);
                 }
             )
-            .And(async (data, responses) =>
+            .And(
+                async (data, responses) =>
                 {
                     var httpResponse3 = await GetAllTasks(data.client);
                     return (responses.httpResponse1, responses.httpResponse2, httpResponse3);
                 }
             )
-            .Then(responses => responses.httpResponse1.StatusCode == HttpStatusCode.NoContent &&
-                               responses.httpResponse2.StatusCode == HttpStatusCode.OK &&
-                               responses.httpResponse3.StatusCode == HttpStatusCode.OK)
-            .And((data, _) =>
+            .Then(responses =>
+                responses.httpResponse1.StatusCode == HttpStatusCode.NoContent
+                && responses.httpResponse2.StatusCode == HttpStatusCode.OK
+                && responses.httpResponse3.StatusCode == HttpStatusCode.OK
+            )
+            .And(
+                (data, _) =>
                 {
                     data.queryHandler.Verify(
                         x => x.QueryAsync(It.IsAny<SearchAllQuery>(), It.IsAny<CancellationToken>()),
@@ -64,7 +71,7 @@ public partial class GetAllTasksFilterTests(WebApplicationFactory<Program> facto
             {
                 var todoListResponse = await GetToDoListFromResponse(responses.httpResponse2);
                 Assert.NotNull(todoListResponse);
-                Assert.Equal(5,todoListResponse.Tasks.Count);
+                Assert.Equal(5, todoListResponse.Tasks.Count);
             })
             .And(async responses =>
             {

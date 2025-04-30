@@ -31,7 +31,8 @@ public static class OperationsTests
                     Mock.Of<ILogger<Program>>()
                 )
             )
-            .Assert((data, _) =>
+            .Assert(
+                (data, _) =>
                 {
                     data.mockedCache.Verify(
                         x =>
@@ -68,7 +69,8 @@ public static class OperationsTests
                     Mock.Of<ILogger<Program>>()
                 )
             )
-            .Assert((data, _) =>
+            .Assert(
+                (data, _) =>
                 {
                     data.mockedCache.Verify(
                         x =>
@@ -113,7 +115,8 @@ public static class OperationsTests
                     Mock.Of<ILogger<Program>>()
                 )
             )
-            .Assert((data, _) =>
+            .Assert(
+                (data, _) =>
                 {
                     data.mockedCache.Verify(
                         x =>

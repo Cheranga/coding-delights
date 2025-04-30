@@ -27,10 +27,11 @@ public static class FunWithMaths
     [Fact(DisplayName = "Division by zero")]
     public static async Task DivisionByZeroBunsen() =>
         // ReSharper disable once IntDivisionByZero
-        await 1.Arrange()
+        await 1
+            .Arrange()
             .Act(x => x / 0)
             .Throw<DivideByZeroException>()
-            .Assert(exception =>exception.Message == "Attempted to divide by zero.");
+            .Assert(exception => exception.Message == "Attempted to divide by zero.");
 
     [Fact(DisplayName = "Division by zero")]
     public static void DivisionByZero()
