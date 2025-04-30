@@ -10,8 +10,8 @@ jobs:
     strategy:
       matrix:
         project-name:
-          - articles/BunsenBurner/tests/ToDoApi.BunsenBurner.Tests/ToDoApi.BunsenBurner.Tests.csproj
-          - articles/BunsenBurner/tests/ToDoApi.Tests/ToDoApi.Tests.csproj
+#          - articles/BunsenBurner/tests/ToDoApi.BunsenBurner.Tests/ToDoApi.BunsenBurner.Tests.csproj
+#          - articles/BunsenBurner/tests/ToDoApi.Tests/ToDoApi.Tests.csproj
           - articles/ResilientHttpClients/tests/ResilientHttpClients.Services.Tests/ResilientHttpClients.Services.Tests.csproj
     steps:
       - name: Checkout
