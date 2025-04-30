@@ -3,3 +3,6 @@
 [*.cs]
 # Use Task.ConfigureAwait
 dotnet_diagnostic.MA0004.severity = none
+
+# Method is too long (64 lines; maximum allowed: 60)
+dotnet_diagnostic.MA0051.severity = none
