@@ -5,11 +5,6 @@ using ResilientHttpClients.Services.Models;
 
 namespace ResilientHttpClients.Services;
 
-public interface IBankAccountService
-{
-    Task<ListBankAccountsResponse> ListBankAccountsAsync(CancellationToken token);
-}
-
 internal sealed class BankAccountService(
     HttpClient client,
     ResiliencePipelineProvider<string> pipelineProvider,
