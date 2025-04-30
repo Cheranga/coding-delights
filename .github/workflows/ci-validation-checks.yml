@@ -7,12 +7,12 @@ jobs:
   checklist:
     name: Checklist
     runs-on: ubuntu-latest
-    strategy: 
-        matrix:
-            project-name:
-            - articles/BunsenBurner/tests/ToDoApi.BunsenBurner.Tests/ToDoApi.BunsenBurner.Tests.csproj
-            - articles/BunsenBurner/tests/ToDoApi.Tests/ToDoApi.Tests.csproj
-            - articles/ResilientHttpClients/tests/ResilientHttpClients.Services.Tests/ResilientHttpClients.Services.Tests.csproj
+    strategy:
+      matrix:
+        project-name:
+          - articles/BunsenBurner/tests/ToDoApi.BunsenBurner.Tests/ToDoApi.BunsenBurner.Tests.csproj
+          - articles/BunsenBurner/tests/ToDoApi.Tests/ToDoApi.Tests.csproj
+          - articles/ResilientHttpClients/tests/ResilientHttpClients.Services.Tests/ResilientHttpClients.Services.Tests.csproj
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,29 +28,35 @@ jobs:
 
       - name: Check C# Code Formatting
         run: dotnet csharpier . --check
-        
+
       - name: Restore Dependencies
         run: dotnet restore ${{matrix.project-name}}
 
       - name: Build Project
         run: dotnet build --configuration Release --no-restore ${{matrix.project-name}}
-        
-#      - name: Test
-#        run: dotnet test --no-restore --verbosity normal --logger "trx;LogFileName=test-results.trx" ${{matrix.project-name}}
 
       - name: Test with coverage
         run: |
-          # Run tests for all projects with coverage
-          dotnet test --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory TestResults
-          
+          # Run tests with coverage for the current matrix project
+          dotnet test ${{matrix.project-name}} \
+            --collect:"XPlat Code Coverage" \
+            --settings coverlet.runsettings \
+            --results-directory TestResults \
+            --no-build \
+            --logger trx
+      
+      # This step runs after all matrix jobs complete
+      - name: Merge coverage reports
+        if: success() || failure()  # Run even if previous steps failed
+        run: |
           # Install reportgenerator if not already present
           dotnet tool install -g dotnet-reportgenerator-globaltool
           
           # Merge all coverage files and generate combined report
-          reportgenerator `
-            -reports:./**/coverage.cobertura.xml `
-            -targetdir:./CombinedCoverageReport `
-            -reporttypes:"Cobertura" `
+          reportgenerator \
+            -reports:./**/coverage.cobertura.xml \
+            -targetdir:./CombinedCoverageReport \
+            -reporttypes:"Cobertura" \
             -sourcedirs:${{ github.workspace }}
 
       - name: Check combined coverage
@@ -58,4 +64,4 @@ jobs:
         with:
           reports: 'CombinedCoverageReport/Cobertura.xml'
           reporttypes: 'HtmlInline'
-          coverageThreshold: '80'  # Overall solution threshold
+          coverageThreshold: '80'
