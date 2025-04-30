@@ -18,6 +18,7 @@
         <PackageVersion Include="AutoBogus" Version="2.13.1" />
         <PackageVersion Include="BunsenBurner" Version="7.0.2" />
         <PackageVersion Include="coverlet.collector" Version="6.0.4"/>
+        <PackageVersion Include="coverlet.msbuild" Version="6.0.4"/>
         <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.4" />
         <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0"/>
         <PackageVersion Include="Moq" Version="4.20.72" />

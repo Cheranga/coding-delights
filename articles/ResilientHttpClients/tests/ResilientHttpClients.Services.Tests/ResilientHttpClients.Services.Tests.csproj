@@ -19,6 +19,7 @@
         <PackageReference Include="AutoBogus"/>
         <PackageReference Include="BunsenBurner"/>
         <PackageReference Include="coverlet.collector"/>
+        <PackageReference Include="coverlet.msbuild"/>
         <PackageReference Include="Microsoft.Extensions.Hosting"/>
         <PackageReference Include="Microsoft.Extensions.Http.Resilience"/>
         <PackageReference Include="Microsoft.NET.Test.Sdk"/>
