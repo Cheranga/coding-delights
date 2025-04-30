@@ -8,9 +8,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.9.1"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.4"/>
-        <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1"/>
+        <PackageReference Include="FluentValidation.DependencyInjectionExtensions"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory"/>
+        <PackageReference Include="Microsoft.Extensions.Caching.Memory"/>
     </ItemGroup>
 
     <ItemGroup>

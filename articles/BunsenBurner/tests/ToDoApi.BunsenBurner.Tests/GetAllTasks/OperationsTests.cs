@@ -1,12 +1,11 @@
-﻿using AutoFixture;
-using FluentAssertions;
+﻿using AutoBogus;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
 using ToDo.Api.Features.GetAll;
 using ToDo.Api.Infrastructure.DataAccess;
-using static BunsenBurner.Aaa;
+using static BunsenBurner.ArrangeActAssert;
 
 namespace ToDoApi.BunsenBurner.Tests.GetAllTasks;
 
@@ -32,8 +31,7 @@ public static class OperationsTests
                     Mock.Of<ILogger<Program>>()
                 )
             )
-            .Assert(
-                (data, _) =>
+            .Assert((data, _) =>
                 {
                     data.mockedCache.Verify(
                         x =>
@@ -47,10 +45,7 @@ public static class OperationsTests
                     );
                 }
             )
-            .And(response =>
-            {
-                response.Result.Should().BeOfType<NoContent>();
-            });
+            .And(response => response.Result.GetType() == typeof(NoContent));
 
     [Fact(DisplayName = "When tasks are available, it will be cached")]
     public static async Task TasksAreAvailableAndWillBeCached() =>
@@ -58,7 +53,7 @@ public static class OperationsTests
             {
                 var mockedCache = new Mock<IDistributedCache>();
 
-                var tasks = new Fixture().CreateMany<TodoDataModel>().ToList();
+                var tasks = new AutoFaker<TodoDataModel>().Generate(3);
                 var mockedQueryHandler = new Mock<IQueryHandler<SearchAllQuery, List<TodoDataModel>>>();
                 mockedQueryHandler
                     .Setup(x => x.QueryAsync(It.IsAny<SearchAllQuery>(), It.IsAny<CancellationToken>()))
@@ -73,8 +68,7 @@ public static class OperationsTests
                     Mock.Of<ILogger<Program>>()
                 )
             )
-            .Assert(
-                (data, _) =>
+            .Assert((data, _) =>
                 {
                     data.mockedCache.Verify(
                         x =>
@@ -95,8 +89,8 @@ public static class OperationsTests
                     Ok<TodoListResponse> r => r.Value,
                     _ => null,
                 };
-                todoListResponse!.Tasks.Should().NotBeNull();
-                todoListResponse.Tasks.Count.Should().Be(3);
+                Assert.NotNull(todoListResponse!.Tasks);
+                Assert.Equal(3, todoListResponse.Tasks.Count);
             });
 
     [Fact(DisplayName = "If error occurs when getting tasks from database, then must return problem response")]
@@ -119,8 +113,7 @@ public static class OperationsTests
                     Mock.Of<ILogger<Program>>()
                 )
             )
-            .Assert(
-                (data, _) =>
+            .Assert((data, _) =>
                 {
                     data.mockedCache.Verify(
                         x =>
@@ -142,6 +135,6 @@ public static class OperationsTests
                     _ => null,
                 };
 
-                problemDetails!.Detail.Should().Be("error occurred when getting all tasks");
+                Assert.Equal("error occurred when getting all tasks", problemDetails!.Detail);
             });
 }

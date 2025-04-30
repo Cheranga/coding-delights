@@ -1,11 +1,11 @@
-﻿using AutoFixture;
-using FluentAssertions;
+﻿using AutoBogus;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using ToDo.Api.Features.SearchById;
 using ToDo.Api.Infrastructure.DataAccess;
-using static BunsenBurner.Aaa;
+using static BunsenBurner.ArrangeActAssert;
 
 namespace ToDoApi.BunsenBurner.Tests.SearchById;
 
@@ -26,10 +26,7 @@ public static class OperationsTests
             .Act(async qh =>
                 await Operations.ExecuteAsync(qh.Object, Mock.Of<ILogger<Program>>(), "666", It.IsAny<CancellationToken>())
             )
-            .Assert(response =>
-            {
-                response.Result.Should().BeOfType<NoContent>();
-            });
+            .Assert(response => response.Result.GetType() == typeof(NoContent));
 
     [Fact(DisplayName = "Task is available for the requested task id")]
     public static async Task TaskIsAvailable() =>
@@ -38,7 +35,7 @@ public static class OperationsTests
                 var mockedQueryHandler = new Mock<IQueryHandler<SearchByIdQuery, TodoDataModel>>();
                 mockedQueryHandler
                     .Setup(x => x.QueryAsync(It.IsAny<SearchByIdQuery>(), It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(new Fixture().Create<TodoDataModel>());
+                    .ReturnsAsync(new AutoFaker<TodoDataModel>().Generate());
 
                 return mockedQueryHandler;
             })
@@ -52,7 +49,7 @@ public static class OperationsTests
                     Ok<TodoResponse> r => r.Value,
                     _ => null,
                 };
-                todoResponse.Should().NotBeNull();
+                Assert.NotNull(todoResponse);
             });
 
     [Fact(DisplayName = "When searching for task by id, an error occurs")]
@@ -76,6 +73,6 @@ public static class OperationsTests
                     ProblemHttpResult p => p.ProblemDetails,
                     _ => null,
                 };
-                problemDetails!.Detail.Should().Be("error occurred when searching task by id");
+                Assert.Equal("error occurred when searching task by id", problemDetails!.Detail);
             });
 }

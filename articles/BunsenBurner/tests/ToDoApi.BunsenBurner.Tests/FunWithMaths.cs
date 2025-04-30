@@ -1,4 +1,4 @@
-﻿using static BunsenBurner.Aaa;
+﻿using static BunsenBurner.ArrangeActAssert;
 
 namespace ToDoApi.BunsenBurner.Tests;
 
@@ -27,14 +27,10 @@ public static class FunWithMaths
     [Fact(DisplayName = "Division by zero")]
     public static async Task DivisionByZeroBunsen() =>
         // ReSharper disable once IntDivisionByZero
-        await 1
-            .ArrangeData()
+        await 1.Arrange()
             .Act(x => x / 0)
-            .AssertFailsWith(exception =>
-            {
-                Assert.IsType<DivideByZeroException>(exception);
-            })
-            .And(exception => exception.Message == "Attempted to divide by zero.");
+            .Throw<DivideByZeroException>()
+            .Assert(exception =>exception.Message == "Attempted to divide by zero.");
 
     [Fact(DisplayName = "Division by zero")]
     public static void DivisionByZero()
