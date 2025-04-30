@@ -11,7 +11,6 @@
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
         <PackageReference Include="FluentValidation.DependencyInjectionExtensions"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory"/>
-        <PackageReference Include="Microsoft.Extensions.Caching.Memory"/>
     </ItemGroup>
 
     <ItemGroup>
