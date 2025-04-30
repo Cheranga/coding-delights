@@ -35,5 +35,27 @@ jobs:
       - name: Build Project
         run: dotnet build --configuration Release --no-restore ${{matrix.project-name}}
         
-      - name: Test
-        run: dotnet test --no-restore --verbosity normal --logger "trx;LogFileName=test-results.trx" ${{matrix.project-name}}
+#      - name: Test
+#        run: dotnet test --no-restore --verbosity normal --logger "trx;LogFileName=test-results.trx" ${{matrix.project-name}}
+
+      - name: Test with coverage
+        run: |
+          # Run tests for all projects with coverage
+          dotnet test --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory TestResults
+          
+          # Install reportgenerator if not already present
+          dotnet tool install -g dotnet-reportgenerator-globaltool
+          
+          # Merge all coverage files and generate combined report
+          reportgenerator `
+            -reports:./**/coverage.cobertura.xml `
+            -targetdir:./CombinedCoverageReport `
+            -reporttypes:"Cobertura" `
+            -sourcedirs:${{ github.workspace }}
+
+      - name: Check combined coverage
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.1.10
+        with:
+          reports: 'CombinedCoverageReport/Cobertura.xml'
+          reporttypes: 'HtmlInline'
+          coverageThreshold: '80'  # Overall solution threshold
