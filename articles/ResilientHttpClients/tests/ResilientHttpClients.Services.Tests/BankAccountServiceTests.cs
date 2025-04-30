@@ -102,7 +102,9 @@ public partial class BankAccountServiceTests
                     //
                     // This fails, commenting for the article's purpose
                     //
+#pragma warning disable S125
                     // Assert.Equal("Bearer new-token", capturedRequests[1].Headers?["Authorization"].ToString());
+#pragma warning restore S125
                 }
             );
     }

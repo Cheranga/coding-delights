@@ -6,7 +6,7 @@ using WireMock.Server;
 
 namespace ResilientHttpClients.Services.Tests;
 
-public class TokenHeaderMiddlewareTests : IDisposable
+public sealed class TokenHeaderMiddlewareTests : IDisposable
 {
     private readonly WireMockServer _wireMockServer = WireMockServer.Start();
     private const string Token = nameof(Token);

@@ -22,7 +22,7 @@ internal sealed class CustomResponseProvider : IResponseProvider
 
     public IReadOnlyList<IRequestMessage> CapturedRequests => _capturedRequests;
 
-    public async Task<(IResponseMessage Message, IMapping? Mapping)> ProvideResponseAsync(
+    public Task<(IResponseMessage Message, IMapping? Mapping)> ProvideResponseAsync(
         IMapping mapping,
         IRequestMessage requestMessage,
         WireMockServerSettings settings
@@ -31,7 +31,7 @@ internal sealed class CustomResponseProvider : IResponseProvider
         if (_responses.TryDequeue(out var responseFunc))
         {
             _capturedRequests.Add(requestMessage);
-            return await responseFunc().ProvideResponseAsync(mapping, requestMessage, settings);
+            return responseFunc().ProvideResponseAsync(mapping, requestMessage, settings);
         }
 
         throw new Exception("No response queued");
