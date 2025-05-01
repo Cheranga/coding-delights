@@ -2,7 +2,7 @@
 
 namespace OrderProcessorFuncApp.Features;
 
-internal sealed class CreateOrderRequestDtoValidator : AbstractValidator<CreateOrderRequestDto>
+public sealed class CreateOrderRequestDtoValidator : AbstractValidator<CreateOrderRequestDto>
 {
     public CreateOrderRequestDtoValidator()
     {

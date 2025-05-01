@@ -31,6 +31,7 @@ public class CreateOrderFunction(
                 ErrorCodes.InvalidCreateOrderRequest,
                 ErrorMessages.InvalidCreateOrderRequest,
                 HttpStatusCode.BadRequest,
+                serializerOptions,
                 token
             );
         }

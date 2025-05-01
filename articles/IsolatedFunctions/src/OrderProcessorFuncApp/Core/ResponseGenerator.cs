@@ -12,13 +12,14 @@ internal static class ResponseGenerator
         string errorCode,
         string errorMessage,
         HttpStatusCode statusCode,
+        JsonSerializerOptions serializerOptions,
         CancellationToken token
     )
     {
         var httpResponse = request.CreateResponse(statusCode);
         httpResponse.Headers.Add("Content-Type", "application/json");
         var errorResponse = new { ErrorCode = errorCode, ErrorMessage = errorMessage };
-        await httpResponse.WriteAsJsonAsync(errorResponse, token);
+        await JsonSerializer.SerializeAsync(httpResponse.Body, errorResponse, serializerOptions, token);
         return new OrderAcceptedResponse { HttpResponse = httpResponse };
     }
 

@@ -94,7 +94,7 @@ internal sealed class TestHttpResponseData : HttpResponseData
         : base(functionContext) { }
 
     public override HttpStatusCode StatusCode { get; set; }
-    public override HttpHeadersCollection Headers { get; set; }
-    public override Stream Body { get; set; }
+    public override HttpHeadersCollection Headers { get; set; } = new();
+    public override Stream Body { get; set; } = new MemoryStream();
     public override HttpCookies Cookies { get; }
 }

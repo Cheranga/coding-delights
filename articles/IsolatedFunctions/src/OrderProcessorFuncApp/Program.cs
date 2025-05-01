@@ -24,6 +24,14 @@ var host = new HostBuilder()
     })
     .ConfigureServices(services =>
     {
+        services.AddSingleton(
+            new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = false,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            }
+        );
         services.AddValidatorsFromAssembly(typeof(Program).Assembly);
         services.AddApplicationInsightsTelemetryWorkerService();
         services.ConfigureFunctionsApplicationInsights();
