@@ -1,11 +1,8 @@
 using System.Net;
-using System.Net.Http.Json;
-using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AutoBogus;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using OrderProcessorFuncApp.Features;
@@ -14,7 +11,7 @@ namespace OrderProcessorFuncApp.Tests;
 
 public class CreateOrderFunctionTests
 {
-    private JsonSerializerOptions _defaultSerializerOptions;
+    private readonly JsonSerializerOptions _defaultSerializerOptions;
 
     public CreateOrderFunctionTests()
     {
@@ -63,38 +60,4 @@ public class CreateOrderFunctionTests
         Assert.NotNull(response.HttpResponse);
         Assert.Equal(HttpStatusCode.BadRequest, response.HttpResponse.StatusCode);
     }
-}
-
-internal sealed class TestHttpRequestData<TRequestData> : HttpRequestData
-    where TRequestData : class
-{
-    private readonly HttpResponseData _response;
-    private readonly HttpRequestMessage _httpRequestMessage;
-
-    public TestHttpRequestData(FunctionContext functionContext, TRequestData requestData)
-        : base(functionContext)
-    {
-        _httpRequestMessage = new HttpRequestMessage() { Content = JsonContent.Create(requestData) };
-        _response = new TestHttpResponseData(functionContext);
-    }
-
-    public override HttpResponseData CreateResponse() => _response;
-
-    public override Stream Body => _httpRequestMessage.Content!.ReadAsStream();
-    public override HttpHeadersCollection Headers { get; }
-    public override IReadOnlyCollection<IHttpCookie> Cookies { get; }
-    public override Uri Url { get; }
-    public override IEnumerable<ClaimsIdentity> Identities { get; }
-    public override string Method { get; }
-}
-
-internal sealed class TestHttpResponseData : HttpResponseData
-{
-    public TestHttpResponseData(FunctionContext functionContext)
-        : base(functionContext) { }
-
-    public override HttpStatusCode StatusCode { get; set; }
-    public override HttpHeadersCollection Headers { get; set; } = new();
-    public override Stream Body { get; set; } = new MemoryStream();
-    public override HttpCookies Cookies { get; }
 }
