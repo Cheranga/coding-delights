@@ -1,21 +1,38 @@
 ﻿using System.Net;
+using System.Text.Json;
 using Microsoft.Azure.Functions.Worker.Http;
+using OrderProcessorFuncApp.Features;
 
 namespace OrderProcessorFuncApp.Core;
 
 internal static class ResponseGenerator
 {
-    public static async Task<HttpResponseData> CreateErrorResponse(
+    public static async Task<OrderAcceptedResponse> CreateErrorResponse(
         this HttpRequestData request,
         string errorCode,
         string errorMessage,
-        HttpStatusCode statusCode
+        HttpStatusCode statusCode,
+        CancellationToken token
     )
     {
-        var response = request.CreateResponse(statusCode);
-        response.Headers.Add("Content-Type", "application/json");
+        var httpResponse = request.CreateResponse(statusCode);
+        httpResponse.Headers.Add("Content-Type", "application/json");
         var errorResponse = new { ErrorCode = errorCode, ErrorMessage = errorMessage };
-        await response.WriteAsJsonAsync(errorResponse);
-        return response;
+        await httpResponse.WriteAsJsonAsync(errorResponse, token);
+        return new OrderAcceptedResponse { HttpResponse = httpResponse };
+    }
+
+    public static async Task<OrderAcceptedResponse> CreateSuccessResponse(
+        this HttpRequestData request,
+        HttpStatusCode statusCode,
+        OrderAcceptedData orderAcceptedData,
+        JsonSerializerOptions serializerOptions,
+        CancellationToken token
+    )
+    {
+        var httpResponse = request.CreateResponse(statusCode);
+        httpResponse.Headers.Add("Content-Type", "application/json");
+        await JsonSerializer.SerializeAsync(httpResponse.Body, orderAcceptedData, serializerOptions, token);
+        return new OrderAcceptedResponse { HttpResponse = httpResponse };
     }
 }
