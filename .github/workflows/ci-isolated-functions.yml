@@ -7,13 +7,35 @@ on:
       - 'articles/IsolatedFunctions/**'
       - '.github/**'
 
+
 jobs:
   ci_validations:
-    name: Build, Test and Lint
-    uses: ./.github/workflows/restore-and-build.yml
-    with:
-      project-path: ./articles/IsolatedFunctions/src/OrderProcessorFuncApp/OrderProcessorFuncApp.csproj
-      dotnet-version: '8.0.x'
+    name: Restore, Build, and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+
+      - name: Restore .NET Tools
+        run: dotnet tool restore
+
+      - name: Check C# Code Formatting
+        run: dotnet csharpier . --check
+
+      - name: Restore Dependencies
+        run: dotnet restore articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Tests/OrderProcessorFuncApp.Tests.csproj
+
+      - name: Build Project
+        run: dotnet build --configuration Release --no-restore articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Tests/OrderProcessorFuncApp.Tests.csproj
+
+      - name: Test
+        run: dotnet test --no-restore --verbosity normal --logger "trx;LogFileName=test-results.trx" articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Tests/OrderProcessorFuncApp.Tests.csproj
   
   generate_version_number:
     name: Generate Version Number
