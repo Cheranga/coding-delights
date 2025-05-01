@@ -47,9 +47,7 @@ public static class OperationsTests
         await Arrange(() =>
             {
                 var commandHandler = new Mock<ICommandHandler<CreateToDoCommand>>();
-                commandHandler
-                    .Setup(x => x.ExecuteAsync(It.IsAny<CreateToDoCommand>(), It.IsAny<CancellationToken>()))
-                    .ReturnsAsync("666");
+                commandHandler.Setup(x => x.ExecuteAsync(It.IsAny<CreateToDoCommand>(), It.IsAny<CancellationToken>())).ReturnsAsync("666");
 
                 var logger = new Mock<ILogger<Program>>();
 

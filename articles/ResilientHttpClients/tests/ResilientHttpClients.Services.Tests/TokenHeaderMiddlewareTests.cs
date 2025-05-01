@@ -31,9 +31,7 @@ public sealed class TokenHeaderMiddlewareTests : IDisposable
                 services.AddDistributedMemoryCache();
                 services.AddSingleton<TokenHeaderMiddleware>();
 
-                services
-                    .AddHttpClient<ITokenService, TokenService>()
-                    .ConfigureHttpClient(client => client.BaseAddress = new Uri(data));
+                services.AddHttpClient<ITokenService, TokenService>().ConfigureHttpClient(client => client.BaseAddress = new Uri(data));
 
                 services
                     .AddHttpClient(

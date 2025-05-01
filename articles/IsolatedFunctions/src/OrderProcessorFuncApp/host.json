@@ -4,6 +4,11 @@
     "logLevel": {
       "default": "Warning",
       "Function": "Information"
+    },
+    "extensions": {
+      "http": {
+        "routePrefix": "api"
+      }
     }
   }
 }

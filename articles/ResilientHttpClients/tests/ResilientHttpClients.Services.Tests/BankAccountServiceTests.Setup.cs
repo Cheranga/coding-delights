@@ -45,9 +45,7 @@ public partial class BankAccountServiceTests(WiremockFixture wiremockFixture) : 
         var services = new ServiceCollection();
         services.AddDistributedMemoryCache();
         services.AddSingleton(
-            Mock.Of<IOptionsMonitor<TokenSettings>>(builder =>
-                builder.CurrentValue == new TokenSettings { TokenExpirationMinutes = 60 }
-            )
+            Mock.Of<IOptionsMonitor<TokenSettings>>(builder => builder.CurrentValue == new TokenSettings { TokenExpirationMinutes = 60 })
         );
 
         services.AddResiliencePipeline<string, HttpResponseMessage>(
@@ -75,9 +73,7 @@ public partial class BankAccountServiceTests(WiremockFixture wiremockFixture) : 
             }
         );
 
-        services
-            .AddHttpClient<ITokenService, TokenService>()
-            .ConfigureHttpClient(builder => builder.BaseAddress = new Uri(baseUrl));
+        services.AddHttpClient<ITokenService, TokenService>().ConfigureHttpClient(builder => builder.BaseAddress = new Uri(baseUrl));
 
         services.AddSingleton<TokenHeaderMiddleware>();
 
@@ -94,14 +90,10 @@ public partial class BankAccountServiceTests(WiremockFixture wiremockFixture) : 
         var services = new ServiceCollection();
         services.AddDistributedMemoryCache();
         services.AddSingleton(
-            Mock.Of<IOptionsMonitor<TokenSettings>>(builder =>
-                builder.CurrentValue == new TokenSettings { TokenExpirationMinutes = 60 }
-            )
+            Mock.Of<IOptionsMonitor<TokenSettings>>(builder => builder.CurrentValue == new TokenSettings { TokenExpirationMinutes = 60 })
         );
 
-        services
-            .AddHttpClient<ITokenService, TokenService>()
-            .ConfigureHttpClient(builder => builder.BaseAddress = new Uri(baseUrl));
+        services.AddHttpClient<ITokenService, TokenService>().ConfigureHttpClient(builder => builder.BaseAddress = new Uri(baseUrl));
 
         services.AddSingleton<TokenHeaderMiddleware>();
 
