@@ -29,5 +29,13 @@
 
         <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0"/>
         <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.4"/>
+        
+<!--        Azure Functions-->
+        <PackageVersion Include="Microsoft.Azure.Functions.Worker" Version="2.0.0" />
+        <PackageVersion Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.2" />
+        <PackageVersion Include="Microsoft.Azure.Functions.Worker.Sdk.Analyzers" Version="1.2.2" />
+        <PackageVersion Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.3.0" />
+        <PackageVersion Include="Microsoft.ApplicationInsights.WorkerService" Version="2.23.0" />
+        <PackageVersion Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="2.0.0" />
     </ItemGroup>
 </Project>

@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <AzureFunctionsVersion>v4</AzureFunctionsVersion>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <WarningsAsErrors>true</WarningsAsErrors>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AsyncFixer"/>
+        <PackageReference Include="Meziantou.Analyzer"/>
+        <PackageReference Include="Roslynator.Analyzers"/>
+        <PackageReference Include="SonarAnalyzer.CSharp"/>
+
+        <PackageReference Include="Microsoft.Azure.Functions.Worker"/>
+        <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk"/>
+        <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk.Analyzers"/>
+        <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http"/>
+        <PackageReference Include="Microsoft.ApplicationInsights.WorkerService"/>
+        <PackageReference Include="Microsoft.Azure.Functions.Worker.ApplicationInsights"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="host.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="local.settings.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Features\" />
+    </ItemGroup>
+</Project>
