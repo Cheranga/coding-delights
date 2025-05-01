@@ -1,4 +1,4 @@
-﻿namespace OrderProcessorFuncApp;
+﻿namespace OrderProcessorFuncApp.Core;
 
 internal static class ErrorMessages
 {

@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using Microsoft.Azure.Functions.Worker.Http;
 
-namespace OrderProcessorFuncApp;
+namespace OrderProcessorFuncApp.Core;
 
 internal static class ResponseGenerator
 {
