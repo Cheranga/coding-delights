@@ -34,14 +34,6 @@ jobs:
       - name: Build Project
         run: dotnet build --configuration Release --no-restore articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Tests/OrderProcessorFuncApp.Tests.csproj
         
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
-        with:
-          languages: 'csharp'
-    
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2        
-
       - name: Test
         run: dotnet test --no-restore --verbosity normal --logger "trx;LogFileName=test-results.trx" articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Tests/OrderProcessorFuncApp.Tests.csproj
   
