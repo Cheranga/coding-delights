@@ -1,0 +1,63 @@
+name: Provision Resources
+
+on:
+  workflow_call:
+    inputs:
+      applicationName:
+        type: string
+        required: true
+        description: Application name
+        
+      environment:
+        type: string
+        required: true
+        description: Environment name
+      
+      location:
+        type: string
+        required: true
+        description: Resource group location
+      
+      versionNumber:
+        type: string
+        required: true
+        description: Version number to track deployments
+        
+    secrets:
+      subscriptionId:
+        required: true
+        description: Azure subscription id
+      credentials:
+        required: true
+        description: Azure service principal details used to provision Azure resources
+        
+jobs:
+  provisioning:
+    name: Provisioning
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:      
+      - name: Download deployment artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: deploy
+          path: deploy
+          
+      - name: Download Application Binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.versionNumber }}
+          path: ${{ inputs.versionNumber }}
+          
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.credentials }}
+          
+      - name: Logout from Azure
+        uses: azure/cli@v2
+        with:
+          inlineScript:
+            az logout                  
+            
+            

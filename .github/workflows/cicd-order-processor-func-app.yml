@@ -39,4 +39,19 @@ jobs:
     with:
         project-path: articles/IsolatedFunctions/src/OrderProcessorFuncApp/OrderProcessorFuncApp.csproj
         deploy-templates-path: ./.github/bicep-order-processor-func-app
-        versionNumber: ${{ needs.generate_version_number.outputs.VersionNumber }}      
+        versionNumber: ${{ needs.generate_version_number.outputs.VersionNumber }}   
+          
+  DEV:
+    name: DEV
+    needs:
+      - generate_version_number
+      - build_and_publish
+    uses: ./.github/workflows/deploy.yml
+    with:
+      applicationName: funky-opf
+      location: australiasoutheast
+      versionNumber: ${{ needs.generate_version_number.outputs.VersionNumber }}
+      environment: DEV
+    secrets:
+      credentials: ${{ secrets.AZURE_CREDENTIALS }}
+      subscriptionId: ${{ secrets.SUBSCRIPTION_ID }}          
