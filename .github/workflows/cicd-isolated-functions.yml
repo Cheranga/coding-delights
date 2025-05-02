@@ -1,0 +1,16 @@
+﻿name: Create Release for PR
+concurrency: Create Release for PR
+
+on:
+  push:
+    paths:
+      - 'articles/IsolatedFunctions/**'
+      - '.github/**'
+
+
+jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci-isolated-functions.yml
+    with:
+      project-path: articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Tests/OrderProcessorFuncApp.Tests.csproj
