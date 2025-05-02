@@ -27,15 +27,6 @@ jobs:
           dotnet tool restore && \
           dotnet husky install && \
           dotnet husky run -g "lint"
-      
-#      - name: Restore .NET Tools
-#        run: dotnet tool restore
-#      
-#      - name: Install Husky
-#        run: dotnet husky install        
-#
-#      - name: Check C# Code Formatting
-#        run: dotnet husky run -g "lint"
 
       - name: Restore Dependencies
         run: dotnet restore articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Tests/OrderProcessorFuncApp.Tests.csproj
@@ -43,8 +34,27 @@ jobs:
       - name: Build Project
         run: dotnet build --configuration Release --no-restore articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Tests/OrderProcessorFuncApp.Tests.csproj
 
-      - name: Test
-        run: dotnet test --no-restore --verbosity normal --logger "trx;LogFileName=test-results.trx" articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Tests/OrderProcessorFuncApp.Tests.csproj
+      - name: Test with Coverage
+        run: dotnet test --no-restore --verbosity normal
+          --logger "trx;LogFileName=test-results.trx"
+          --collect:"XPlat Code Coverage"
+          /p:CollectCoverage=true
+          /p:CoverletOutputFormat=cobertura
+          /p:CoverletOutput=./TestResults/Coverage/
+          /p:Threshold=80
+          articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Tests/OrderProcessorFuncApp.Tests.csproj
+
+      - name: Check Code Coverage
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Tests/TestResults/Coverage/coverage.cobertura.xml
+          badge: true
+          format: markdown
+          output: both
+          thresholds: '80 90'
+
+#      - name: Test
+#        run: dotnet test --no-restore --verbosity normal --logger "trx;LogFileName=test-results.trx" articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Tests/OrderProcessorFuncApp.Tests.csproj
   
   generate_version_number:
     name: Generate Version Number
