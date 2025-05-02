@@ -1,4 +1,4 @@
-name: CI Validations
+name: Articles Validation Checks
 
 on:
   workflow_call:
@@ -24,11 +24,11 @@ jobs:
           dotnet-version: |
             8.0.x
 
-      - name: Restore .NET Tools
-        run: dotnet tool restore
-
-      - name: Check C# Code Formatting
-        run: dotnet csharpier . --check
+      - name: Install DotNet Tools and Run Husky
+        run: |
+          dotnet tool restore && \
+          dotnet husky install && \
+          dotnet husky run -g "lint"
         
       - name: Restore Dependencies
         run: dotnet restore ${{matrix.project-name}}

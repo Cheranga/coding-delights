@@ -1,4 +1,4 @@
-﻿name: CI Isolated Functions
+﻿name: CI Application
 
 on:
   workflow_call:

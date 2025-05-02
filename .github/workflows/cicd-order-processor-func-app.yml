@@ -1,5 +1,5 @@
-﻿name: Create Release for PR
-concurrency: Create Release for PR
+﻿name: Order Processor Func App Create Release for PR
+concurrency: Order Processor Func App Create Release for PR
 
 on:
   push:
@@ -12,8 +12,8 @@ permissions:
 
 jobs:
   ci:
-    name: CI
-    uses: ./.github/workflows/ci-isolated-functions.yml
+    name: CI Order Processor
+    uses: ./.github/workflows/ci-application.yml
     with:
       project-path: articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Tests/OrderProcessorFuncApp.Tests.csproj
       
@@ -38,4 +38,5 @@ jobs:
     uses: ./.github/workflows/build-and-publish-artifacts.yml
     with:
         project-path: articles/IsolatedFunctions/src/OrderProcessorFuncApp/OrderProcessorFuncApp.csproj
+        deploy-templates-path: ./.github/bicep-order-processor-func-app
         versionNumber: ${{ needs.generate_version_number.outputs.VersionNumber }}      

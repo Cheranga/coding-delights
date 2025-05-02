@@ -7,6 +7,10 @@ on:
         type: string
         required: true
         description: Path to the csproj file
+      deploy-templates-path:
+        type: string
+        required: true
+        description: Path to the deployment templates
       versionNumber:
         type: string
         required: true
@@ -33,7 +37,7 @@ jobs:
         shell: bash
         run: dotnet publish -c Release --no-build ${{ inputs.project-path }} -o ${{ inputs.versionNumber }}
 
-      - name: Publish Artifact - Function App
+      - name: Publish Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.versionNumber }}
@@ -44,5 +48,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: deploy
-          path: ./.github/bicep
+          path: ${{ inputs.deploy-templates-path }}
           if-no-files-found: error
