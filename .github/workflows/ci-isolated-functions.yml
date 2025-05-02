@@ -24,6 +24,9 @@ jobs:
 
       - name: Restore .NET Tools
         run: dotnet tool restore
+      
+      - name: Install Husky
+        run: dotnet husky install        
 
       - name: Check C# Code Formatting
         run: dotnet husky run -g "lint"
