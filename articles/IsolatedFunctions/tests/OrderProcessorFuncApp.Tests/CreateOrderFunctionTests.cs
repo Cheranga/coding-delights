@@ -56,8 +56,10 @@ public class CreateOrderFunctionTests
             _defaultSerializerOptions,
             Mock.Of<ILogger<CreateOrderFunction>>()
         );
-        var response = await function.Run(request, context.Object);
-        Assert.NotNull(response.HttpResponse);
+        var response = await function
+            .Run(request, context.Object);
+        Assert
+            .NotNull(response.HttpResponse);
         Assert.Equal(HttpStatusCode.BadRequest, response.HttpResponse.StatusCode);
     }
 }
