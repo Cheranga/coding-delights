@@ -22,14 +22,20 @@ jobs:
           dotnet-version: |
             8.0.x
 
-      - name: Restore .NET Tools
-        run: dotnet tool restore
+      - name: Install DotNet Tools and Run Husky
+        run: |
+          dotnet tool restore && \
+          dotnet husky install && \
+          dotnet husky run -g "lint"
       
-      - name: Install Husky
-        run: dotnet husky install        
-
-      - name: Check C# Code Formatting
-        run: dotnet husky run -g "lint"
+#      - name: Restore .NET Tools
+#        run: dotnet tool restore
+#      
+#      - name: Install Husky
+#        run: dotnet husky install        
+#
+#      - name: Check C# Code Formatting
+#        run: dotnet husky run -g "lint"
 
       - name: Restore Dependencies
         run: dotnet restore articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Tests/OrderProcessorFuncApp.Tests.csproj
