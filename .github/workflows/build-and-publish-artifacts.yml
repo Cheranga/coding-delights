@@ -32,7 +32,10 @@ jobs:
             
       - name: Restore Dependencies
         run: dotnet restore ${{ inputs.project-path }}
-        
+
+      - name: Build Project
+        run: dotnet build --configuration Release --no-restore ${{ inputs.project-path }}
+      
       - name: Create Artifact
         shell: bash
         run: dotnet publish -c Release --no-build ${{ inputs.project-path }} -o ${{ inputs.versionNumber }}
