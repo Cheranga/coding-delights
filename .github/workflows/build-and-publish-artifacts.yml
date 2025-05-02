@@ -24,7 +24,10 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
-            8.0.x
+            8.0.x     
+            
+      - name: Restore Dependencies
+        run: dotnet restore ${{ inputs.project-path }}
         
       - name: Create Artifact
         shell: bash
