@@ -7,6 +7,9 @@ on:
       - 'articles/**'     
       - '.github/**'
   workflow_dispatch:
+    
+permissions: 
+  contents: read
 
 jobs:  
   build:

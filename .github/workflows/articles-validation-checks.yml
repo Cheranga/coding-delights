@@ -2,6 +2,9 @@ name: Articles Validation Checks
 
 on:
   workflow_call:
+    
+permissions: 
+  contents: read
 
 jobs:
   checklist:

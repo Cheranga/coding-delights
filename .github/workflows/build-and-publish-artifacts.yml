@@ -15,6 +15,9 @@ on:
         type: string
         required: true
         description: Version number
+
+permissions:
+  contents: read
         
 jobs:
   build:
