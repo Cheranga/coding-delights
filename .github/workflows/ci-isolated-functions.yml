@@ -7,6 +7,9 @@ on:
         type: string
         required: true
         description: Path to the csproj file
+        
+permissions: 
+    contents: read
 
 jobs:
   ci_validations:
