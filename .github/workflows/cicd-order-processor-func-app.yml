@@ -20,8 +20,6 @@ jobs:
   generate_version_number:
     name: Generate Version Number
     runs-on: ubuntu-latest
-    needs:
-      - ci
     steps:
       - name: Build Version Number
         shell: bash
@@ -34,6 +32,7 @@ jobs:
   build_and_publish:
     name: Build and Publish
     needs:
+      - ci
       - generate_version_number
     uses: ./.github/workflows/build-and-publish-artifacts.yml
     with:
