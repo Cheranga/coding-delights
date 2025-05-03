@@ -21,6 +21,7 @@ var appSettings = {
   APPINSIGHTS_INSTRUMENTATIONKEY: '@Microsoft.KeyVault(SecretUri=${kv.properties.vaultUri}/secrets/appInsightsKey/)'
   FUNCTIONS_WORKER_RUNTIME: 'dotnet-isolated'
   FUNCTIONS_WORKER_RUNTIME_VERSION: '8.0'
+  WEBSITE_RUN_FROM_PACKAGE: '1'
   WEBSITE_TIME_ZONE: timeZone
   WEBSITE_ADD_SITENAME_BINDINGS_IN_APPHOST_CONFIG: '1'
   Source__Queue: 'sample-work'
