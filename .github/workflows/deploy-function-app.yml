@@ -47,7 +47,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.versionNumber }}
-          path: artifacts/${{ inputs.versionNumber }}
+          path: ${{ inputs.versionNumber }}
           
       - name: Login to Azure
         uses: azure/login@v2
@@ -69,26 +69,32 @@ jobs:
             environment=${{ inputs.environment }}
             location=${{ inputs.location }}
             
-      - name: Zip function output
-        run: |
-          cd artifacts/${{ inputs.versionNumber }}
-          zip -r ../functionapp.zip .
-          cd .. 
-          
-      - name: Verify zip file exists
-        run: |
-          if [ ! -f "artifacts/functionapp.zip" ]; then
-          echo "Error: functionapp.zip does not exist"
-          exit 1
-          fi          
+      - name: "Deploy Azure Function App"
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'cchat-fn-${{ inputs.applicationName }}-${{ inputs.environment }}'
+          package: ${{ inputs.versionNumber }}            
             
-      - name: Deploy via Zip
-        run: |
-          az functionapp deployment source config-zip \
-          --resource-group cchat-rg-${{ inputs.applicationName }}-${{ inputs.environment }} \
-          --name cchat-fn-${{ inputs.applicationName }}-${{ inputs.environment }} \
-          --src artifacts/functionapp.zip \
-          --timeout 600
+#      - name: Zip function output
+#        run: |
+#          cd artifacts/${{ inputs.versionNumber }}
+#          zip -r ../functionapp.zip .
+#          cd .. 
+#          
+#      - name: Verify zip file exists
+#        run: |
+#          if [ ! -f "artifacts/functionapp.zip" ]; then
+#          echo "Error: functionapp.zip does not exist"
+#          exit 1
+#          fi          
+#            
+#      - name: Deploy via Zip
+#        run: |
+#          az functionapp deployment source config-zip \
+#          --resource-group cchat-rg-${{ inputs.applicationName }}-${{ inputs.environment }} \
+#          --name cchat-fn-${{ inputs.applicationName }}-${{ inputs.environment }} \
+#          --src artifacts/functionapp.zip \
+#          --timeout 600
             
 #      - name: Deploy Function App Package
 #        uses: Azure/functions-action@v1
