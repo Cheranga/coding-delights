@@ -75,12 +75,18 @@ jobs:
 #          app-name: "cchat-fn-${{ inputs.applicationName }}-${{ inputs.environment }}"
 #          package: ${{ inputs.versionNumber }}
             
+      - name: Zip Published Output
+        run: |
+          cd ${{ inputs.versionNumber }}
+          zip -r ../functionapp.zip .
+          cd ..            
+            
       - name: "Deploy Azure Function App"
         uses: Azure/functions-action@v1
         id: deploy-to-function-app
         with:
           app-name: "cchat-fn-${{ inputs.applicationName }}-${{ inputs.environment }}"
-          package: ${{ inputs.versionNumber }}
+          package: functionapp.zip
       
       - name: Logout from Azure
         uses: azure/cli@v2
