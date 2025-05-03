@@ -18,7 +18,7 @@ var envType = {
     PROD: 'prod'
     } 
 
-var appNameWithEnvironment = '${appName}-${environment}'
+var appNameWithEnvironment = toLower('${appName}-${environment}')
 var rgName = 'cchat-rg-${appNameWithEnvironment}'
 var funcAppName = 'cchat-fn-${appNameWithEnvironment}'
 var sgName = take(replace('cchatsg${appNameWithEnvironment}', '-', ''), 24)
