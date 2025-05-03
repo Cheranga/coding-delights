@@ -47,7 +47,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.versionNumber }}
-          path: ${{ inputs.versionNumber }}
+          path: artifacts/${{ inputs.versionNumber }}
           
       - name: Login to Azure
         uses: azure/login@v2
@@ -71,7 +71,7 @@ jobs:
             
       - name: Zip function output
         run: |
-          cd ${{ inputs.versionNumber }}
+          cd artifacts/${{ inputs.versionNumber }}
           zip -r ../functionapp.zip .
           cd ..            
             
@@ -80,7 +80,8 @@ jobs:
           az functionapp deployment source config-zip \
           --resource-group cchat-rg-${{ inputs.applicationName }}-${{ inputs.environment }} \
           --name cchat-fn-${{ inputs.applicationName }}-${{ inputs.environment }} \
-          --src functionapp.zip            
+          --src functionapp.zip \
+          --timeout 600
             
 #      - name: Deploy Function App Package
 #        uses: Azure/functions-action@v1

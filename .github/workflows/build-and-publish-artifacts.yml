@@ -41,13 +41,15 @@ jobs:
       
       - name: Create Artifact
         shell: bash
-        run: dotnet publish -c Release --no-build ${{ inputs.project-path }} -o ${{ inputs.versionNumber }}
+        run: |
+          mkdir -p artifacts
+          dotnet publish -c Release --no-build ${{ inputs.project-path }} -o artifacts/${{ inputs.versionNumber }}
 
       - name: Publish Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.versionNumber }}
-          path: ${{ inputs.versionNumber }}/**
+          path: artifacts/${{ inputs.versionNumber }}/**
           if-no-files-found: error
 
       - name: Publish Artifact - Templates
