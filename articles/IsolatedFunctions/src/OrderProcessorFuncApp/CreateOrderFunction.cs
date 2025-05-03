@@ -17,7 +17,7 @@ public class CreateOrderFunction(
 {
     [Function(nameof(CreateOrderFunction))]
     public async Task<OrderAcceptedResponse> Run(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "orders")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "orders")] HttpRequestData req,
         FunctionContext context
     )
     {
