@@ -47,7 +47,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.versionNumber }}
-          path: funcapp
+          path: ${{ inputs.versionNumber }}
           
       - name: Login to Azure
         uses: azure/login@v2
@@ -69,11 +69,17 @@ jobs:
             environment=${{ inputs.environment }}
             location=${{ inputs.location }}    
             
-      - name: "Deploy Azure Function App"
-        uses: azure/webapps-deploy@v2
+      - name: Deploy Function App Package
+        uses: Azure/functions-action@v1
         with:
           app-name: "cchat-fn-${{ inputs.applicationName }}-${{ inputs.environment }}"
-          package: funcapp/${{ inputs.versionNumber }}
+          package: ${{ inputs.versionNumber }}            
+            
+#      - name: "Deploy Azure Function App"
+#        uses: azure/webapps-deploy@v2
+#        with:
+#          app-name: "cchat-fn-${{ inputs.applicationName }}-${{ inputs.environment }}"
+#          package: ${{ inputs.versionNumber }}
           
       
       - name: Logout from Azure
