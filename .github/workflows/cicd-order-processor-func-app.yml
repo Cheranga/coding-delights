@@ -55,17 +55,17 @@ jobs:
       credentials: ${{ secrets.AZURE_CREDENTIALS }}
       subscriptionId: ${{ secrets.SUBSCRIPTION_ID }}    
         
-  QA:
-    name: QA
-    needs:
-      - generate_version_number
-      - DEV
-    uses: ./.github/workflows/deploy-function-app.yml
-    with:
-      applicationName: funky-opf
-      location: australiasoutheast
-      versionNumber: ${{ needs.generate_version_number.outputs.VersionNumber }}
-      environment: qa
-    secrets:
-      credentials: ${{ secrets.AZURE_CREDENTIALS }}
-      subscriptionId: ${{ secrets.SUBSCRIPTION_ID }}           
+#  QA:
+#    name: QA
+#    needs:
+#      - generate_version_number
+#      - DEV
+#    uses: ./.github/workflows/deploy-function-app.yml
+#    with:
+#      applicationName: funky-opf
+#      location: australiasoutheast
+#      versionNumber: ${{ needs.generate_version_number.outputs.VersionNumber }}
+#      environment: qa
+#    secrets:
+#      credentials: ${{ secrets.AZURE_CREDENTIALS }}
+#      subscriptionId: ${{ secrets.SUBSCRIPTION_ID }}           
