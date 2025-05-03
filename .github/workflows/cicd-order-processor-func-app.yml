@@ -6,7 +6,7 @@ on:
     paths:
       - 'articles/IsolatedFunctions/**'
       - '.github/**'
-
+        
 permissions: 
     contents: read
 
