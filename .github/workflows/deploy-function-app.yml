@@ -73,7 +73,14 @@ jobs:
         run: |
           cd artifacts/${{ inputs.versionNumber }}
           zip -r ../functionapp.zip .
-          cd ..            
+          cd .. 
+          
+      - name: Verify zip file exists
+        run: |
+          if [ ! -f "artifacts/functionapp.zip" ]; then
+          echo "Error: functionapp.zip does not exist"
+          exit 1
+          fi          
             
       - name: Deploy via Zip
         run: |
