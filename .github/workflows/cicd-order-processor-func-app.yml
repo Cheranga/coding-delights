@@ -45,12 +45,12 @@ jobs:
     needs:
       - generate_version_number
       - build_and_publish
-    uses: ./.github/workflows/deploy.yml
+    uses: ./.github/workflows/deploy-function-app.yml
     with:
       applicationName: funky-opf
       location: australiasoutheast
       versionNumber: ${{ needs.generate_version_number.outputs.VersionNumber }}
-      environment: DEV
+      environment: dev
     secrets:
       credentials: ${{ secrets.AZURE_CREDENTIALS }}
       subscriptionId: ${{ secrets.SUBSCRIPTION_ID }}    
@@ -60,12 +60,12 @@ jobs:
     needs:
       - generate_version_number
       - DEV
-    uses: ./.github/workflows/deploy.yml
+    uses: ./.github/workflows/deploy-function-app.yml
     with:
       applicationName: funky-opf
       location: australiasoutheast
       versionNumber: ${{ needs.generate_version_number.outputs.VersionNumber }}
-      environment: QA
+      environment: qa
     secrets:
       credentials: ${{ secrets.AZURE_CREDENTIALS }}
       subscriptionId: ${{ secrets.SUBSCRIPTION_ID }}           

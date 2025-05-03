@@ -67,7 +67,13 @@ jobs:
             appName=${{ inputs.applicationName }}
             version=${{ inputs.versionNumber }}
             environment=${{ inputs.environment }}
-            location=${{ inputs.location }}          
+            location=${{ inputs.location }}    
+            
+      - name: "Deploy Azure Function App"
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'cchat-fn-${{ inputs.applicationName }}-${{ inputs.environment }}'
+          package: ${{ inputs.versionNumber }}            
           
       - name: Logout from Azure
         uses: azure/cli@v2
