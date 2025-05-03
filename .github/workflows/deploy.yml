@@ -54,6 +54,21 @@ jobs:
         with:
           creds: ${{ secrets.credentials }}
           
+      - name: Provision Azure Resources
+        uses: azure/arm-deploy@v2
+        with:
+          failOnStdErr: false
+          deploymentName: ${{ env.ARTIFACT_NAME }}
+          scope: subscription
+          region: ${{ inputs.location }}
+          subscriptionId: ${{ secrets.subscriptionId }}
+          template: deploy/main.bicep
+          parameters: >
+            appName=${{ inputs.applicationName }}
+            version=${{ inputs.versionNumber }}
+            environment=${{ inputs.environment }}
+            location=${{ inputs.location }}          
+          
       - name: Logout from Azure
         uses: azure/cli@v2
         with:
