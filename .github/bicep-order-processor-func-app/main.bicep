@@ -6,16 +6,16 @@ param location string
 
 
 @allowed([
-  'DEV'
-  'QA'
-  'PROD'
+  'dev'
+  'qa'
+  'prod'
 ])
 param environment string
 
 var envType = {
-    DEV: 'nonprod'
-    QA: 'nonprod'
-    PROD: 'prod'
+    dev: 'nonprod'
+    qa: 'nonprod'
+    prod: 'prod'
     } 
 
 var appNameWithEnvironment = toLower('${appName}-${environment}')
