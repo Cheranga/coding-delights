@@ -58,7 +58,7 @@ jobs:
         uses: azure/arm-deploy@v2
         with:
           failOnStdErr: false
-          deploymentName: ${{ env.ARTIFACT_NAME }}
+          deploymentName: ${{ env.ARTIFACT_NAME }}-${{inputs.environment}}
           scope: subscription
           region: ${{ inputs.location }}
           subscriptionId: ${{ secrets.subscriptionId }}
