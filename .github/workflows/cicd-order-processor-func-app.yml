@@ -58,8 +58,8 @@ jobs:
   QA:
     name: QA
     needs:
-      - DEV
       - generate_version_number
+      - DEV
     uses: ./.github/workflows/deploy.yml
     with:
       applicationName: funky-opf
