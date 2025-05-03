@@ -7,7 +7,7 @@ param location string
 
 @allowed([
   'DEV'
-  'QA',
+  'QA'
   'PROD'
 ])
 param environment string
