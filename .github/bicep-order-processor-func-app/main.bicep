@@ -28,7 +28,7 @@ var kvName = take(replace('cchatkv${appNameWithEnvironment}', '-', ''), 24)
 
 module rg 'resourcegroup/template.bicep' = {
   scope: subscription()
-  name: '${version}-rg'
+  name: toLower('${environment}-${version}-rg')
   params: {
     location: location
     name: rgName
@@ -36,7 +36,7 @@ module rg 'resourcegroup/template.bicep' = {
 }
 
 module storageAccount 'storageaccount/template.bicep' = {
-  name: '${version}-sg'
+  name: toLower('${environment}-${version}-sg')
   scope: resourceGroup(rgName)
   params: {
     name: sgName    
@@ -52,7 +52,7 @@ module storageAccount 'storageaccount/template.bicep' = {
 
 
 module appInsights 'appinsights/template.bicep' = {
-  name: '${version}-ins'
+  name: toLower('${environment}-${version}-ins')
   scope: resourceGroup(rgName)
   params: {
     name: appInsName
@@ -63,7 +63,7 @@ module appInsights 'appinsights/template.bicep' = {
 }
 
 module appServicePlan 'appserviceplan/template.bicep' = {
-  name: '${version}-asp'
+  name: toLower('${environment}-${version}-asp')
   scope: resourceGroup(rgName)
   params: {
     name: aspName
@@ -75,7 +75,7 @@ module appServicePlan 'appserviceplan/template.bicep' = {
 }
 
 module keyVault 'keyvault/template.bicep' = {
-  name: '${version}-kv'
+  name: toLower('${environment}-${version}-kv')
   scope: resourceGroup(rgName)
   params: {
     name: kvName
@@ -86,7 +86,7 @@ module keyVault 'keyvault/template.bicep' = {
 }
 
 module app 'functionapp/template.bicep' = {
-  name: '${version}-fn'
+  name: toLower('${environment}-${version}-fn')
   scope: resourceGroup(rgName)
   params: {
     appName: funcAppName
@@ -99,7 +99,7 @@ module app 'functionapp/template.bicep' = {
 
 module kvPolicies 'keyvault/policies.bicep' = {
   scope: resourceGroup(rgName)
-  name: '${version}-kv-policies'
+  name: toLower('${environment}-${version}-kv-policies')
   params: {
     appId: app.outputs.prodId
     appInsightsName: appInsName
@@ -116,7 +116,7 @@ module kvPolicies 'keyvault/policies.bicep' = {
 
 module rbacSetting 'rbac/template.bicep' = {
   scope: resourceGroup(rgName)
-  name: '${version}-rbac'
+  name: toLower('${environment}-${version}-rbac')
   params: {
     appId: app.outputs.prodId
     friendlyName: funcAppName
@@ -130,7 +130,7 @@ module rbacSetting 'rbac/template.bicep' = {
 
 module funcAppSettings 'functionapp/configurations.bicep' = {
   scope: resourceGroup(rgName)
-  name: '${version}-fn-settings'
+  name: toLower('${environment}-${version}-fn-settings')
   params: {
     appName: funcAppName
     kvName: kvName
