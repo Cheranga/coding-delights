@@ -23,6 +23,7 @@ var appSettings = {
   FUNCTIONS_WORKER_RUNTIME_VERSION: '8.0'
   WEBSITE_TIME_ZONE: timeZone
   WEBSITE_ADD_SITENAME_BINDINGS_IN_APPHOST_CONFIG: '1'
+  SCM_DO_BUILD_DURING_DEPLOYMENT: 'true'
   Source__Queue: 'sample-work'
   Source__Container: 'sample-work'
   Source__Table: 'samplework'
