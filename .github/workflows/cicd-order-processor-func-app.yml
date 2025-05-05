@@ -17,6 +17,8 @@ jobs:
   
   deploy_to_non_prod:
     name: Deploy to ${{ matrix.env }}
+    needs:
+      - ci
     strategy:
       matrix:
         env: [dev, qa]
