@@ -2,10 +2,11 @@
 concurrency: Order Processor Func App Create Release for PR
 
 on:
-  push:
-    paths:
-      - 'articles/IsolatedFunctions/**'
-      - '.github/**'
+  workflow_dispatch:
+#  push:
+#    paths:
+#      - 'articles/IsolatedFunctions/**'
+#      - '.github/**'
         
 permissions: 
     contents: write
