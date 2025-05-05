@@ -107,7 +107,6 @@ module kvPolicies 'keyvault/policies.bicep' = {
     storageName: sgName
   }
   dependsOn: [
-    app
     appInsights
     keyVault
     storageAccount
@@ -123,7 +122,6 @@ module rbacSetting 'rbac/template.bicep' = {
     storageName: sgName
   }
   dependsOn: [
-    app
     storageAccount    
   ]
 }
