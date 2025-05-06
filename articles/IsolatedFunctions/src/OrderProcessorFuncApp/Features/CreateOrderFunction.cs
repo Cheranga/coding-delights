@@ -5,9 +5,8 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using OrderProcessorFuncApp.Core;
-using OrderProcessorFuncApp.Features;
 
-namespace OrderProcessorFuncApp;
+namespace OrderProcessorFuncApp.Features;
 
 public class CreateOrderFunction(
     IValidator<CreateOrderRequestDto> validator,
@@ -17,7 +16,7 @@ public class CreateOrderFunction(
 {
     [Function(nameof(CreateOrderFunction))]
     public async Task<OrderAcceptedResponse> Run(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "orders")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, WebRequestMethods.Http.Post, Route = "orders")] HttpRequestData req,
         FunctionContext context
     )
     {
