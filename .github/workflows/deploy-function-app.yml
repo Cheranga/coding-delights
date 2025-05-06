@@ -21,6 +21,10 @@ on:
       deploy_templates_path:
         required: true
         type: string
+      version_number:
+        required: false
+        type: string
+        default: ''
 
     secrets:
       AZURE_CREDENTIALS:
@@ -36,14 +40,19 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4        
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+          
+      - name: Set Version from Input
+        if: inputs.version_number != ''
+        run: echo "BUILD_VERSION=${{ inputs.version_number }}" >> $GITHUB_ENV
 
       - name: Generate Version Number
+        if: inputs.version_number == ''
         run: echo "BUILD_VERSION=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
 
       - name: Create Artifact
