@@ -23,9 +23,7 @@ public static class OperationsTests
 
                 return mockedQueryHandler;
             })
-            .Act(async qh =>
-                await Operations.ExecuteAsync(qh.Object, Mock.Of<ILogger<Program>>(), "666", It.IsAny<CancellationToken>())
-            )
+            .Act(async qh => await Operations.ExecuteAsync(qh.Object, Mock.Of<ILogger<Program>>(), "666", It.IsAny<CancellationToken>()))
             .Assert(response => response.Result.GetType() == typeof(NoContent));
 
     [Fact(DisplayName = "Task is available for the requested task id")]
@@ -39,9 +37,7 @@ public static class OperationsTests
 
                 return mockedQueryHandler;
             })
-            .Act(async qh =>
-                await Operations.ExecuteAsync(qh.Object, Mock.Of<ILogger<Program>>(), "666", It.IsAny<CancellationToken>())
-            )
+            .Act(async qh => await Operations.ExecuteAsync(qh.Object, Mock.Of<ILogger<Program>>(), "666", It.IsAny<CancellationToken>()))
             .Assert(response =>
             {
                 var todoResponse = response.Result switch
@@ -63,9 +59,7 @@ public static class OperationsTests
 
                 return mockedQueryHandler;
             })
-            .Act(async qh =>
-                await Operations.ExecuteAsync(qh.Object, Mock.Of<ILogger<Program>>(), "666", It.IsAny<CancellationToken>())
-            )
+            .Act(async qh => await Operations.ExecuteAsync(qh.Object, Mock.Of<ILogger<Program>>(), "666", It.IsAny<CancellationToken>()))
             .Assert(response =>
             {
                 var problemDetails = response.Result switch

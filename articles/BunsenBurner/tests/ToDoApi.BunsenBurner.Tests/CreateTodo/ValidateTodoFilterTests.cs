@@ -36,10 +36,7 @@ public class ValidateTodoFilterTests(WebApplicationFactory<Program> factory) : I
                 Assert.NotNull(problemResponse);
                 Assert.NotEmpty(problemResponse.Errors);
                 Assert.Contains(problemResponse.Errors, x => string.Equals(x.Key, "Title", StringComparison.Ordinal));
-                Assert.Single(
-                    problemResponse.Errors["Title"],
-                    x => string.Equals(x, "Title cannot be empty", StringComparison.Ordinal)
-                );
+                Assert.Single(problemResponse.Errors["Title"], x => string.Equals(x, "Title cannot be empty", StringComparison.Ordinal));
             });
     }
 

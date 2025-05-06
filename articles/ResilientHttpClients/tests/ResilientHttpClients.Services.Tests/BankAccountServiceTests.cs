@@ -24,12 +24,7 @@ public partial class BankAccountServiceTests
             .And(data =>
             {
                 var serviceProvider = RegisterServicesAndGetApplication();
-                return (
-                    data.tokenResponseProvider,
-                    data.bankAccountResponseProvider,
-                    data.expectedBankAccountsResponse,
-                    serviceProvider
-                );
+                return (data.tokenResponseProvider, data.bankAccountResponseProvider, data.expectedBankAccountsResponse, serviceProvider);
             })
             .And(async data =>
             {
@@ -73,12 +68,7 @@ public partial class BankAccountServiceTests
             .And(data =>
             {
                 var serviceProvider = RegisterServicesAndSetupOtherBankService();
-                return (
-                    data.tokenResponseProvider,
-                    data.bankAccountResponseProvider,
-                    data.expectedBankAccountsResponse,
-                    serviceProvider
-                );
+                return (data.tokenResponseProvider, data.bankAccountResponseProvider, data.expectedBankAccountsResponse, serviceProvider);
             })
             .And(async data =>
             {

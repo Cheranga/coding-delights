@@ -1,0 +1,41 @@
+﻿name: CI Application
+
+on:
+  workflow_call:
+    inputs:
+      project-path:
+        type: string
+        required: true
+        description: Path to the csproj file
+        
+permissions: 
+    contents: read
+
+jobs:
+  ci_validations:
+    name: Restore, Build, and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+
+      - name: Install DotNet Tools and Run Husky
+        run: |
+          dotnet tool restore && \
+          dotnet husky install && \
+          dotnet husky run -g "lint"
+
+      - name: Restore Dependencies
+        run: dotnet restore ${{ inputs.project-path }}
+
+      - name: Build Project
+        run: dotnet build --configuration Release --no-restore ${{ inputs.project-path }}
+
+      - name: Test
+        run: dotnet test --no-restore --verbosity normal --logger "trx;LogFileName=test-results.trx" ${{ inputs.project-path }}

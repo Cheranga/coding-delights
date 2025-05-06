@@ -1,0 +1,17 @@
+﻿name: CI Articles
+concurrency: CI Articles
+
+on:
+  push:
+    paths:
+      - 'articles/**'     
+      - '.github/**'
+  workflow_dispatch:
+    
+permissions: 
+  contents: read
+
+jobs:  
+  build:
+    name: CI Articles
+    uses: ./.github/workflows/articles-validation-checks.yml

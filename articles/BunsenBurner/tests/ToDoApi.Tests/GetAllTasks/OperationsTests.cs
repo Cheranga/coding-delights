@@ -24,12 +24,7 @@ public static class OperationsTests
         // Assert
         mockedCache.Verify(
             x =>
-                x.SetAsync(
-                    Constants.CacheKey,
-                    It.IsAny<byte[]>(),
-                    It.IsAny<DistributedCacheEntryOptions>(),
-                    It.IsAny<CancellationToken>()
-                ),
+                x.SetAsync(Constants.CacheKey, It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), It.IsAny<CancellationToken>()),
             Times.Never()
         );
 

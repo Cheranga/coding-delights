@@ -11,6 +11,16 @@
          ]
       },
       {
+         "name": "Verify Code Formatting",
+         "group": "lint",
+         "command": "dotnet",
+         "args": [
+            "csharpier",
+            ".",
+            "--check"
+         ]
+      },
+      {
          "name": "Conventional Commit Linter",
          "command": "bash",
          "group": "commit-msg",

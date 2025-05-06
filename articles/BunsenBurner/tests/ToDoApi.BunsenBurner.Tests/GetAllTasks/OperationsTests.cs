@@ -18,18 +18,12 @@ public static class OperationsTests
                 var mockedCache = new Mock<IDistributedCache>();
 
                 var mockedQueryHandler = new Mock<IQueryHandler<SearchAllQuery, List<TodoDataModel>>>();
-                mockedQueryHandler
-                    .Setup(x => x.QueryAsync(It.IsAny<SearchAllQuery>(), It.IsAny<CancellationToken>()))
-                    .ReturnsAsync([]);
+                mockedQueryHandler.Setup(x => x.QueryAsync(It.IsAny<SearchAllQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
                 return (mockedCache, mockedQueryHandler);
             })
             .Act(async data =>
-                await Operations.ExecuteAsync(
-                    data.mockedCache.Object,
-                    data.mockedQueryHandler.Object,
-                    Mock.Of<ILogger<Program>>()
-                )
+                await Operations.ExecuteAsync(data.mockedCache.Object, data.mockedQueryHandler.Object, Mock.Of<ILogger<Program>>())
             )
             .Assert(
                 (data, _) =>
@@ -56,18 +50,12 @@ public static class OperationsTests
 
                 var tasks = new AutoFaker<TodoDataModel>().Generate(3);
                 var mockedQueryHandler = new Mock<IQueryHandler<SearchAllQuery, List<TodoDataModel>>>();
-                mockedQueryHandler
-                    .Setup(x => x.QueryAsync(It.IsAny<SearchAllQuery>(), It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(tasks);
+                mockedQueryHandler.Setup(x => x.QueryAsync(It.IsAny<SearchAllQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(tasks);
 
                 return (mockedCache, mockedQueryHandler);
             })
             .Act(async data =>
-                await Operations.ExecuteAsync(
-                    data.mockedCache.Object,
-                    data.mockedQueryHandler.Object,
-                    Mock.Of<ILogger<Program>>()
-                )
+                await Operations.ExecuteAsync(data.mockedCache.Object, data.mockedQueryHandler.Object, Mock.Of<ILogger<Program>>())
             )
             .Assert(
                 (data, _) =>
@@ -109,11 +97,7 @@ public static class OperationsTests
                 return (mockedCache, mockedQueryHandler);
             })
             .Act(async data =>
-                await Operations.ExecuteAsync(
-                    data.mockedCache.Object,
-                    data.mockedQueryHandler.Object,
-                    Mock.Of<ILogger<Program>>()
-                )
+                await Operations.ExecuteAsync(data.mockedCache.Object, data.mockedQueryHandler.Object, Mock.Of<ILogger<Program>>())
             )
             .Assert(
                 (data, _) =>

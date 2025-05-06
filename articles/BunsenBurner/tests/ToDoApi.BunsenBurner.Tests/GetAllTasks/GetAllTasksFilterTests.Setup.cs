@@ -7,14 +7,10 @@ namespace ToDoApi.BunsenBurner.Tests.GetAllTasks;
 
 public partial class GetAllTasksFilterTests
 {
-    private static Mock<IQueryHandler<SearchAllQuery, List<TodoDataModel>>> GetMockedQueryHandler(
-        params List<TodoDataModel>[] results
-    )
+    private static Mock<IQueryHandler<SearchAllQuery, List<TodoDataModel>>> GetMockedQueryHandler(params List<TodoDataModel>[] results)
     {
         var mockedQueryHandler = new Mock<IQueryHandler<SearchAllQuery, List<TodoDataModel>>>();
-        var setupAction = mockedQueryHandler.SetupSequence(x =>
-            x.QueryAsync(It.IsAny<SearchAllQuery>(), It.IsAny<CancellationToken>())
-        );
+        var setupAction = mockedQueryHandler.SetupSequence(x => x.QueryAsync(It.IsAny<SearchAllQuery>(), It.IsAny<CancellationToken>()));
         results.ToList().ForEach(x => setupAction.ReturnsAsync(x));
 
         return mockedQueryHandler;

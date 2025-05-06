@@ -1,0 +1,19 @@
+﻿
+# @name = invalidOrderSchema
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "invalid": "blah!"
+}
+
+###
+
+# @name = createOrder
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "orderId": "ORD_000666",
+  "referenceId": "bruce.wayne@gotham.com"
+}

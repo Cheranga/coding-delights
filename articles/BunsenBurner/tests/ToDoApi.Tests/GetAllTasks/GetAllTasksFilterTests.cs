@@ -9,8 +9,7 @@ using ToDo.Api.Infrastructure.DataAccess;
 
 namespace ToDoApi.Tests.GetAllTasks;
 
-public partial class GetAllTasksFilterTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public partial class GetAllTasksFilterTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
 {
     [Fact(DisplayName = "Given tasks are cached, when get all endpoint is called, then must return tasks from the cache")]
     public async Task GetAllTasksWhenCached()

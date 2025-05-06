@@ -1,0 +1,92 @@
+﻿name: Deploy Function App
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      app_name:
+        required: true
+        type: string
+      deployment_name:
+        required: true
+        type: string
+      function_app_name:
+        required: true
+        type: string
+      project_path:
+        required: true
+        type: string
+      deploy_templates_path:
+        required: true
+        type: string
+      version_number:
+        required: false
+        type: string
+        default: ''
+
+    secrets:
+      AZURE_CREDENTIALS:
+        required: true
+      SUBSCRIPTION_ID:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4        
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+          
+      - name: Set Version from Input
+        if: inputs.version_number != ''
+        run: echo "BUILD_VERSION=${{ inputs.version_number }}" >> $GITHUB_ENV
+
+      - name: Generate Version Number
+        if: inputs.version_number == ''
+        run: echo "BUILD_VERSION=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
+
+      - name: Create Artifact
+        run: dotnet publish ${{ inputs.project_path }} -c Release -o ${{ env.BUILD_VERSION }}
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Provision Azure Resources
+        uses: azure/arm-deploy@v2
+        with:
+          failOnStdErr: false
+          deploymentName: ${{ inputs.deployment_name }}
+          scope: subscription
+          region: australiasoutheast
+          subscriptionId: ${{ secrets.SUBSCRIPTION_ID }}
+          template: ${{ inputs.deploy_templates_path }}/main.bicep
+          parameters: >
+            appName=${{ inputs.app_name }}
+            version=${{ env.BUILD_VERSION }}
+            environment=${{ inputs.environment }}
+            location=australiasoutheast
+
+      - name: Show files in published folder
+        run: ls -R ${{ env.BUILD_VERSION }}/
+
+      - name: Deploy Function App
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ inputs.function_app_name }}
+          slot-name: 'Production'
+          package: '${{ env.BUILD_VERSION }}'
+
+      - name: Logout from Azure
+        run: az logout

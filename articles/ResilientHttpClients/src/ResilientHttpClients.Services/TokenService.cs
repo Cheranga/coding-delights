@@ -4,8 +4,7 @@ using ResilientHttpClients.Services.Models;
 
 namespace ResilientHttpClients.Services;
 
-internal sealed class TokenService(IOptionsMonitor<TokenSettings> options, HttpClient client, IDistributedCache cache)
-    : ITokenService
+internal sealed class TokenService(IOptionsMonitor<TokenSettings> options, HttpClient client, IDistributedCache cache) : ITokenService
 {
     private readonly TokenSettings _tokenSettings = options.CurrentValue;
 

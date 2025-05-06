@@ -6,11 +6,7 @@ public class PerformanceFilter(ILogger<PerformanceFilter> logger) : IEndpointFil
 {
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
-        logger.LogInformation(
-            "Starting request {HttpVerb} {@Url}",
-            context.HttpContext.Request.Method,
-            context.HttpContext.Request.Path
-        );
+        logger.LogInformation("Starting request {HttpVerb} {@Url}", context.HttpContext.Request.Method, context.HttpContext.Request.Path);
         var stopWatch = new Stopwatch();
         stopWatch.Start();
         var response = await next(context);
