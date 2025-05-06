@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         env: [dev, qa]
-    uses: ./.github/workflows/cd-deploy-function-app.yml
+    uses: ./.github/workflows/deploy-function-app.yml
     with:
       environment: ${{ matrix.env }}
       app_name: funky-opf
