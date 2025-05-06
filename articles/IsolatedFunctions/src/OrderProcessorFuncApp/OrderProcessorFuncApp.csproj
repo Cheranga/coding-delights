@@ -23,6 +23,7 @@
         <PackageReference Include="Microsoft.ApplicationInsights.WorkerService"/>
         <PackageReference Include="Microsoft.Azure.Functions.Worker.ApplicationInsights"/>
         <PackageReference Include="FluentValidation.DependencyInjectionExtensions"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights"/>
     </ItemGroup>
 
     <ItemGroup>

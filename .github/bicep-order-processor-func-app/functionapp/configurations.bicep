@@ -18,7 +18,7 @@ var appSettings = {
   WEBSITE_CONTENTAZUREFILECONNECTIONSTRING: '@Microsoft.KeyVault(SecretUri=${kv.properties.vaultUri}/secrets/storageAccountConnectionString/)'
   WEBSITE_CONTENTSHARE: toLower(appName)
   FUNCTIONS_EXTENSION_VERSION: '~4'
-  APPINSIGHTS_INSTRUMENTATIONKEY: '@Microsoft.KeyVault(SecretUri=${kv.properties.vaultUri}/secrets/appInsightsKey/)'
+  APPLICATIONINSIGHTS_CONNECTION_STRING: '@Microsoft.KeyVault(SecretUri=${kv.properties.vaultUri}/secrets/appInsightsKey/)'
   FUNCTIONS_WORKER_RUNTIME: 'dotnet-isolated'
   FUNCTIONS_WORKER_RUNTIME_VERSION: '8.0'
   WEBSITE_TIME_ZONE: timeZone

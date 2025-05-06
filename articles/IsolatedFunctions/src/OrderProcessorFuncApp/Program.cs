@@ -1,22 +1,28 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using FluentValidation;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.ApplicationInsights;
+using OrderProcessorFuncApp.Core;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults(builder =>
     {
-        builder.Services.Configure<JsonSerializerOptions>(options =>
+        var services = builder.Services;
+        services.Configure<JsonSerializerOptions>(options =>
         {
             options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
             options.PropertyNameCaseInsensitive = true;
             options.WriteIndented = false;
             options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
         });
+        services.AddApplicationInsightsTelemetryWorkerService();
+        services.AddSingleton<ITelemetryInitializer, CustomTelemetryInitializer>();
     })
     .ConfigureAppConfiguration(builder =>
     {
@@ -39,6 +45,8 @@ var host = new HostBuilder()
     .ConfigureLogging(builder =>
     {
         builder.AddJsonConsole();
+        builder.AddApplicationInsights();
+        builder.AddFilter<ApplicationInsightsLoggerProvider>("", LogLevel.Information);
     })
     .Build();
 
