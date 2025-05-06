@@ -21,8 +21,10 @@ var host = new HostBuilder()
             options.WriteIndented = false;
             options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
         });
-        services.AddApplicationInsightsTelemetryWorkerService();
-        services.AddSingleton<ITelemetryInitializer, CustomTelemetryInitializer>();
+#pragma warning disable S125
+        // services.AddApplicationInsightsTelemetryWorkerService();
+#pragma warning restore S125
+        // services.AddSingleton<ITelemetryInitializer, CustomTelemetryInitializer>();
     })
     .ConfigureAppConfiguration(builder =>
     {
@@ -45,8 +47,21 @@ var host = new HostBuilder()
     .ConfigureLogging(builder =>
     {
         builder.AddJsonConsole();
-        builder.AddApplicationInsights();
-        builder.AddFilter<ApplicationInsightsLoggerProvider>("", LogLevel.Information);
+
+#pragma warning disable S125
+        // builder.ClearProviders();
+#pragma warning restore S125
+        // builder.AddOpenTelemetry(options =>
+        // {
+        //     options.IncludeScopes = true;
+        //     options.IncludeFormattedMessage = true;
+        //     options.ParseStateValues = true;
+        //
+        //     options.SetResourceBuilder(resourceBuilder);
+        //
+        //     // Export logs to App Insights
+        //     options.AddAzureMonitorLogExporter();
+        // });
     })
     .Build();
 
