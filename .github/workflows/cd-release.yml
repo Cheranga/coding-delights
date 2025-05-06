@@ -63,14 +63,14 @@ jobs:
   deploy_to_non_prod:
     name: Deploy to ${{ matrix.env }}
     needs:
-      - ci
       - release
+      - ci
     strategy:
       matrix:
         env: [dev, qa]
     uses: ./.github/workflows/deploy-function-app.yml
     with:
-      version_number: '' # don't pass a version number to non-prod environments, it will be auto generated
+      version_number: ${{ needs.release.outputs.VersionNumber }} # don't pass a version number to non-prod environments, it will be auto generated
       environment: ${{ matrix.env }}
       app_name: funky-opf
       deployment_name: funky-opf-${{ matrix.env }}
@@ -84,8 +84,8 @@ jobs:
   deploy_to_prod:
     name: Deploy to PROD
     needs:
-      - deploy_to_non_prod
       - release
+      - deploy_to_non_prod
     uses: ./.github/workflows/deploy-function-app.yml
     with:
       version_number: ${{ needs.release.outputs.VersionNumber }}
