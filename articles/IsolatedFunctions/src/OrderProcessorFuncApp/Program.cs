@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OrderProcessorFuncApp.Features;
 using Serilog;
 using Serilog.Events;
 
@@ -37,6 +38,7 @@ var host = new HostBuilder()
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             }
         );
+        services.AddSingleton<IOrderProcessor, OrderProcessor>();
         services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
         services.AddApplicationInsightsTelemetryWorkerService();
@@ -56,10 +58,10 @@ var host = new HostBuilder()
             .MinimumLevel.Override("Function", LogEventLevel.Warning)
             .MinimumLevel.Override("Azure*", LogEventLevel.Warning)
             .MinimumLevel.Override("OrderProcessorFuncApp.Features", LogEventLevel.Information)
-            .WriteTo.Console()
-            .WriteTo.ApplicationInsights(TelemetryConverter.Traces, LogEventLevel.Information)
             .Enrich.FromLogContext()
             .Enrich.WithProperty("FunctionAppName", "OrderProcessorFuncApp")
+            .WriteTo.Console()
+            .WriteTo.ApplicationInsights(TelemetryConverter.Traces, LogEventLevel.Information)
             .CreateLogger();
 
         logging.AddSerilog(Log.Logger, true);
