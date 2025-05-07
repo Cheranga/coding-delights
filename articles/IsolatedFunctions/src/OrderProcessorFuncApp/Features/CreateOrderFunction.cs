@@ -9,6 +9,7 @@ using OrderProcessorFuncApp.Core;
 namespace OrderProcessorFuncApp.Features;
 
 public class CreateOrderFunction(
+    IOrderProcessor orderProcessor,
     IValidator<CreateOrderRequestDto> validator,
     JsonSerializerOptions serializerOptions,
     ILogger<CreateOrderFunction> logger
@@ -16,28 +17,40 @@ public class CreateOrderFunction(
 {
     [Function(nameof(CreateOrderFunction))]
     public async Task<OrderAcceptedResponse> Run(
-        [HttpTrigger(AuthorizationLevel.Anonymous, WebRequestMethods.Http.Post, Route = "orders")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, WebRequestMethods.Http.Post, Route = "orders")]
+        HttpRequestData req,
         FunctionContext context
     )
     {
-        var token = context.CancellationToken;
-        var dto = await GetDtoFromRequest(req, serializerOptions, token);
-        var validationResult = await validator.ValidateAsync(dto, token);
-        if (!validationResult.IsValid)
-        {
-            logger.LogWarning("Invalid {@CreateOrderRequest} received Validation failed {@ValidationResult}", dto, validationResult);
-            return await req.CreateErrorResponse(
-                ErrorCodes.InvalidCreateOrderRequest,
-                ErrorMessages.InvalidCreateOrderRequest,
-                HttpStatusCode.BadRequest,
-                serializerOptions,
-                token
-            );
-        }
+        var correlationId = req.Headers.TryGetValues("x-correlation-id", out var values)
+            ? values.FirstOrDefault()
+            : Guid.NewGuid().ToString("N");
 
-        logger.LogInformation("Received {@CreateOrderRequest}", dto);
-        // Do processing
-        return await req.CreateSuccessResponse(HttpStatusCode.Accepted, new OrderAcceptedData(dto.OrderId), serializerOptions, token);
+        using (logger.BeginScope(KeyValuePair.Create("CorrelationId", correlationId)))
+        {
+            logger.LogInformation("Received request with CorrelationId: {CorrelationId}", correlationId);
+            var token = context.CancellationToken;
+            var dto = await GetDtoFromRequest(req, serializerOptions, token);
+            var validationResult = await validator.ValidateAsync(dto, token);
+            if (!validationResult.IsValid)
+            {
+                logger.LogWarning("Invalid {@CreateOrderRequest} received Validation failed {@ValidationResult}", dto,
+                    validationResult);
+                return await req.CreateErrorResponse(
+                    ErrorCodes.InvalidCreateOrderRequest,
+                    ErrorMessages.InvalidCreateOrderRequest,
+                    HttpStatusCode.BadRequest,
+                    serializerOptions,
+                    token
+                );
+            }
+
+            logger.LogInformation("Validation passed");
+            await orderProcessor.ProcessAsync(dto, token);
+            // Do processing
+            return await req.CreateSuccessResponse(HttpStatusCode.Accepted, new OrderAcceptedData(dto.OrderId),
+                serializerOptions, token);
+        }
     }
 
     private static async Task<CreateOrderRequestDto> GetDtoFromRequest(
