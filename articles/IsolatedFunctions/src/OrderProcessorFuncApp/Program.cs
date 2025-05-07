@@ -7,13 +7,23 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.ApplicationInsights;
-using OrderProcessorFuncApp.Core;
 using Serilog;
 using Serilog.Events;
-using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
+
+Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
 
 var host = new HostBuilder()
+    .UseSerilog(
+        (_, services, loggerConfiguration) =>
+        {
+            loggerConfiguration
+                .MinimumLevel.Warning()
+                .MinimumLevel.Override("OrderProcessorFuncApp.Features", LogEventLevel.Information)
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .WriteTo.ApplicationInsights(services.GetRequiredService<TelemetryConfiguration>(), TelemetryConverter.Traces);
+        }
+    )
     .ConfigureFunctionsWorkerDefaults(builder =>
     {
         var services = builder.Services;
@@ -24,10 +34,6 @@ var host = new HostBuilder()
             options.WriteIndented = false;
             options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
         });
-#pragma warning disable S125
-        // services.AddApplicationInsightsTelemetryWorkerService();
-#pragma warning restore S125
-        // services.AddSingleton<ITelemetryInitializer, CustomTelemetryInitializer>();
     })
     .ConfigureAppConfiguration(builder =>
     {
@@ -44,24 +50,29 @@ var host = new HostBuilder()
             }
         );
         services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+
+        services.AddApplicationInsightsTelemetryWorkerService();
+        services.ConfigureFunctionsApplicationInsights();
     })
-    .UseSerilog(
-        (context, configuration) =>
+    .ConfigureLogging(logging =>
+    {
+        // Remove the default Application Insights logger provider so that Information logs are sent
+        // https://learn.microsoft.com/en-us/azure/azure-functions/dotnet-isolated-process-guide?tabs=hostbuilder%2Clinux&WT.mc_id=DOP-MVP-5001655#managing-log-levels
+        logging.Services.Configure<LoggerFilterOptions>(options =>
         {
-            configuration
-                .MinimumLevel.Information()
-                .Enrich.FromLogContext()
-                .WriteTo.Console()
-                .WriteTo.ApplicationInsights(
-                    telemetryConverter: new TraceTelemetryConverter(),
-                    telemetryConfiguration: new TelemetryConfiguration()
-                    {
-                        ConnectionString = context.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"] ?? "",
-                    },
-                    restrictedToMinimumLevel: LogEventLevel.Information
-                );
-        }
-    )
+            var defaultRule = options.Rules.FirstOrDefault(rule =>
+                string.Equals(
+                    rule.ProviderName,
+                    "Microsoft.Extensions.Logging.ApplicationInsights.ApplicationInsightsLoggerProvider",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            );
+            if (defaultRule is not null)
+            {
+                options.Rules.Remove(defaultRule);
+            }
+        });
+    })
     .Build();
 
 await host.RunAsync();
