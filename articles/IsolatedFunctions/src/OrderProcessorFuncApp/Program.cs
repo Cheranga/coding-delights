@@ -17,8 +17,6 @@ var host = new HostBuilder()
         (_, services, loggerConfiguration) =>
         {
             loggerConfiguration
-                .MinimumLevel.Override("Host.*", LogEventLevel.Warning)
-                .MinimumLevel.Override("Function", LogEventLevel.Warning)
                 .Enrich.FromLogContext()
                 .WriteTo.Console()
                 .WriteTo.ApplicationInsights(services.GetRequiredService<TelemetryConfiguration>(), TelemetryConverter.Traces);
