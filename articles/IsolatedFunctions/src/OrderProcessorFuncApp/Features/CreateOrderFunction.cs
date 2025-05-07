@@ -37,11 +37,11 @@ public class CreateOrderFunction(
 
         logger.LogInformation(
             "Received {@CreateOrderRequest}",
-            new
+            new Dictionary<string, object>(StringComparer.Ordinal)
             {
-                dto.OrderId,
-                dto.ReferenceId,
-                dto.OrderDate,
+                { nameof(dto.OrderId), dto.OrderId },
+                { nameof(dto.ReferenceId), dto.ReferenceId },
+                { nameof(dto.OrderDate), dto.OrderDate },
             }
         );
         // Do processing
