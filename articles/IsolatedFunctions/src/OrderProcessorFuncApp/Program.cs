@@ -10,6 +10,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.ApplicationInsights;
 using OrderProcessorFuncApp.Core;
 using Serilog;
+using Serilog.Events;
+using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults(builder =>
@@ -50,7 +52,14 @@ var host = new HostBuilder()
                 .MinimumLevel.Information()
                 .Enrich.FromLogContext()
                 .WriteTo.Console()
-                .WriteTo.ApplicationInsights(context.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"], TelemetryConverter.Traces);
+                .WriteTo.ApplicationInsights(
+                    telemetryConverter: new TraceTelemetryConverter(),
+                    telemetryConfiguration: new TelemetryConfiguration()
+                    {
+                        ConnectionString = context.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"] ?? "",
+                    },
+                    restrictedToMinimumLevel: LogEventLevel.Information
+                );
         }
     )
     .Build();
