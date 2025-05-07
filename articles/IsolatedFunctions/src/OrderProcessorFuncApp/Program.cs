@@ -47,6 +47,7 @@ var host = new HostBuilder()
         builder.ClearProviders();
         builder.AddJsonConsole();
         builder.AddApplicationInsights();
+        builder.AddFilter<ApplicationInsightsLoggerProvider>("", LogLevel.Information);
     })
     .Build();
 
