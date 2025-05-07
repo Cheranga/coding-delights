@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.ApplicationInsights;
 using OrderProcessorFuncApp.Core;
+using Serilog;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults(builder =>
@@ -21,8 +22,10 @@ var host = new HostBuilder()
             options.WriteIndented = false;
             options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
         });
-        services.AddApplicationInsightsTelemetryWorkerService();
-        services.AddSingleton<ITelemetryInitializer, CustomTelemetryInitializer>();
+#pragma warning disable S125
+        // services.AddApplicationInsightsTelemetryWorkerService();
+#pragma warning restore S125
+        // services.AddSingleton<ITelemetryInitializer, CustomTelemetryInitializer>();
     })
     .ConfigureAppConfiguration(builder =>
     {
@@ -39,16 +42,17 @@ var host = new HostBuilder()
             }
         );
         services.AddValidatorsFromAssembly(typeof(Program).Assembly);
-        services.AddApplicationInsightsTelemetryWorkerService();
-        services.ConfigureFunctionsApplicationInsights();
     })
-    .ConfigureLogging(builder =>
-    {
-        builder.ClearProviders();
-        builder.AddJsonConsole();
-        builder.AddApplicationInsights();
-        builder.AddFilter<ApplicationInsightsLoggerProvider>("", LogLevel.Information);
-    })
+    .UseSerilog(
+        (context, configuration) =>
+        {
+            configuration
+                .MinimumLevel.Information()
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .WriteTo.ApplicationInsights(context.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"], TelemetryConverter.Traces);
+        }
+    )
     .Build();
 
 await host.RunAsync();

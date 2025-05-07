@@ -24,6 +24,10 @@
         <PackageReference Include="Microsoft.Azure.Functions.Worker.ApplicationInsights"/>
         <PackageReference Include="FluentValidation.DependencyInjectionExtensions"/>
         <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights"/>
+        <PackageReference Include="Serilog" />
+        <PackageReference Include="Serilog.Sinks.ApplicationInsights"/>
+        <PackageReference Include="Serilog.Sinks.Console"/>
+        <PackageReference Include="Serilog.Extensions.Hosting"/>
     </ItemGroup>
 
     <ItemGroup>

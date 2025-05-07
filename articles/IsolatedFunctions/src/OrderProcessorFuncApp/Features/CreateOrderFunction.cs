@@ -35,15 +35,7 @@ public class CreateOrderFunction(
             );
         }
 
-        logger.LogInformation(
-            "Received {@CreateOrderRequest}",
-            new Dictionary<string, object>(StringComparer.Ordinal)
-            {
-                { nameof(dto.OrderId), dto.OrderId },
-                { nameof(dto.ReferenceId), dto.ReferenceId },
-                { nameof(dto.OrderDate), dto.OrderDate },
-            }
-        );
+        logger.LogInformation("Received {@CreateOrderRequest}", dto);
         // Do processing
         return await req.CreateSuccessResponse(HttpStatusCode.Accepted, new OrderAcceptedData(dto.OrderId), serializerOptions, token);
     }
