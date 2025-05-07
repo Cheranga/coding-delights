@@ -35,7 +35,15 @@ public class CreateOrderFunction(
             );
         }
 
-        logger.LogInformation("Received {CreateOrderRequest}", CreateOrderRequestLoggingDto.New(dto));
+        logger.LogInformation(
+            "Received {@CreateOrderRequest}",
+            new
+            {
+                dto.OrderId,
+                dto.ReferenceId,
+                dto.OrderDate,
+            }
+        );
         // Do processing
         return await req.CreateSuccessResponse(HttpStatusCode.Accepted, new OrderAcceptedData(dto.OrderId), serializerOptions, token);
     }
