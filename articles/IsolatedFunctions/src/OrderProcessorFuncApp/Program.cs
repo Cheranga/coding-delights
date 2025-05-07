@@ -1,7 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using FluentValidation;
-using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,15 +12,6 @@ using Serilog.Events;
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
 
 var host = new HostBuilder()
-    .UseSerilog(
-        (_, services, loggerConfiguration) =>
-        {
-            loggerConfiguration
-                .Enrich.FromLogContext()
-                .WriteTo.Console()
-                .WriteTo.ApplicationInsights(services.GetRequiredService<TelemetryConfiguration>(), TelemetryConverter.Traces);
-        }
-    )
     .ConfigureFunctionsWorkerDefaults(builder =>
     {
         var services = builder.Services;
@@ -51,9 +41,29 @@ var host = new HostBuilder()
 
         services.AddApplicationInsightsTelemetryWorkerService();
         services.ConfigureFunctionsApplicationInsights();
+#pragma warning disable S125
+        // services.AddSingleton<ITelemetryInitializer, CustomTelemetryInitializer>();
+#pragma warning restore S125
     })
     .ConfigureLogging(logging =>
     {
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+            .MinimumLevel.Override("Worker", LogEventLevel.Warning)
+            .MinimumLevel.Override("Host", LogEventLevel.Warning)
+            .MinimumLevel.Override("System", LogEventLevel.Warning)
+            .MinimumLevel.Override("Function", LogEventLevel.Warning)
+            .MinimumLevel.Override("Azure*", LogEventLevel.Warning)
+            .MinimumLevel.Override("OrderProcessorFuncApp.Features", LogEventLevel.Information)
+            .WriteTo.Console()
+            .WriteTo.ApplicationInsights(TelemetryConverter.Traces, LogEventLevel.Information)
+            .Enrich.FromLogContext()
+            .Enrich.WithProperty("FunctionAppName", "OrderProcessorFuncApp")
+            .CreateLogger();
+
+        logging.AddSerilog(Log.Logger, true);
+
         // Remove the default Application Insights logger provider so that Information logs are sent
         // https://learn.microsoft.com/en-us/azure/azure-functions/dotnet-isolated-process-guide?tabs=hostbuilder%2Clinux&WT.mc_id=DOP-MVP-5001655#managing-log-levels
         logging.Services.Configure<LoggerFilterOptions>(options =>
