@@ -49,7 +49,8 @@ var host = new HostBuilder()
     .ConfigureLogging(
         (context, logging) =>
         {
-            Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(context.Configuration).CreateLogger();
+            var serilogLogger = new LoggerConfiguration().ReadFrom.Configuration(context.Configuration).CreateLogger();
+            Log.Logger = serilogLogger;
 
             logging.AddSerilog(Log.Logger, true);
 
