@@ -7,15 +7,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OrderProcessorFuncApp.Features;
+using OrderProcessorFuncApp.Middlewares;
 using Serilog;
-using Serilog.Configuration;
-using Serilog.Events;
 
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults(builder =>
     {
+        builder.UseMiddleware<EnrichmentMiddleware>();
         var services = builder.Services;
         services.Configure<JsonSerializerOptions>(options =>
         {
