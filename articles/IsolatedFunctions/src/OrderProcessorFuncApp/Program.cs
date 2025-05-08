@@ -10,6 +10,10 @@ using OrderProcessorFuncApp.Features;
 using OrderProcessorFuncApp.Middlewares;
 using Serilog;
 
+//
+// Initialize a bootstrap logger to capture logs during the application's startup phase.
+// This logger will be replaced later in the logging configuration with the final logger.
+//
 Log.Logger = new LoggerConfiguration().Enrich.FromLogContext().WriteTo.Console().CreateBootstrapLogger();
 
 var host = new HostBuilder()
