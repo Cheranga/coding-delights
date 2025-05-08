@@ -10,7 +10,7 @@ using OrderProcessorFuncApp.Features;
 using OrderProcessorFuncApp.Middlewares;
 using Serilog;
 
-Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
+Log.Logger = new LoggerConfiguration().Enrich.FromLogContext().WriteTo.Console().CreateBootstrapLogger();
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults(builder =>
