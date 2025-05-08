@@ -59,6 +59,10 @@ var host = new HostBuilder()
 
             logging.AddSerilog(Log.Logger, true);
 
+            //
+            // Remove the default Application Insights logger provider so that Information logs are sent
+            // https://learn.microsoft.com/en-us/azure/azure-functions/dotnet-isolated-process-guide?tabs=hostbuilder%2Clinux&WT.mc_id=DOP-MVP-5001655#managing-log-levels
+            //
             logging.Services.Configure<LoggerFilterOptions>(options =>
             {
                 var defaultRule = options.Rules.FirstOrDefault(rule =>
