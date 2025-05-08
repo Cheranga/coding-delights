@@ -25,7 +25,7 @@ jobs:
     uses: ./.github/workflows/deploy-function-app.yml
     with:
       environment: ${{ matrix.env }}
-      skip_provisioning: true
+      skip_provisioning: false
       app_name: funky-opf
       deployment_name: funky-opf-${{ matrix.env }}
       function_app_name: cchat-fn-funky-opf-${{ matrix.env }}
