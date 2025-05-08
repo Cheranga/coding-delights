@@ -7,6 +7,6 @@ internal sealed class OrderProcessor(ILogger<OrderProcessor> logger) : IOrderPro
     public async Task ProcessAsync(CreateOrderRequestDto request, CancellationToken token)
     {
         await Task.Delay(TimeSpan.FromSeconds(2), token);
-        logger.LogInformation("Processing order with ID: {OrderId}", request.OrderId);
+        logger.LogInformation("Processing order with ID: {@CreateOrderRequest}", request);
     }
 }

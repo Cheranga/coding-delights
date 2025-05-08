@@ -5,6 +5,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using OrderProcessorFuncApp.Core;
+using Serilog.Context;
 
 namespace OrderProcessorFuncApp.Features;
 
@@ -25,11 +26,11 @@ public class CreateOrderFunction(
             ? values.FirstOrDefault()
             : Guid.NewGuid().ToString("N");
 
-        using (logger.BeginScope(KeyValuePair.Create("CorrelationId", correlationId)))
+        using (LogContext.PushProperty("CorrelationId", correlationId))
         {
-            logger.LogInformation("Received request with CorrelationId: {CorrelationId}", correlationId);
             var token = context.CancellationToken;
             var dto = await GetDtoFromRequest(req, serializerOptions, token);
+            logger.LogInformation("Received {@CreateOrderRequest}", dto);
             var validationResult = await validator.ValidateAsync(dto, token);
             if (!validationResult.IsValid)
             {

@@ -25,6 +25,10 @@ on:
         required: false
         type: string
         default: ''
+      skip_provisioning:
+        required: false
+        type: boolean
+        default: false
 
     secrets:
       AZURE_CREDENTIALS:
@@ -35,6 +39,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: inputs.skip_provisioning != true
     environment:
       name: ${{ inputs.environment }}
 

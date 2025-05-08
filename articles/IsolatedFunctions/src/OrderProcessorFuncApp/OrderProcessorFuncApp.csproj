@@ -28,6 +28,7 @@
         <PackageReference Include="Serilog.Sinks.ApplicationInsights"/>
         <PackageReference Include="Serilog.Sinks.Console"/>
         <PackageReference Include="Serilog.Extensions.Hosting"/>
+        <PackageReference Include="Serilog.Settings.Configuration"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -35,6 +36,9 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
       <None Update="local.settings.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="appsettings.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>
