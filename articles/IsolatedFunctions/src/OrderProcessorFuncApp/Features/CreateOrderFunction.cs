@@ -22,14 +22,6 @@ public class CreateOrderFunction(
         FunctionContext context
     )
     {
-        // var correlationId = req.Headers.TryGetValues("x-correlation-id", out var values)
-        //     ? values.FirstOrDefault()
-#pragma warning disable S125
-        //     : Guid.NewGuid().ToString("N");
-#pragma warning restore S125
-
-        // using (LogContext.PushProperty("CorrelationId", correlationId))
-        // {
         var token = context.CancellationToken;
         var dto = await GetDtoFromRequest(req, serializerOptions, token);
         logger.LogInformation("Received {@CreateOrderRequest}", dto);
@@ -48,11 +40,7 @@ public class CreateOrderFunction(
 
         logger.LogInformation("Validation passed");
         await orderProcessor.ProcessAsync(dto, token);
-        // Do processing
         return await req.CreateSuccessResponse(HttpStatusCode.Accepted, new OrderAcceptedData(dto.OrderId), serializerOptions, token);
-#pragma warning disable S125
-        // }
-#pragma warning restore S125
     }
 
     private static async Task<CreateOrderRequestDto> GetDtoFromRequest(
