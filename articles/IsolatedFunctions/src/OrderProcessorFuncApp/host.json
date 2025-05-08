@@ -1,14 +1,8 @@
 ﻿{
   "version": "2.0",
-  "logging": {
-    "logLevel": {
-      "default": "Warning",
-      "Function": "Information"
-    },
-    "extensions": {
-      "http": {
-        "routePrefix": "api"
-      }
+  "extensions": {
+    "http": {
+      "routePrefix": "api"
     }
   }
 }

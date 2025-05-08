@@ -33,6 +33,7 @@ public class CreateOrderFunctionTests
 
         var request = new TestHttpRequestData<CreateOrderRequestDto>(context.Object, createOrderRequest);
         var function = new CreateOrderFunction(
+            Mock.Of<IOrderProcessor>(),
             new CreateOrderRequestDtoValidator(),
             _defaultSerializerOptions,
             Mock.Of<ILogger<CreateOrderFunction>>()
@@ -52,6 +53,7 @@ public class CreateOrderFunctionTests
 
         var request = new TestHttpRequestData<CreateOrderRequestDto>(context.Object, createOrderRequest);
         var function = new CreateOrderFunction(
+            Mock.Of<IOrderProcessor>(),
             new CreateOrderRequestDtoValidator(),
             _defaultSerializerOptions,
             Mock.Of<ILogger<CreateOrderFunction>>()

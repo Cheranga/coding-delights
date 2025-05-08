@@ -5,11 +5,12 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using OrderProcessorFuncApp.Core;
-using OrderProcessorFuncApp.Features;
+using Serilog.Context;
 
-namespace OrderProcessorFuncApp;
+namespace OrderProcessorFuncApp.Features;
 
 public class CreateOrderFunction(
+    IOrderProcessor orderProcessor,
     IValidator<CreateOrderRequestDto> validator,
     JsonSerializerOptions serializerOptions,
     ILogger<CreateOrderFunction> logger
@@ -17,12 +18,13 @@ public class CreateOrderFunction(
 {
     [Function(nameof(CreateOrderFunction))]
     public async Task<OrderAcceptedResponse> Run(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "orders")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, WebRequestMethods.Http.Post, Route = "orders")] HttpRequestData req,
         FunctionContext context
     )
     {
         var token = context.CancellationToken;
         var dto = await GetDtoFromRequest(req, serializerOptions, token);
+        logger.LogInformation("Received {@CreateOrderRequest}", dto);
         var validationResult = await validator.ValidateAsync(dto, token);
         if (!validationResult.IsValid)
         {
@@ -36,8 +38,8 @@ public class CreateOrderFunction(
             );
         }
 
-        logger.LogInformation("Received {@CreateOrderRequest}", dto);
-        // Do processing
+        logger.LogInformation("Validation passed");
+        await orderProcessor.ProcessAsync(dto, token);
         return await req.CreateSuccessResponse(HttpStatusCode.Accepted, new OrderAcceptedData(dto.OrderId), serializerOptions, token);
     }
 

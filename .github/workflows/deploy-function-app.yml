@@ -25,6 +25,10 @@ on:
         required: false
         type: string
         default: ''
+      skip_provisioning:
+        required: false
+        type: boolean
+        default: false
 
     secrets:
       AZURE_CREDENTIALS:
@@ -64,6 +68,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Provision Azure Resources
+        if: inputs.skip_provisioning == false
         uses: azure/arm-deploy@v2
         with:
           failOnStdErr: false
