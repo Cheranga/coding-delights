@@ -14,8 +14,8 @@ POST {{baseUrl}}/api/orders
 Content-Type: application/json
 
 {
-  "orderId": "ORD_000666",
-  "referenceId": "bruce.wayne@gotham.com",
+  "orderId": "0452FDD7-918D-49DD-BC19-CBF84FAB6264",
+  "referenceId": "9EB8B2D4-110C-4F56-A228-ADDDCC812620",
   "orderDate": "2023-10-01T00:00:00Z",
   "items": [
     {

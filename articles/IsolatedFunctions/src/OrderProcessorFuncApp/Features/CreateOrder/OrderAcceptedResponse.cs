@@ -1,6 +1,6 @@
 ﻿using Microsoft.Azure.Functions.Worker.Http;
 
-namespace OrderProcessorFuncApp.Features;
+namespace OrderProcessorFuncApp.Features.CreateOrder;
 
 public sealed record OrderAcceptedResponse
 {

@@ -8,6 +8,7 @@
         <Nullable>enable</Nullable>
         <WarningsAsErrors>true</WarningsAsErrors>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <UserSecretsId>16e3d9c7-e050-43ca-96e4-671700be6dad</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>

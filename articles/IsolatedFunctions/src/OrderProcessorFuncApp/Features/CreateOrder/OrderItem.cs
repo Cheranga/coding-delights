@@ -1,4 +1,4 @@
-﻿namespace OrderProcessorFuncApp.Features;
+﻿namespace OrderProcessorFuncApp.Features.CreateOrder;
 
 public sealed record OrderItem
 {
