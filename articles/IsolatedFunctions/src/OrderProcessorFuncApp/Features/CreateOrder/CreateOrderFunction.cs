@@ -7,8 +7,8 @@ using OrderProcessorFuncApp.Core.Shared;
 
 namespace OrderProcessorFuncApp.Features.CreateOrder;
 
-public class CreateOrderFunction(
-    ITestHttpRequestReader<CreateOrderRequestDto, CreateOrderRequestDto.Validator> requestReader,
+internal sealed class CreateOrderFunction(
+    IApiRequestReader<CreateOrderRequestDto, CreateOrderRequestDto.Validator> requestReader,
     IOrderProcessor orderProcessor,
     IOrderApiResponseGenerator responseGenerator,
     ILogger<CreateOrderFunction> logger

@@ -4,8 +4,8 @@ using OrderProcessorFuncApp.Core.Shared;
 
 namespace OrderProcessorFuncApp.Core.Http;
 
-public interface ITestHttpRequestReader<TDto, TDtoValidator>
-    where TDto : class, ITestDto<TDto, TDtoValidator>
+public interface IApiRequestReader<TDto, TDtoValidator>
+    where TDto : class, IApiRequestDto<TDto, TDtoValidator>
     where TDtoValidator : class, IValidator<TDto>
 {
     Task<OperationResponse<OperationResult.FailedResult, OperationResult.SuccessResult<TDto>>> ReadRequestAsync(

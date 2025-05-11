@@ -6,12 +6,12 @@ using OrderProcessorFuncApp.Core.Shared;
 
 namespace OrderProcessorFuncApp.Core.Http;
 
-public sealed class TestHttpRequestReader<TDto, TDtoValidator>(
+internal sealed class ApiRequestReader<TDto, TDtoValidator>(
     JsonSerializerOptions serializerOptions,
     IValidator<TDto> validator,
-    ILogger<TestHttpRequestReader<TDto, TDtoValidator>> logger
-) : ITestHttpRequestReader<TDto, TDtoValidator>
-    where TDto : class, ITestDto<TDto, TDtoValidator>
+    ILogger<ApiRequestReader<TDto, TDtoValidator>> logger
+) : IApiRequestReader<TDto, TDtoValidator>
+    where TDto : class, IApiRequestDto<TDto, TDtoValidator>
     where TDtoValidator : class, IValidator<TDto>
 {
     public async Task<OperationResponse<OperationResult.FailedResult, OperationResult.SuccessResult<TDto>>> ReadRequestAsync(

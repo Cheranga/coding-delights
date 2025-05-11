@@ -1,10 +1,8 @@
 ﻿using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Text.Json;
 using Microsoft.Azure.Functions.Worker.Http;
 using OrderProcessorFuncApp.Core.Shared;
-using OrderProcessorFuncApp.Features;
 using OrderProcessorFuncApp.Features.CreateOrder;
 
 namespace OrderProcessorFuncApp.Core.Http;

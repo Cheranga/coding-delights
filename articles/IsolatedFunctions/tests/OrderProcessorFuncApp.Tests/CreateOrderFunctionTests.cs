@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using AutoBogus;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using OrderProcessorFuncApp.Core.Http;
 using OrderProcessorFuncApp.Features.CreateOrder;
@@ -14,7 +14,7 @@ public class CreateOrderFunctionTests
 {
     private readonly OrderApiResponseGenerator _responseGenerator;
     private readonly OrderProcessor _orderProcessor;
-    private readonly ITestHttpRequestReader<CreateOrderRequestDto, CreateOrderRequestDto.Validator> _mockedApiRequestReader;
+    private readonly IApiRequestReader<CreateOrderRequestDto, CreateOrderRequestDto.Validator> _apiRequestReader;
 
     public CreateOrderFunctionTests()
     {
@@ -26,14 +26,14 @@ public class CreateOrderFunctionTests
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         };
 
-        _mockedApiRequestReader = new TestHttpRequestReader<CreateOrderRequestDto, CreateOrderRequestDto.Validator>(
+        _apiRequestReader = new ApiRequestReader<CreateOrderRequestDto, CreateOrderRequestDto.Validator>(
             serializerOptions,
             new CreateOrderRequestDto.Validator(),
-            Mock.Of<ILogger<TestHttpRequestReader<CreateOrderRequestDto, CreateOrderRequestDto.Validator>>>()
+            NullLogger<ApiRequestReader<CreateOrderRequestDto, CreateOrderRequestDto.Validator>>.Instance
         );
 
         _responseGenerator = new OrderApiResponseGenerator(serializerOptions);
-        _orderProcessor = new OrderProcessor(Mock.Of<ILogger<OrderProcessor>>());
+        _orderProcessor = new OrderProcessor(NullLogger<OrderProcessor>.Instance);
     }
 
     [Fact(DisplayName = "Valid create order request returns accepted response")]
@@ -45,10 +45,10 @@ public class CreateOrderFunctionTests
         var createOrderRequest = new AutoFaker<CreateOrderRequestDto>().Generate();
         var request = new TestHttpRequestData<CreateOrderRequestDto>(context.Object, createOrderRequest);
         var function = new CreateOrderFunction(
-            _mockedApiRequestReader,
+            _apiRequestReader,
             _orderProcessor,
             _responseGenerator,
-            Mock.Of<ILogger<CreateOrderFunction>>()
+            NullLogger<CreateOrderFunction>.Instance
         );
         var response = await function.Run(request, context.Object);
         Assert.NotNull(response.HttpResponse);
@@ -65,10 +65,10 @@ public class CreateOrderFunctionTests
 
         var request = new TestHttpRequestData<CreateOrderRequestDto>(context.Object, createOrderRequest);
         var function = new CreateOrderFunction(
-            _mockedApiRequestReader,
+            _apiRequestReader,
             _orderProcessor,
             _responseGenerator,
-            Mock.Of<ILogger<CreateOrderFunction>>()
+            NullLogger<CreateOrderFunction>.Instance
         );
         var response = await function.Run(request, context.Object);
         Assert.NotNull(response.HttpResponse);

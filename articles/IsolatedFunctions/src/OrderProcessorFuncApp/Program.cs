@@ -6,9 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using OrderProcessorFuncApp.Core;
 using OrderProcessorFuncApp.Core.Http;
-using OrderProcessorFuncApp.Features;
 using OrderProcessorFuncApp.Features.CreateOrder;
 using OrderProcessorFuncApp.Middlewares;
 using Serilog;
@@ -48,7 +46,7 @@ var host = new HostBuilder()
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             }
         );
-        services.AddSingleton<IHttpRequestReader, HttpRequestReader>();
+        services.AddSingleton(typeof(IApiRequestReader<,>), typeof(ApiRequestReader<,>));
         services.AddSingleton<IOrderApiResponseGenerator, OrderApiResponseGenerator>();
         services.AddSingleton<IOrderProcessor, OrderProcessor>();
         services.AddValidatorsFromAssembly(typeof(Program).Assembly);

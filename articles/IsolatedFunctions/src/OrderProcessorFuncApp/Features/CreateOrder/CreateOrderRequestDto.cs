@@ -3,7 +3,7 @@ using OrderProcessorFuncApp.Core.Http;
 
 namespace OrderProcessorFuncApp.Features.CreateOrder;
 
-public sealed record CreateOrderRequestDto : ITestDto<CreateOrderRequestDto, CreateOrderRequestDto.Validator>
+public sealed record CreateOrderRequestDto : IApiRequestDto<CreateOrderRequestDto, CreateOrderRequestDto.Validator>
 {
     public required Guid OrderId { get; init; }
     public required Guid ReferenceId { get; init; }

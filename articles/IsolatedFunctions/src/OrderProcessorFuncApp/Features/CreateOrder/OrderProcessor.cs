@@ -1,10 +1,9 @@
-﻿using FluentValidation;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using OrderProcessorFuncApp.Core.Shared;
 
 namespace OrderProcessorFuncApp.Features.CreateOrder;
 
-public sealed class OrderProcessor(ILogger<OrderProcessor> logger) : IOrderProcessor
+internal sealed class OrderProcessor(ILogger<OrderProcessor> logger) : IOrderProcessor
 {
     public async Task<OperationResponse<OperationResult.FailedResult, OperationResult.SuccessResult<OrderAcceptedData>>> ProcessAsync(
         CreateOrderRequestDto request,
