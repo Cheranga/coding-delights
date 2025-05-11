@@ -8,7 +8,7 @@ using OrderProcessorFuncApp.Core.Shared;
 namespace OrderProcessorFuncApp.Features.CreateOrder;
 
 public class CreateOrderFunction(
-    IHttpRequestReader requestReader,
+    ITestHttpRequestReader<CreateOrderRequestDto, CreateOrderRequestDto.Validator> requestReader,
     IOrderProcessor orderProcessor,
     IOrderApiResponseGenerator responseGenerator,
     ILogger<CreateOrderFunction> logger
@@ -22,7 +22,7 @@ public class CreateOrderFunction(
     {
         logger.LogInformation("starting to process order");
         var token = context.CancellationToken;
-        var readOperation = await requestReader.ReadRequestAsync<CreateOrderRequestDto>(req, token);
+        var readOperation = await requestReader.ReadRequestAsync(req, token);
         var response = readOperation.Result switch
         {
             OperationResult.FailedResult f => await responseGenerator.GenerateErrorResponseAsync(req, f, HttpStatusCode.BadRequest, token),
