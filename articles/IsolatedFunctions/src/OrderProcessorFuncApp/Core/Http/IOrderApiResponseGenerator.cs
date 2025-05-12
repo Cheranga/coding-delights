@@ -9,16 +9,16 @@ namespace OrderProcessorFuncApp.Core.Http;
 
 public interface IOrderApiResponseGenerator
 {
-    Task<OrderAcceptedResponse> GenerateOrderAcceptedResponseAsync(HttpRequestData request, Guid orderId);
+    Task<OrderApiResponse> GenerateOrderAcceptedResponseAsync(HttpRequestData request, Guid orderId);
 
-    Task<OrderAcceptedResponse> GenerateErrorResponseAsync(
+    Task<OrderApiResponse> GenerateErrorResponseAsync(
         HttpRequestData request,
         OperationResult.FailedResult failure,
         HttpStatusCode statusCode,
         CancellationToken token
     );
 
-    async Task<OrderAcceptedResponse> GenerateUnknownErrorAsync(HttpRequestData request, CancellationToken token)
+    async Task<OrderApiResponse> GenerateUnknownErrorAsync(HttpRequestData request, CancellationToken token)
     {
         var httpResponse = request.CreateResponse(HttpStatusCode.InternalServerError);
         httpResponse.Headers.Add("Content-Type", MediaTypeNames.Application.Json);
@@ -27,6 +27,6 @@ public interface IOrderApiResponseGenerator
             ErrorResponse.New(ErrorCodes.Unknown, ErrorMessages.Unknown),
             cancellationToken: token
         );
-        return new OrderAcceptedResponse { HttpResponse = httpResponse };
+        return new OrderApiResponse { HttpResponse = httpResponse };
     }
 }

@@ -2,7 +2,7 @@
 
 namespace OrderProcessorFuncApp.Features.CreateOrder;
 
-public sealed record OrderAcceptedResponse
+public sealed record OrderApiResponse
 {
     public HttpResponseData? HttpResponse { get; set; }
 }

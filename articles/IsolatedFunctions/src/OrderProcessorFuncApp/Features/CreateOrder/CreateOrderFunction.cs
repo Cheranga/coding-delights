@@ -15,7 +15,7 @@ internal sealed class CreateOrderFunction(
 )
 {
     [Function(nameof(CreateOrderFunction))]
-    public async Task<OrderAcceptedResponse> Run(
+    public async Task<OrderApiResponse> Run(
         [HttpTrigger(AuthorizationLevel.Anonymous, WebRequestMethods.Http.Post, Route = "orders")] HttpRequestData req,
         FunctionContext context
     )
@@ -34,7 +34,7 @@ internal sealed class CreateOrderFunction(
         return response;
     }
 
-    private async Task<OrderAcceptedResponse> ProcessOrderAsync(HttpRequestData request, CreateOrderRequestDto dto, CancellationToken token)
+    private async Task<OrderApiResponse> ProcessOrderAsync(HttpRequestData request, CreateOrderRequestDto dto, CancellationToken token)
     {
         var operation = await orderProcessor.ProcessAsync(dto, token);
         var response = operation.Result switch

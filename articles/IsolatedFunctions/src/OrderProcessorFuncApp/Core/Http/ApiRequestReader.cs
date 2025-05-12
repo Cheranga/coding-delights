@@ -21,6 +21,11 @@ internal sealed class ApiRequestReader<TDto, TDtoValidator>(
     {
         try
         {
+            if (request.Body is null)
+            {
+                logger.LogError("Request body is null");
+                return OperationResult.FailedResult.New(ErrorCodes.InvalidRequestSchema, ErrorMessages.InvalidRequestSchema);
+            }
             var dto = await JsonSerializer.DeserializeAsync<TDto>(request.Body, options: serializerOptions, cancellationToken: token);
             if (dto is null)
             {
@@ -33,7 +38,7 @@ internal sealed class ApiRequestReader<TDto, TDtoValidator>(
             {
                 return OperationResult.SuccessResult<TDto>.New(dto);
             }
-            logger.LogError("Request body is invalid");
+            logger.LogError("Validation failed for request with {@ValidationResult}", validationResult);
             return OperationResult.FailedResult.New(ErrorCodes.InvalidDataInRequest, ErrorMessages.InvalidDataInRequest, validationResult);
         }
         catch (Exception exception)

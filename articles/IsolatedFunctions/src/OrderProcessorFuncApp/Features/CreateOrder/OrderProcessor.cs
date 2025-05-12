@@ -10,10 +10,20 @@ internal sealed class OrderProcessor(ILogger<OrderProcessor> logger) : IOrderPro
         CancellationToken token
     )
     {
-        logger.LogInformation("Received order request: {@Request}", request);
+        try
+        {
+            // Simulating some processing time
+            await Task.Delay(TimeSpan.FromSeconds(1), token);
+            return OperationResult.SuccessResult<OrderAcceptedData>.New(new OrderAcceptedData(request.OrderId));
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "An error occurred while processing the order request");
+        }
 
-        // Simulating some processing time
-        await Task.Delay(TimeSpan.FromSeconds(1), token);
-        return OperationResult.SuccessResult<OrderAcceptedData>.New(new OrderAcceptedData(request.OrderId));
+        return OperationResult.FailedResult.New(
+            ErrorCodes.ErrorOccurredWhenProcessingOrder,
+            ErrorMessages.ErrorOccurredWhenProcessingOrder
+        );
     }
 }
