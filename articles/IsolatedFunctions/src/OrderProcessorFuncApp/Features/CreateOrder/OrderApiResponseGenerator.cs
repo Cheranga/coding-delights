@@ -27,8 +27,6 @@ internal sealed class OrderApiResponseGenerator(JsonSerializerOptions serializer
     {
         var httpResponse = request.CreateResponse(statusCode);
         httpResponse.Headers.Add("Content-Type", MediaTypeNames.Application.Json);
-        var a = JsonSerializer.Serialize(failure.Error, serializerOptions);
-        Console.WriteLine(a);
         await JsonSerializer.SerializeAsync(httpResponse.Body, failure.Error, serializerOptions, token);
         return new OrderApiResponse { HttpResponse = httpResponse };
     }
