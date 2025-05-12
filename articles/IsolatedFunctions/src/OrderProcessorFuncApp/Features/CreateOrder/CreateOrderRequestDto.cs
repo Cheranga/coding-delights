@@ -13,10 +13,14 @@ public sealed record CreateOrderRequestDto : IApiRequestDto<CreateOrderRequestDt
 
     public sealed class Validator : AbstractValidator<CreateOrderRequestDto>
     {
-        public Validator()
+        public Validator(IValidator<OrderItem> orderItemValidator)
         {
             RuleFor(x => x.OrderId).NotEqual(Guid.Empty).WithMessage("OrderId is required");
             RuleFor(x => x.ReferenceId).NotEqual(Guid.Empty).WithMessage("ReferenceId is required");
+            RuleFor(x => x.OrderDate).GreaterThan(DateTimeOffset.MinValue);
+            // Items cannot be empty, but for each item it must be validated
+            RuleFor(x => x.Items).NotEmpty().WithMessage("Items are required");
+            RuleForEach(x => x.Items).SetValidator(orderItemValidator);
         }
     }
 }

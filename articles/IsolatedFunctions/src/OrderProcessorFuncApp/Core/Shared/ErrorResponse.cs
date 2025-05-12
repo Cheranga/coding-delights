@@ -15,7 +15,7 @@ public sealed record ErrorResponse
 
     public string ErrorCode { get; init; }
 
-    private IReadOnlyCollection<ErrorResponse>? ErrorDetails { get; init; }
+    public IReadOnlyCollection<ErrorResponse>? ErrorDetails { get; init; }
 
     public static ErrorResponse New(string errorCode, string errorMessage) => new(errorCode, errorMessage, errorDetails: null);
 
@@ -23,6 +23,12 @@ public sealed record ErrorResponse
         new(
             errorCode,
             errorMessage,
-            errorDetails: validationResult.Errors.Select(x => new ErrorResponse(x.PropertyName, x.ErrorMessage, errorDetails: null))
+            errorDetails: validationResult.Errors.Select(x => new ErrorResponse(
+                x.FormattedMessagePlaceholderValues.TryGetValue("PropertyName", out var propertyName)
+                    ? propertyName?.ToString() ?? x.PropertyName
+                    : x.PropertyName,
+                x.ErrorMessage,
+                errorDetails: null
+            ))
         );
 }

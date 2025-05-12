@@ -28,7 +28,7 @@ public class CreateOrderFunctionTests
 
         _apiRequestReader = new ApiRequestReader<CreateOrderRequestDto, CreateOrderRequestDto.Validator>(
             serializerOptions,
-            new CreateOrderRequestDto.Validator(),
+            new CreateOrderRequestDto.Validator(new OrderItem.Validator()),
             NullLogger<ApiRequestReader<CreateOrderRequestDto, CreateOrderRequestDto.Validator>>.Instance
         );
 

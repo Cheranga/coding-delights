@@ -34,7 +34,7 @@ internal sealed class ApiRequestReader<TDto, TDtoValidator>(
                 return OperationResult.SuccessResult<TDto>.New(dto);
             }
             logger.LogError("Request body is invalid");
-            return OperationResult.FailedResult.New(ErrorCodes.InvalidDataInRequest, ErrorMessages.InvalidDataInRequest);
+            return OperationResult.FailedResult.New(ErrorCodes.InvalidDataInRequest, ErrorMessages.InvalidDataInRequest, validationResult);
         }
         catch (Exception exception)
         {
