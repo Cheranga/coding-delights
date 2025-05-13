@@ -14,6 +14,7 @@ jobs:
     uses: ./.github/workflows/ci-application.yml
     with:
       project-path: articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Tests/OrderProcessorFuncApp.Tests.csproj
+      dotnet-version: '9.0.x'
   
   deploy_to_non_prod:
     name: Deploy to ${{ matrix.env }}
@@ -26,6 +27,7 @@ jobs:
     with:
       environment: ${{ matrix.env }}
       skip_provisioning: false
+      dotnet_version: '9.0.x'
       app_name: funky-opf
       deployment_name: funky-opf-${{ matrix.env }}
       function_app_name: cchat-fn-funky-opf-${{ matrix.env }}

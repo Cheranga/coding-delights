@@ -7,7 +7,12 @@ on:
         type: string
         required: true
         description: Path to the csproj file
-        
+      dotnet-version:
+        type: string
+        required: false
+        description: Version of .NET to use (default is 8.0.x)
+        default: 8.0.x
+
 permissions: 
     contents: read
 
@@ -23,7 +28,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
-            8.0.x
+            ${{ inputs.dotnet-version }}
 
       - name: Install DotNet Tools and Run Husky
         run: |
