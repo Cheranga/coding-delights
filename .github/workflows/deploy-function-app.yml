@@ -29,10 +29,6 @@ on:
         required: false
         type: boolean
         default: false
-      dotnet_version:
-        required: false
-        type: string
-        default: '9.0.x'
 
     secrets:
       AZURE_CREDENTIALS:
@@ -53,7 +49,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 8.0.x
           
       - name: Set Version from Input
         if: inputs.version_number != ''

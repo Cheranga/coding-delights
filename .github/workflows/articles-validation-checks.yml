@@ -2,12 +2,6 @@ name: Articles Validation Checks
 
 on:
   workflow_call:
-    inputs:      
-      dotnet-version:
-        type: string
-        required: false
-        description: Version of .NET to use (default is 8.0.x)
-        default: 8.0.x
     
 permissions: 
   contents: read
@@ -22,6 +16,7 @@ jobs:
             - articles/BunsenBurner/tests/ToDoApi.BunsenBurner.Tests/ToDoApi.BunsenBurner.Tests.csproj
             - articles/BunsenBurner/tests/ToDoApi.Tests/ToDoApi.Tests.csproj
             - articles/ResilientHttpClients/tests/ResilientHttpClients.Services.Tests/ResilientHttpClients.Services.Tests.csproj
+            - articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Tests/OrderProcessorFuncApp.Tests.csproj
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,7 +25,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
-            ${{ inputs.dotnet-version }}
+            8.0.x
 
       - name: Install DotNet Tools and Run Husky
         run: |
