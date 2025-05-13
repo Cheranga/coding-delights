@@ -11,11 +11,3 @@ public sealed record CreateOrderMessage : IMessage
     public string CorrelationId => ReferenceId.ToString();
     public string MessageType => nameof(CreateOrderMessage);
 }
-
-public sealed record OrderItem
-{
-    public required string ProductId { get; init; }
-    public required decimal Quantity { get; init; }
-    public required decimal Price { get; init; }
-    public required string Metric { get; init; }
-}

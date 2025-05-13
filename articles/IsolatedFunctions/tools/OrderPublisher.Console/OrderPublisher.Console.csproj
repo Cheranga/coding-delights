@@ -5,19 +5,25 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <WarningsAsErrors>true</WarningsAsErrors>
         <UserSecretsId>a250280a-72ba-4908-9359-8284a0d34cff</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="AutoBogus" />
-      <PackageReference Include="Azure.Messaging.ServiceBus" />
-      <PackageReference Include="Microsoft.Extensions.Hosting" />
+        <PackageReference Include="AsyncFixer"/>
+        <PackageReference Include="Meziantou.Analyzer"/>
+        <PackageReference Include="Roslynator.Analyzers"/>
+        <PackageReference Include="SonarAnalyzer.CSharp"/>
+        <PackageReference Include="AutoBogus"/>
+        <PackageReference Include="Azure.Messaging.ServiceBus"/>
+        <PackageReference Include="Microsoft.Extensions.Hosting"/>
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="appsettings.json">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
+        <None Update="appsettings.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
 </Project>

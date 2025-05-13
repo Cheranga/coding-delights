@@ -24,7 +24,7 @@ internal static class Bootstrapper
         return services;
     }
 
-    private static IServiceCollection RegisterConfigurations(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection RegisterConfigurations(this IServiceCollection services)
     {
         services.AddOptions<ServiceBusConfig>().BindConfiguration(nameof(ServiceBusConfig));
         return services;
@@ -39,6 +39,6 @@ internal static class Bootstrapper
 
     public static void RegisterDependencies(this IServiceCollection services, IConfiguration configuration)
     {
-        services.RegisterConfigurations(configuration).RegisterInfrastructureServices().RegisterApplicationServices();
+        services.RegisterConfigurations().RegisterInfrastructureServices().RegisterApplicationServices();
     }
 }

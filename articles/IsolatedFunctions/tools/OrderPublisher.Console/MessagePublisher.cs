@@ -5,18 +5,14 @@ using OrderPublisher.Console.Models;
 
 namespace OrderPublisher.Console;
 
-internal sealed class MessagePublisher(
-    ServiceBusClient serviceBusClient,
-    IOptionsMonitor<ServiceBusConfig> serviceBusConfigOptions,
-    JsonSerializerOptions serializerOptions
-) : IMessagePublisher
+internal sealed class MessagePublisher(ServiceBusClient serviceBusClient, JsonSerializerOptions serializerOptions) : IMessagePublisher
 {
-    public async Task PublishToTopicAsync<TMessage>(string topicName, TMessage message, CancellationToken token)
+    public Task PublishToTopicAsync<TMessage>(string topicName, TMessage message, CancellationToken token)
         where TMessage : IMessage
     {
         var sender = serviceBusClient.CreateSender(topicName);
         var serializedMessage = JsonSerializer.Serialize(message, serializerOptions);
-        await sender.SendMessageAsync(
+        return sender.SendMessageAsync(
             new ServiceBusMessage(serializedMessage) { SessionId = message.Id, Subject = message.MessageType },
             token
         );
