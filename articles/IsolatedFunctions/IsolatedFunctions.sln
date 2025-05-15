@@ -8,6 +8,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{38844F56
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderPublisher.Console", "tools\OrderPublisher.Console\OrderPublisher.Console.csproj", "{AA3AF999-6E6A-4552-9772-DF14E703A87F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderReceiver.Console", "tools\OrderReceiver.Console\OrderReceiver.Console.csproj", "{60B6A79A-537C-48EC-8FB2-134E65353F11}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,8 +28,13 @@ Global
 		{AA3AF999-6E6A-4552-9772-DF14E703A87F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AA3AF999-6E6A-4552-9772-DF14E703A87F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AA3AF999-6E6A-4552-9772-DF14E703A87F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60B6A79A-537C-48EC-8FB2-134E65353F11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60B6A79A-537C-48EC-8FB2-134E65353F11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60B6A79A-537C-48EC-8FB2-134E65353F11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60B6A79A-537C-48EC-8FB2-134E65353F11}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{AA3AF999-6E6A-4552-9772-DF14E703A87F} = {38844F56-6CA6-43C3-9E9E-48804D9EF7AD}
+		{60B6A79A-537C-48EC-8FB2-134E65353F11} = {38844F56-6CA6-43C3-9E9E-48804D9EF7AD}
 	EndGlobalSection
 EndGlobal
