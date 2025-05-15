@@ -1,0 +1,29 @@
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using OrderPublisher.Console.Models;
+using OrderPublisher.Console.Services;
+
+namespace OrderPublisher.Console;
+
+internal class OrderPublisherBackgroundService(
+    IOptions<ServiceBusConfig> options,
+    IOrderGenerator<CreateOrderMessage> orderGenerator,
+    IMessagePublisher messagePublisher,
+    ILogger<OrderPublisherBackgroundService> logger
+) : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        var serviceBusConfig = options.Value;
+        var topicName = serviceBusConfig.TopicName;
+
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            var orders = await orderGenerator.GenerateOrdersAsync(10, stoppingToken);
+            await messagePublisher.PublishToTopicAsync(topicName, orders.ToList(), stoppingToken);
+            logger.LogInformation("Published {Count} messages to topic {TopicName}", orders.Count, topicName);
+            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+        }
+    }
+}

@@ -2,7 +2,7 @@
 using Azure.Messaging.ServiceBus;
 using OrderReceiver.Console.Models;
 
-namespace OrderReceiver.Console;
+namespace OrderReceiver.Console.Services;
 
 internal sealed class MessageReader(ServiceBusClient serviceBusClient, JsonSerializerOptions serializerOptions) : IMessageReader
 {
@@ -21,7 +21,7 @@ internal sealed class MessageReader(ServiceBusClient serviceBusClient, JsonSeria
         return message!;
     }
 
-    public async Task<IReadOnlyCollection<TMessage>> ReadMessageBatchAsync<TMessage>(
+    public async Task<IReadOnlyList<TMessage>> ReadMessageBatchAsync<TMessage>(
         string topicName,
         string subscriptionName,
         CancellationToken token

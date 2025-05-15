@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using OrderReceiver.Console;
 using OrderReceiver.Console.Models;
+using OrderReceiver.Console.Services;
 
 var host = Host.CreateDefaultBuilder()
     .ConfigureAppConfiguration(builder =>
@@ -12,20 +13,4 @@ var host = Host.CreateDefaultBuilder()
     .ConfigureServices((context, services) => services.RegisterDependencies(context.Configuration))
     .Build();
 
-var serviceBusConfig = host.Services.GetRequiredService<IOptions<ServiceBusConfig>>().Value;
-var messageReader = host.Services.GetRequiredService<IMessageReader>();
-var message = await messageReader.ReadMessageAsync<CreateOrderMessage>(
-    serviceBusConfig.TopicName,
-    serviceBusConfig.SubscriptionName,
-    CancellationToken.None
-);
-
-Console.WriteLine($"Read order with id ${message.Id}");
-
-var messages = await messageReader.ReadMessageBatchAsync<CreateOrderMessage>(
-    serviceBusConfig.TopicName,
-    serviceBusConfig.SubscriptionName,
-    CancellationToken.None
-);
-Console.WriteLine($"Read {messages.Count} orders");
 await host.RunAsync();

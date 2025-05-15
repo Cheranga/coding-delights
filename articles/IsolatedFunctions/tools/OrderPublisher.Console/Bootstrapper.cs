@@ -5,6 +5,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using OrderPublisher.Console.Models;
+using OrderPublisher.Console.Services;
 
 namespace OrderPublisher.Console;
 
@@ -21,6 +23,8 @@ internal static class Bootstrapper
             }
         );
         services.TryAddSingleton<IMessagePublisher, MessagePublisher>();
+        services.TryAddSingleton<IOrderGenerator<CreateOrderMessage>, OrderGenerator>();
+        services.AddHostedService<OrderPublisherBackgroundService>();
         return services;
     }
 

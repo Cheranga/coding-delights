@@ -1,9 +1,8 @@
 ﻿using System.Text.Json;
 using Azure.Messaging.ServiceBus;
-using Microsoft.Extensions.Options;
 using OrderPublisher.Console.Models;
 
-namespace OrderPublisher.Console;
+namespace OrderPublisher.Console.Services;
 
 internal sealed class MessagePublisher(ServiceBusClient serviceBusClient, JsonSerializerOptions serializerOptions) : IMessagePublisher
 {
@@ -18,7 +17,7 @@ internal sealed class MessagePublisher(ServiceBusClient serviceBusClient, JsonSe
         );
     }
 
-    public async Task PublishToTopicAsync<TMessage>(string topicName, IReadOnlyCollection<TMessage> messages, CancellationToken token)
+    public async Task PublishToTopicAsync<TMessage>(string topicName, IList<TMessage> messages, CancellationToken token)
         where TMessage : IMessage
     {
         var sender = serviceBusClient.CreateSender(topicName);

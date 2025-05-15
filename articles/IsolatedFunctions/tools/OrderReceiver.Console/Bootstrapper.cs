@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using OrderReceiver.Console.Services;
 
 namespace OrderReceiver.Console;
 
@@ -21,6 +22,7 @@ internal static class Bootstrapper
             }
         );
         services.TryAddSingleton<IMessageReader, MessageReader>();
+        services.AddHostedService<OrderReaderBackgroundService>();
         return services;
     }
 
