@@ -1,10 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 using OrderReceiver.Console;
-using OrderReceiver.Console.Models;
-using OrderReceiver.Console.Services;
 
 var host = Host.CreateDefaultBuilder()
     .ConfigureAppConfiguration(builder =>

@@ -47,7 +47,8 @@ internal sealed class CreateOrderFunction(
             ),
             OperationResult.SuccessResult<OrderAcceptedData> s => await responseGenerator.GenerateOrderAcceptedResponseAsync(
                 request,
-                s.Result.OrderId
+                s.Result.OrderId,
+                token
             ),
             _ => await responseGenerator.GenerateUnknownErrorAsync(request, token),
         };
