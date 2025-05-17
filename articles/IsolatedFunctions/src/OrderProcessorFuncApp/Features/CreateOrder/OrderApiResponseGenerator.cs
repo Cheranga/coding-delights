@@ -9,12 +9,13 @@ namespace OrderProcessorFuncApp.Features.CreateOrder;
 
 internal sealed class OrderApiResponseGenerator(JsonSerializerOptions serializerOptions) : IOrderApiResponseGenerator
 {
-    public async Task<OrderApiResponse> GenerateOrderAcceptedResponseAsync(HttpRequestData request, Guid orderId)
+    public async Task<OrderApiResponse> GenerateOrderAcceptedResponseAsync(HttpRequestData request, Guid orderId, CancellationToken token)
     {
         var httpResponse = request.CreateResponse(HttpStatusCode.Accepted);
         httpResponse.Headers.Add("Content-Type", MediaTypeNames.Application.Json);
         var responseData = new OrderAcceptedData(orderId);
-        await JsonSerializer.SerializeAsync(httpResponse.Body, responseData, serializerOptions);
+        await JsonSerializer.SerializeAsync(httpResponse.Body, responseData, serializerOptions, token);
+
         return new OrderApiResponse { HttpResponse = httpResponse };
     }
 
@@ -28,6 +29,7 @@ internal sealed class OrderApiResponseGenerator(JsonSerializerOptions serializer
         var httpResponse = request.CreateResponse(statusCode);
         httpResponse.Headers.Add("Content-Type", MediaTypeNames.Application.Json);
         await JsonSerializer.SerializeAsync(httpResponse.Body, failure.Error, serializerOptions, token);
+
         return new OrderApiResponse { HttpResponse = httpResponse };
     }
 }

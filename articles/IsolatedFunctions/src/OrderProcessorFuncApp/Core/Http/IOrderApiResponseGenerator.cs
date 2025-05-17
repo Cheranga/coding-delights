@@ -9,8 +9,7 @@ namespace OrderProcessorFuncApp.Core.Http;
 
 public interface IOrderApiResponseGenerator
 {
-    Task<OrderApiResponse> GenerateOrderAcceptedResponseAsync(HttpRequestData request, Guid orderId);
-
+    Task<OrderApiResponse> GenerateOrderAcceptedResponseAsync(HttpRequestData request, Guid orderId, CancellationToken token);
     Task<OrderApiResponse> GenerateErrorResponseAsync(
         HttpRequestData request,
         OperationResult.FailedResult failure,
