@@ -26,6 +26,7 @@
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.15" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.4" />
+    <PackageVersion Include="Testcontainers.ServiceBus" Version="4.4.0" />
     <!--        Azure Functions-->
     <PackageVersion Include="Microsoft.Azure.Functions.Worker" Version="2.0.0" />
     <PackageVersion Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.2" />
