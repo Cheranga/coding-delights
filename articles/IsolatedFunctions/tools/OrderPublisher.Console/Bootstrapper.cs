@@ -35,11 +35,14 @@ internal static class Bootstrapper
     }
 
     private static IServiceCollection RegisterInfrastructureServices(this IServiceCollection services) =>
-        services.AddSingleton(sp =>
-        {
-            var config = sp.GetRequiredService<IOptions<ServiceBusConfig>>().Value;
-            return new ServiceBusClient(config.ConnectionString);
-        });
+        services
+            .AddSingleton(sp =>
+            {
+                var config = sp.GetRequiredService<IOptions<ServiceBusConfig>>().Value;
+                return new ServiceBusClient(config.ConnectionString);
+            })
+            // Registering the `ServiceBusClient` as an `IAsyncDisposable` to ensure it is disposed of correctly
+            .AddSingleton<IAsyncDisposable>(sp => sp.GetRequiredService<ServiceBusClient>());
 
     public static void RegisterDependencies(this IServiceCollection services, IConfiguration configuration)
     {

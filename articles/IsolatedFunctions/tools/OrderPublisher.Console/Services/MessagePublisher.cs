@@ -6,12 +6,12 @@ namespace OrderPublisher.Console.Services;
 
 internal sealed class MessagePublisher(ServiceBusClient serviceBusClient, JsonSerializerOptions serializerOptions) : IMessagePublisher
 {
-    public Task PublishToTopicAsync<TMessage>(string topicName, TMessage message, CancellationToken token)
+    public async Task PublishToTopicAsync<TMessage>(string topicName, TMessage message, CancellationToken token)
         where TMessage : IMessage
     {
-        var sender = serviceBusClient.CreateSender(topicName);
+        await using var sender = serviceBusClient.CreateSender(topicName);
         var serializedMessage = JsonSerializer.Serialize(message, serializerOptions);
-        return sender.SendMessageAsync(
+        await sender.SendMessageAsync(
             new ServiceBusMessage(serializedMessage) { SessionId = message.Id, Subject = message.MessageType },
             token
         );
@@ -20,7 +20,7 @@ internal sealed class MessagePublisher(ServiceBusClient serviceBusClient, JsonSe
     public async Task PublishToTopicAsync<TMessage>(string topicName, IList<TMessage> messages, CancellationToken token)
         where TMessage : IMessage
     {
-        var sender = serviceBusClient.CreateSender(topicName);
+        await using var sender = serviceBusClient.CreateSender(topicName);
         var messageBatch = await sender.CreateMessageBatchAsync(token);
         foreach (var message in messages)
         {

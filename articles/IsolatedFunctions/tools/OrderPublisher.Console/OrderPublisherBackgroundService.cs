@@ -18,12 +18,19 @@ internal class OrderPublisherBackgroundService(
         var serviceBusConfig = options.Value;
         var topicName = serviceBusConfig.TopicName;
 
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            var orders = await orderGenerator.GenerateOrdersAsync(10, stoppingToken);
-            await messagePublisher.PublishToTopicAsync(topicName, orders.ToList(), stoppingToken);
-            logger.LogInformation("Published {Count} messages to topic {TopicName}", orders.Count, topicName);
-            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                var orders = await orderGenerator.GenerateOrdersAsync(10, stoppingToken);
+                await messagePublisher.PublishToTopicAsync(topicName, orders.ToList(), stoppingToken);
+                logger.LogInformation("Published {Count} messages to topic {TopicName}", orders.Count, topicName);
+                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+            }
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Error occurred while publishing messages to topic {TopicName}", topicName);
         }
     }
 }

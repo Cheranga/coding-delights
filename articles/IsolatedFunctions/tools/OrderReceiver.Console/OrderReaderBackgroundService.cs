@@ -17,16 +17,29 @@ internal class OrderReaderBackgroundService(
         var serviceBusConfig = options.Value;
         var topicName = serviceBusConfig.TopicName;
         var subscriptionName = serviceBusConfig.SubscriptionName;
-        while (!stoppingToken.IsCancellationRequested)
+
+        try
         {
-            var orders = await messageReader.ReadMessageBatchAsync<CreateOrderMessage>(topicName, subscriptionName, stoppingToken);
-            logger.LogInformation(
-                "Received {Count} messages from topic {TopicName} and subscription {SubscriptionName}",
-                orders.Count,
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                var orders = await messageReader.ReadMessageBatchAsync<CreateOrderMessage>(topicName, subscriptionName, stoppingToken);
+                logger.LogInformation(
+                    "Received {Count} messages from topic {TopicName} and subscription {SubscriptionName}",
+                    orders.Count,
+                    topicName,
+                    subscriptionName
+                );
+                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+            }
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(
+                exception,
+                "Error occurred while reading messages from topic {TopicName} and subscription {SubscriptionName}",
                 topicName,
                 subscriptionName
             );
-            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
         }
     }
 }
