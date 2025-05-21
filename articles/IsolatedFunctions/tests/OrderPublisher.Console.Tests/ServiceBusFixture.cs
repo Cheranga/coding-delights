@@ -4,17 +4,19 @@ namespace OrderPublisher.Console.Tests;
 
 public class ServiceBusFixture : IAsyncLifetime
 {
+    private readonly ServiceBusContainer _serviceBusContainer;
+
     public ServiceBusFixture()
     {
-        ServiceBusContainer = new ServiceBusBuilder()
+        _serviceBusContainer = new ServiceBusBuilder()
             .WithAcceptLicenseAgreement(true)
             .WithResourceMapping("Config.json", "/ServiceBus_Emulator/ConfigFiles/")
             .Build();
     }
 
-    public Task InitializeAsync() => ServiceBusContainer.StartAsync();
+    public Task InitializeAsync() => _serviceBusContainer.StartAsync();
 
-    public ServiceBusContainer ServiceBusContainer { get; init; }
+    public Task DisposeAsync() => _serviceBusContainer.DisposeAsync().AsTask();
 
-    public Task DisposeAsync() => ServiceBusContainer.DisposeAsync().AsTask();
+    public string GetConnectionString() => _serviceBusContainer.GetConnectionString();
 }
