@@ -8,4 +8,5 @@ dotnet_diagnostic.MA0004.severity = none
 dotnet_diagnostic.MA0051.severity = none
 
 # ReSharper inspection severities
-resharper_condition_is_always_true_or_false_according_to_nullable_api_contract_highlighting = hint
+resharper_condition_is_always_true_or_false_according_to_nullable_api_contract_highlighting = none
+resharper_convert_to_local_function_highlighting = none

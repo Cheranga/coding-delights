@@ -12,7 +12,6 @@ internal sealed class OrderProcessor(ILogger<OrderProcessor> logger) : IOrderPro
     {
         try
         {
-            // Simulating some processing time
             await Task.Delay(TimeSpan.FromSeconds(1), token);
             return OperationResult.SuccessResult<OrderAcceptedData>.New(new OrderAcceptedData(request.OrderId));
         }
