@@ -41,7 +41,7 @@ public class OrderPublisherTests(ServiceBusFixture serviceBusFixture) : IClassFi
 
                 return recMessage;
             })
-            .Assert((data, result) => result != null && data.msg.Id == result.Id);
+            .Assert((data, result) => result != null && data.msg.SessionId == result.SessionId);
 
     [Fact(DisplayName = "Reading from a session enabled subscription")]
     public async Task Test2() =>
@@ -69,5 +69,5 @@ public class OrderPublisherTests(ServiceBusFixture serviceBusFixture) : IClassFi
 
                 return recMessage;
             })
-            .Assert((data, result) => result != null && data.msg.Id == result.Id);
+            .Assert((data, result) => result != null && data.msg.SessionId == result.SessionId);
 }

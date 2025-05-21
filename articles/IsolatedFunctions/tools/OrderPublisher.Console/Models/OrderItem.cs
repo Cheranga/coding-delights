@@ -1,6 +1,6 @@
 ﻿namespace OrderPublisher.Console.Models;
 
-public sealed record OrderItem
+internal sealed record OrderItem
 {
     public required string ProductId { get; init; }
     public required decimal Quantity { get; init; }

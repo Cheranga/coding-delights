@@ -15,8 +15,14 @@ internal sealed class OrderGenerator : IOrderGenerator<CreateOrderMessage>
 
     public Task<IReadOnlyList<CreateOrderMessage>> GenerateOrdersAsync(int count, CancellationToken token)
     {
-        var orderId = Guid.NewGuid();
-        var orders = _faker.RuleFor(x => x.OrderId, orderId).Generate(count);
+        var orders = Enumerable
+            .Range(1, 10)
+            .SelectMany(_ =>
+            {
+                var orderId = Guid.NewGuid();
+                return _faker.RuleFor(y => y.OrderId, orderId).Generate(count);
+            })
+            .ToList();
         var readOnlyCollection = new ReadOnlyCollection<CreateOrderMessage>(orders);
         return Task.FromResult<IReadOnlyList<CreateOrderMessage>>(readOnlyCollection);
     }

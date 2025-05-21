@@ -29,13 +29,29 @@ internal sealed class MessageReader(
             await receiver.CompleteMessageAsync(serviceBusMessage, token);
             return message!;
         }
-        catch (Exception exception)
+        catch (JsonException exception)
         {
             logger.LogError(
                 exception,
                 "Error occurred while deserializing message from topic {TopicName} and subscription {SubscriptionName}",
                 topicName,
                 subscriptionName
+            );
+            await receiver.DeadLetterMessageAsync(
+                serviceBusMessage,
+                deadLetterReason: "DeserializationError",
+                deadLetterErrorDescription: exception.Message,
+                cancellationToken: token
+            );
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(
+                exception,
+                "Error occurred while receiving message from topic {TopicName} and subscription {SubscriptionName}. Current {DeliveryCount}",
+                topicName,
+                subscriptionName,
+                serviceBusMessage.DeliveryCount
             );
             await receiver.AbandonMessageAsync(serviceBusMessage, cancellationToken: token);
         }

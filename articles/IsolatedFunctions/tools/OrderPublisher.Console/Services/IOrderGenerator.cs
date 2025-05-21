@@ -3,7 +3,7 @@
 namespace OrderPublisher.Console.Services;
 
 internal interface IOrderGenerator<TMessage>
-    where TMessage : IMessage
+    where TMessage : ISessionMessage
 {
     Task<IReadOnlyList<TMessage>> GenerateOrdersAsync(int count, CancellationToken token);
 }
