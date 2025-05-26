@@ -1,7 +1,6 @@
 ﻿namespace OrderPublisher.Console.Models;
 
-internal interface ISessionMessage
+internal interface ISessionMessage : IMessage
 {
     string SessionId { get; }
-    string MessageType { get; }
 }

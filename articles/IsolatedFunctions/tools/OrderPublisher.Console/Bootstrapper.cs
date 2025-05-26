@@ -22,7 +22,6 @@ internal static class Bootstrapper
                 WriteIndented = false,
             }
         );
-        services.TryAddSingleton<IMessagePublisher, MessagePublisher>();
         services.TryAddSingleton<IOrderGenerator<CreateOrderMessage>, OrderGenerator>();
         services.AddHostedService<OrderPublisherBackgroundService>();
         return services;
@@ -34,7 +33,11 @@ internal static class Bootstrapper
         return services;
     }
 
-    private static IServiceCollection RegisterInfrastructureServices(this IServiceCollection services) =>
+    private static IServiceCollection RegisterMessagingServices(this IServiceCollection services)
+    {
+        //
+        // Registering the ServiceBusClient with the connection string from the configuration
+        //
         services
             .AddSingleton(sp =>
             {
@@ -44,8 +47,31 @@ internal static class Bootstrapper
             // Registering the `ServiceBusClient` as an `IAsyncDisposable` to ensure it is disposed of correctly
             .AddSingleton<IAsyncDisposable>(sp => sp.GetRequiredService<ServiceBusClient>());
 
+        //
+        // Registering the message publisher for the CreateOrderMessage
+        //
+        services
+            .RegisterMessageClientBuilder()
+            .AddTopicPublisher<CreateOrderMessage>()
+            .Configure<IOptions<ServiceBusConfig>>(
+                (config, busConfigOptions) =>
+                {
+                    var busConfig = busConfigOptions.Value;
+                    config.ConnectionString = busConfig.ConnectionString;
+                    config.TopicName = busConfig.TopicName;
+                    config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.OrderId.ToString();
+                }
+            );
+
+        //
+        // Registering the OrderGenerator for CreateOrderMessage
+        //
+        services.TryAddSingleton<IOrderGenerator<CreateOrderMessage>, OrderGenerator>();
+        return services;
+    }
+
     public static void RegisterDependencies(this IServiceCollection services, IConfiguration configuration)
     {
-        services.RegisterConfigurations().RegisterInfrastructureServices().RegisterApplicationServices();
+        services.RegisterConfigurations().RegisterMessagingServices().RegisterApplicationServices();
     }
 }
