@@ -2,6 +2,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using AutoBogus;
 using Azure.Messaging.ServiceBus;
+using Microsoft.Extensions.DependencyInjection;
+using OrderPublisher.Console.Core;
 using OrderPublisher.Console.Models;
 using OrderPublisher.Console.Services;
 
@@ -70,4 +72,66 @@ public class OrderPublisherTests(ServiceBusFixture serviceBusFixture) : IClassFi
                 return recMessage;
             })
             .Assert((data, result) => result != null && data.msg.SessionId == result.SessionId);
+
+    [Fact(DisplayName = "Publishing to topic")]
+    public async Task Test3()
+    {
+        await Arrange(() =>
+            {
+                var services = new ServiceCollection();
+                services
+                    .AddLogging()
+                    .RegisterMessageClientBuilder()
+                    .AddTopicPublisher<CreateOrderMessage>()
+                    .Configure(config =>
+                    {
+                        config.ConnectionString = serviceBusFixture.GetConnectionString();
+                        config.TopicName = "sbt-orders";
+                        config.SerializerOptions = _serializerOptions;
+                    });
+
+                var serviceProvider = services.BuildServiceProvider();
+                var publisher = serviceProvider.GetRequiredService<IMessagePublisher<CreateOrderMessage>>();
+                return publisher;
+            })
+            .Act(async data =>
+            {
+                var msg = new AutoFaker<CreateOrderMessage>().Generate();
+                return await data.PublishToTopicAsync(msg, CancellationToken.None);
+            })
+            .Assert(operation =>
+            {
+                Assert.True(operation.Result is OperationResult.SuccessResult);
+            });
+    }
+
+    [Fact(DisplayName = "Publishing to topic with a session id")]
+    public async Task Test4()
+    {
+        await Arrange(() =>
+            {
+                var services = new ServiceCollection();
+                services
+                    .AddLogging()
+                    .RegisterMessageClientBuilder()
+                    .AddTopicPublisher<CreateOrderMessage>()
+                    .Configure(config =>
+                    {
+                        config.ConnectionString = serviceBusFixture.GetConnectionString();
+                        config.TopicName = "sbt-orders";
+                        config.SerializerOptions = _serializerOptions;
+                        config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.SessionId;
+                    });
+
+                var serviceProvider = services.BuildServiceProvider();
+                var publisher = serviceProvider.GetRequiredService<IMessagePublisher<CreateOrderMessage>>();
+                return publisher;
+            })
+            .Act(async data =>
+            {
+                var msg = new AutoFaker<CreateOrderMessage>().Generate();
+                return await data.PublishToTopicAsync(msg, CancellationToken.None);
+            })
+            .Assert(operation => operation.Result is OperationResult.SuccessResult);
+    }
 }
