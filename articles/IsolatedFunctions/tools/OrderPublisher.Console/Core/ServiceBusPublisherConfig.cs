@@ -5,7 +5,7 @@ using OrderPublisher.Console.Models;
 
 namespace OrderPublisher.Console.Core;
 
-public sealed class TopicPublisherConfig<TMessage>
+public sealed class ServiceBusPublisherConfig<TMessage>
     where TMessage : IMessage
 {
     public required string TopicOrQueueName { get; set; }

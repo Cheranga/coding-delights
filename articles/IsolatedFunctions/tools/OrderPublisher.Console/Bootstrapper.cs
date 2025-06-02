@@ -52,7 +52,7 @@ internal static class Bootstrapper
         //
         services
             .RegisterMessageClientBuilder()
-            .AddTopicPublisher<CreateOrderMessage>()
+            .AddPublisher<CreateOrderMessage>()
             .Configure<IOptions<ServiceBusConfig>>(
                 (config, busConfigOptions) =>
                 {

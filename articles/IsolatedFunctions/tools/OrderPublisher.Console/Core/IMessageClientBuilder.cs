@@ -5,6 +5,6 @@ namespace OrderPublisher.Console.Core;
 
 public interface IMessageClientBuilder
 {
-    OptionsBuilder<TopicPublisherConfig<TMessage>> AddTopicPublisher<TMessage>()
+    OptionsBuilder<ServiceBusPublisherConfig<TMessage>> AddPublisher<TMessage>()
         where TMessage : IMessage;
 }

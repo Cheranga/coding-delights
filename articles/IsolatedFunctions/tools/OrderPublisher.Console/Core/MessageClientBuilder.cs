@@ -20,7 +20,7 @@ internal class MessageClientBuilder : IMessageClientBuilder
         _services = services;
     }
 
-    public OptionsBuilder<TopicPublisherConfig<TMessage>> AddTopicPublisher<TMessage>()
+    public OptionsBuilder<ServiceBusPublisherConfig<TMessage>> AddPublisher<TMessage>()
         where TMessage : IMessage
     {
         //
@@ -29,7 +29,7 @@ internal class MessageClientBuilder : IMessageClientBuilder
         var publisherName = typeof(TMessage).Name;
         _services.TryAddSingleton<IServiceBusPublisher<TMessage>>(provider =>
         {
-            var optionsMonitor = provider.GetRequiredService<IOptionsMonitor<TopicPublisherConfig<TMessage>>>();
+            var optionsMonitor = provider.GetRequiredService<IOptionsMonitor<ServiceBusPublisherConfig<TMessage>>>();
             var options = optionsMonitor.Get(publisherName);
             var serviceBusClient = new ServiceBusClient(options.ConnectionString);
             var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<ServiceBusPublisher<TMessage>>();
@@ -37,6 +37,6 @@ internal class MessageClientBuilder : IMessageClientBuilder
             var publisher = new ServiceBusPublisher<TMessage>(serviceBusClient, options, logger);
             return publisher;
         });
-        return _services.AddOptions<TopicPublisherConfig<TMessage>>(publisherName);
+        return _services.AddOptions<ServiceBusPublisherConfig<TMessage>>(publisherName);
     }
 }

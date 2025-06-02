@@ -7,7 +7,7 @@ namespace OrderPublisher.Console.Services;
 
 internal class ServiceBusPublisher<TMessage>(
     ServiceBusClient serviceBusClient,
-    TopicPublisherConfig<TMessage> options,
+    ServiceBusPublisherConfig<TMessage> options,
     ILogger<ServiceBusPublisher<TMessage>> logger
 ) : IServiceBusPublisher<TMessage>
     where TMessage : IMessage

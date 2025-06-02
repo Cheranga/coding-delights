@@ -30,7 +30,7 @@ public partial class ServiceBusPublisherTests(ServiceBusFixture serviceBusFixtur
                 services
                     .AddLogging()
                     .RegisterMessageClientBuilder()
-                    .AddTopicPublisher<CreateOrderMessage>()
+                    .AddPublisher<CreateOrderMessage>()
                     .Configure(config =>
                     {
                         config.ConnectionString = serviceBusFixture.GetConnectionString();
@@ -69,7 +69,7 @@ public partial class ServiceBusPublisherTests(ServiceBusFixture serviceBusFixtur
                 services
                     .AddLogging()
                     .RegisterMessageClientBuilder()
-                    .AddTopicPublisher<CreateOrderMessage>()
+                    .AddPublisher<CreateOrderMessage>()
                     .Configure(config =>
                     {
                         config.ConnectionString = serviceBusFixture.GetConnectionString();
