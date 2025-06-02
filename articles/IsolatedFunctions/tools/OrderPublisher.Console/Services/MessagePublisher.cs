@@ -4,6 +4,9 @@ using OrderPublisher.Console.Models;
 
 namespace OrderPublisher.Console.Services;
 
+//
+// Remove this class, after testing ServiceBusTopicPublisher
+//
 internal sealed class MessagePublisher(ServiceBusClient serviceBusClient, JsonSerializerOptions serializerOptions) : IMessagePublisher
 {
     public async Task PublishToTopicAsync<TSessionMessage>(string topicName, TSessionMessage message, CancellationToken token)

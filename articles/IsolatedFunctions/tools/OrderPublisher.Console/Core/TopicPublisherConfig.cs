@@ -8,7 +8,7 @@ namespace OrderPublisher.Console.Core;
 public sealed class TopicPublisherConfig<TMessage>
     where TMessage : IMessage
 {
-    public required string TopicName { get; set; }
+    public required string TopicOrQueueName { get; set; }
     public required string ConnectionString { get; set; }
 
     public JsonSerializerOptions SerializerOptions { get; set; } =

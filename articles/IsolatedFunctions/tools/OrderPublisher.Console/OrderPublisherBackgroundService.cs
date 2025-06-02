@@ -9,7 +9,7 @@ namespace OrderPublisher.Console;
 internal class OrderPublisherBackgroundService(
     IOptions<ServiceBusConfig> options,
     IOrderGenerator<CreateOrderMessage> orderGenerator,
-    IMessagePublisher<CreateOrderMessage> messagePublisher,
+    IServiceBusPublisher<CreateOrderMessage> messagePublisher,
     ILogger<OrderPublisherBackgroundService> logger
 ) : BackgroundService
 {
@@ -23,7 +23,7 @@ internal class OrderPublisherBackgroundService(
             while (!stoppingToken.IsCancellationRequested)
             {
                 var orders = await orderGenerator.GenerateOrdersAsync(10, stoppingToken);
-                await messagePublisher.PublishToTopicAsync(orders, stoppingToken);
+                await messagePublisher.PublishAsync(orders, stoppingToken);
                 logger.LogInformation("Published {Count} messages to topic {TopicName}", orders.Count, topicName);
                 await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             }

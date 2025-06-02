@@ -27,16 +27,14 @@ internal class MessageClientBuilder : IMessageClientBuilder
         // Let's do the HttpClientFactory like approach later
         //
         var publisherName = typeof(TMessage).Name;
-        _services.TryAddSingleton<IMessagePublisher<TMessage>>(provider =>
+        _services.TryAddSingleton<IServiceBusPublisher<TMessage>>(provider =>
         {
-            var a = provider.GetService<IOptions<TopicPublisherConfig<TMessage>>>();
-
             var optionsMonitor = provider.GetRequiredService<IOptionsMonitor<TopicPublisherConfig<TMessage>>>();
             var options = optionsMonitor.Get(publisherName);
             var serviceBusClient = new ServiceBusClient(options.ConnectionString);
-            var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<ServiceBusTopicPublisher<TMessage>>();
+            var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<ServiceBusPublisher<TMessage>>();
 
-            var publisher = new ServiceBusTopicPublisher<TMessage>(serviceBusClient, options, logger);
+            var publisher = new ServiceBusPublisher<TMessage>(serviceBusClient, options, logger);
             return publisher;
         });
         return _services.AddOptions<TopicPublisherConfig<TMessage>>(publisherName);
