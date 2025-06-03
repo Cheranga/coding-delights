@@ -1,4 +1,6 @@
-﻿namespace OrderPublisher.Console.Models;
+﻿using AzureServiceBusLib.Models;
+
+namespace OrderPublisher.Console.Models;
 
 internal sealed record CreateOrderMessage : ISessionMessage
 {

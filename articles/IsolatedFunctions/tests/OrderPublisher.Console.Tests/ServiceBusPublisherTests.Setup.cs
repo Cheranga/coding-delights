@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 using Azure.Messaging.ServiceBus;
-using OrderPublisher.Console.Models;
+using AzureServiceBusLib.Models;
 
 namespace OrderPublisher.Console.Tests;
 

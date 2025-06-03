@@ -32,4 +32,8 @@
         </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\..\libs\AzureServiceBusLib\AzureServiceBusLib.csproj" />
+    </ItemGroup>
+
 </Project>

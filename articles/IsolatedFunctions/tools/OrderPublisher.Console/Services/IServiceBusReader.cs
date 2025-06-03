@@ -1,6 +1,4 @@
-﻿using Azure.Messaging.ServiceBus;
-using Microsoft.Extensions.Logging;
-using OrderPublisher.Console.Models;
+﻿using AzureServiceBusLib.Models;
 
 namespace OrderPublisher.Console.Services;
 

@@ -1,6 +1,6 @@
 ﻿namespace AzureServiceBusLib.Models;
 
-internal interface ISessionMessage : IMessage
+public interface ISessionMessage : IMessage
 {
     string SessionId { get; }
 }

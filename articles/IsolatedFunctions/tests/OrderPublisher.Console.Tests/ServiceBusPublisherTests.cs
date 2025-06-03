@@ -1,10 +1,10 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using AutoBogus;
+using AzureServiceBusLib.Core;
+using AzureServiceBusLib.Services;
 using Microsoft.Extensions.DependencyInjection;
-using OrderPublisher.Console.Core;
 using OrderPublisher.Console.Models;
-using OrderPublisher.Console.Services;
 
 namespace OrderPublisher.Console.Tests;
 

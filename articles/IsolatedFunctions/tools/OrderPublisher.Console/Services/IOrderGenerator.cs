@@ -1,4 +1,4 @@
-﻿using OrderPublisher.Console.Models;
+﻿using AzureServiceBusLib.Models;
 
 namespace OrderPublisher.Console.Services;
 

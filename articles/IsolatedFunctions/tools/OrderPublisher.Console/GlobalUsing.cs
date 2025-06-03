@@ -1,3 +1,3 @@
-﻿global using OrderPublisher.Console.Core;
-global using FailedResult = OrderPublisher.Console.Core.OperationResult.FailedResult;
-global using SuccessResult = OrderPublisher.Console.Core.OperationResult.SuccessResult;
+﻿global using AzureServiceBusLib.Core;
+global using FailedResult = AzureServiceBusLib.Core.OperationResult.FailedResult;
+global using SuccessResult = AzureServiceBusLib.Core.OperationResult.SuccessResult;
