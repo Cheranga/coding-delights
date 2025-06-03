@@ -1,45 +1,83 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using Azure.Messaging.ServiceBus;
+using Microsoft.Extensions.Logging;
 using OrderPublisher.Console.Models;
 
 namespace OrderPublisher.Console.Services;
 
-//
-// Remove this class, after testing ServiceBusTopicPublisher
-//
-internal sealed class MessagePublisher(ServiceBusClient serviceBusClient, JsonSerializerOptions serializerOptions) : IMessagePublisher
+internal class MessagePublisher<TMessage, TPublisherConfig>(
+    ServiceBusClient serviceBusClient,
+    TPublisherConfig options,
+    ILogger<MessagePublisher<TMessage, TPublisherConfig>> logger
+) : IServiceBusPublisher<TMessage>
+    where TMessage : IMessage
+    where TPublisherConfig : BasePublisherConfig<TMessage>
 {
-    public async Task PublishToTopicAsync<TSessionMessage>(string topicName, TSessionMessage message, CancellationToken token)
-        where TSessionMessage : ISessionMessage
+    private JsonSerializerOptions SerializerOptions =>
+        options.SerializerOptions
+        ?? new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        };
+
+    public async Task<OperationResponse<FailedResult, SuccessResult>> PublishAsync(
+        IReadOnlyCollection<TMessage> messages,
+        CancellationToken token
+    )
     {
-        await using var sender = serviceBusClient.CreateSender(topicName);
-        var serializedMessage = JsonSerializer.Serialize(message, serializerOptions);
-        await sender.SendMessageAsync(
-            new ServiceBusMessage(serializedMessage) { SessionId = message.SessionId, Subject = message.MessageType },
-            token
-        );
+        await using var sender = serviceBusClient.CreateSender(options.PublishTo);
+        var addMessagesOperation = await AddMessagesToBatch(sender, messages, SerializerOptions, options.MessageOptions, token);
+        var sendMessagesOperation = addMessagesOperation.Result switch
+        {
+            FailedResult f => f,
+            OperationResult.SuccessResult<ServiceBusMessageBatch> s => await SendMessages(sender, s.Result, logger, token),
+            _ => throw new InvalidOperationException("Unexpected operation result type."),
+        };
+
+        return sendMessagesOperation;
     }
 
-    public async Task PublishToTopicAsync<TSessionMessage>(string topicName, IList<TSessionMessage> messages, CancellationToken token)
-        where TSessionMessage : ISessionMessage
+    private static async Task<OperationResponse<FailedResult, OperationResult.SuccessResult<ServiceBusMessageBatch>>> AddMessagesToBatch(
+        ServiceBusSender sender,
+        IReadOnlyCollection<TMessage> messages,
+        JsonSerializerOptions serializerOptions,
+        Action<TMessage, ServiceBusMessage>? messageOptions,
+        CancellationToken token
+    )
     {
-        await using var sender = serviceBusClient.CreateSender(topicName);
-        var messageBatch = await sender.CreateMessageBatchAsync(token);
+        var batch = await sender.CreateMessageBatchAsync(token);
         foreach (var message in messages)
         {
-            var serializedMessage = JsonSerializer.Serialize(message, serializerOptions);
-            var serviceBusMessage = new ServiceBusMessage(serializedMessage)
-            {
-                SessionId = message.SessionId,
-                Subject = message.MessageType,
-            };
-            var canEnqueue = messageBatch.TryAddMessage(serviceBusMessage);
-            if (!canEnqueue)
-            {
-                break;
-            }
+            var binaryData = BinaryData.FromObjectAsJson(message, serializerOptions);
+            var serviceBusMessage = new ServiceBusMessage(binaryData);
+            messageOptions?.Invoke(message, serviceBusMessage);
+            if (!batch.TryAddMessage(serviceBusMessage))
+                return OperationResult.Failure(ErrorCodes.TooManyMessagesInBatch, ErrorMessages.TooManyMessagesInBatch);
         }
 
-        await sender.SendMessagesAsync(messageBatch, token);
+        return OperationResult.Success(batch);
+    }
+
+    private static async Task<OperationResponse<FailedResult, SuccessResult>> SendMessages(
+        ServiceBusSender sender,
+        ServiceBusMessageBatch batch,
+        ILogger logger,
+        CancellationToken token
+    )
+    {
+        try
+        {
+            await sender.SendMessagesAsync(batch, token);
+            logger.LogInformation("Successfully sent {MessageCount} messages to topic", batch.Count);
+            return OperationResult.Success();
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, ErrorMessages.MessagePublishError);
+            return OperationResult.Failure(ErrorCodes.MessagePublishError, ErrorMessages.MessagePublishError, exception);
+        }
     }
 }

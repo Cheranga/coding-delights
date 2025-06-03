@@ -5,7 +5,7 @@
         "Name": "sbemulatorns",
         "Queues": [
           {
-            "Name": "orders",
+            "Name": "just-orders",
             "Properties": {
               "DeadLetteringOnMessageExpiration": false,
               "DefaultMessageTimeToLive": "PT1H",
@@ -16,6 +16,20 @@
               "MaxDeliveryCount": 3,
               "RequiresDuplicateDetection": false,
               "RequiresSession": false
+            }
+          },
+          {
+            "Name": "session-orders",
+            "Properties": {
+              "DeadLetteringOnMessageExpiration": false,
+              "DefaultMessageTimeToLive": "PT1H",
+              "DuplicateDetectionHistoryTimeWindow": "PT20S",
+              "ForwardDeadLetteredMessagesTo": "",
+              "ForwardTo": "",
+              "LockDuration": "PT1M",
+              "MaxDeliveryCount": 3,
+              "RequiresDuplicateDetection": false,
+              "RequiresSession": true
             }
           }
         ],
@@ -42,7 +56,7 @@
                 }
               },
               {
-                "Name": "subscription.2",
+                "Name": "just-orders",
                 "Properties": {
                   "DeadLetteringOnMessageExpiration": false,
                   "DefaultMessageTimeToLive": "PT1H",
@@ -51,20 +65,7 @@
                   "ForwardDeadLetteredMessagesTo": "",
                   "ForwardTo": "",
                   "RequiresSession": false
-                },
-                "Rules": [
-                  {
-                    "Name": "user-prop-filter-1",
-                    "Properties": {
-                      "FilterType": "Correlation",
-                      "CorrelationFilter": {
-                        "Properties": {
-                          "prop1": "value1"
-                        }
-                      }
-                    }
-                  }
-                ]
+                }
               },
               {
                 "Name": "subscription.3",

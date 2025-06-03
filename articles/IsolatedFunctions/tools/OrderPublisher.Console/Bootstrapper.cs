@@ -52,13 +52,13 @@ internal static class Bootstrapper
         //
         services
             .RegisterMessageClientBuilder()
-            .AddPublisher<CreateOrderMessage>()
+            .AddTopicPublisher<CreateOrderMessage>()
             .Configure<IOptions<ServiceBusConfig>>(
                 (config, busConfigOptions) =>
                 {
                     var busConfig = busConfigOptions.Value;
                     config.ConnectionString = busConfig.ConnectionString;
-                    config.TopicOrQueueName = busConfig.TopicName;
+                    config.TopicName = busConfig.TopicName;
                     config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.OrderId.ToString();
                 }
             );
