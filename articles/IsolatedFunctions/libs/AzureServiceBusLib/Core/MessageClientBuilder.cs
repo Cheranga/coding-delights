@@ -1,12 +1,12 @@
 ﻿using Azure.Messaging.ServiceBus;
+using AzureServiceBusLib.Models;
+using AzureServiceBusLib.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OrderPublisher.Console.Models;
-using OrderPublisher.Console.Services;
 
-namespace OrderPublisher.Console.Core;
+namespace AzureServiceBusLib.Core;
 
 internal class MessageClientBuilder : IMessageClientBuilder
 {
