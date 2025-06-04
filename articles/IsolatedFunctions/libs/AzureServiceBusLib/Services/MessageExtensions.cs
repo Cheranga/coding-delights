@@ -1,18 +1,10 @@
-﻿using AzureServiceBusLib.Models;
+﻿using AzureServiceBusLib.Core;
+using AzureServiceBusLib.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace AzureServiceBusLib.NewCore;
-
-public interface IServiceBusMessagePublisher<TMessage> : IServiceBusMessagePublisher
-    where TMessage : IMessage
-{
-    Task<OperationResponse<OperationResult.FailedResult, OperationResult.SuccessResult>> PublishAsync(
-        IReadOnlyCollection<TMessage> messages,
-        CancellationToken token
-    );
-}
+namespace AzureServiceBusLib.Services;
 
 public static class MessageExtensions
 {

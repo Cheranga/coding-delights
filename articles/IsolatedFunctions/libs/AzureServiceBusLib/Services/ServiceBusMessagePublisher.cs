@@ -1,12 +1,13 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Messaging.ServiceBus;
+using AzureServiceBusLib.Core;
 using AzureServiceBusLib.Models;
 using Microsoft.Extensions.Logging;
 
-namespace AzureServiceBusLib.NewCore;
+namespace AzureServiceBusLib.Services;
 
-public class ServiceBusMessagePublisher<TMessage>(
+internal sealed class ServiceBusMessagePublisher<TMessage>(
     string publisherName,
     PublisherConfig<TMessage> options,
     ILogger<ServiceBusMessagePublisher<TMessage>> logger

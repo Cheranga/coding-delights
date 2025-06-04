@@ -11,8 +11,4 @@
         <PackageReference Include="Microsoft.Extensions.Hosting"/>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Services\" />
-    </ItemGroup>
-
 </Project>

@@ -1,6 +1,6 @@
-﻿namespace AzureServiceBusLib.NewCore;
+﻿namespace AzureServiceBusLib.Core;
 
-public static class ErrorCodes
+internal static class ErrorCodes
 {
     public const string MessagePublishError = nameof(MessagePublishError);
     public const string TooManyMessagesInBatch = nameof(TooManyMessagesInBatch);

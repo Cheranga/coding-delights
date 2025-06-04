@@ -1,8 +1,9 @@
-﻿using AzureServiceBusLib.Models;
+﻿using AzureServiceBusLib.Core;
+using AzureServiceBusLib.Models;
 
-namespace AzureServiceBusLib.NewCore;
+namespace AzureServiceBusLib.Services;
 
-public class MessagePublisherFactory : IMessagePublisherFactory
+internal sealed class MessagePublisherFactory : IMessagePublisherFactory
 {
     private readonly Dictionary<string, IServiceBusMessagePublisher> _publishersMappedByName;
 

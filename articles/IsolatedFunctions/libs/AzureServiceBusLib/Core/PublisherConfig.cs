@@ -2,7 +2,7 @@
 using Azure.Messaging.ServiceBus;
 using AzureServiceBusLib.Models;
 
-namespace AzureServiceBusLib.NewCore;
+namespace AzureServiceBusLib.Core;
 
 public sealed record PublisherConfig<TMessage>
     where TMessage : IMessage

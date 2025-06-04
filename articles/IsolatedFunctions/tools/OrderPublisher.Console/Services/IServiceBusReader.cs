@@ -1,5 +1,5 @@
-﻿using AzureServiceBusLib.Models;
-using AzureServiceBusLib.NewCore;
+﻿using AzureServiceBusLib.Core;
+using AzureServiceBusLib.Models;
 
 namespace OrderPublisher.Console.Services;
 

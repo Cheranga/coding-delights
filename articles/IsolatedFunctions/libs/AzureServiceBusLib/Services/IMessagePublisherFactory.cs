@@ -1,6 +1,7 @@
-﻿using AzureServiceBusLib.Models;
+﻿using AzureServiceBusLib.Core;
+using AzureServiceBusLib.Models;
 
-namespace AzureServiceBusLib.NewCore;
+namespace AzureServiceBusLib.Services;
 
 public interface IMessagePublisherFactory
 {

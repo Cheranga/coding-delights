@@ -1,4 +1,5 @@
-﻿using AzureServiceBusLib.NewCore;
+﻿using AzureServiceBusLib.Core;
+using AzureServiceBusLib.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
