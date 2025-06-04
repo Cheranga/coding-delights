@@ -1,4 +1,4 @@
-﻿namespace AzureServiceBusLib.Core;
+﻿namespace AzureServiceBusLib.NewCore;
 
 public sealed class OperationResponse<TA, TB>
     where TA : OperationResult

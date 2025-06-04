@@ -1,4 +1,4 @@
-﻿namespace AzureServiceBusLib.Core;
+﻿namespace AzureServiceBusLib.NewCore;
 
 public abstract record OperationResult
 {

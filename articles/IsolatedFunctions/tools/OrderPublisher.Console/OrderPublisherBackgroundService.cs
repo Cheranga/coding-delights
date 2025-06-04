@@ -1,4 +1,4 @@
-﻿using AzureServiceBusLib.Services;
+﻿using AzureServiceBusLib.NewCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -10,7 +10,8 @@ namespace OrderPublisher.Console;
 internal class OrderPublisherBackgroundService(
     IOptions<ServiceBusConfig> options,
     IOrderGenerator<CreateOrderMessage> orderGenerator,
-    ITopicPublisher<CreateOrderMessage> orderPublisher,
+    IServiceBusMessagePublisher<CreateOrderMessage> orderPublisher,
+    IMessagePublisherFactory publisherFactory,
     ILogger<OrderPublisherBackgroundService> logger
 ) : BackgroundService
 {
@@ -25,6 +26,14 @@ internal class OrderPublisherBackgroundService(
             {
                 var orders = await orderGenerator.GenerateOrdersAsync(10, stoppingToken);
                 var operation = await orderPublisher.PublishAsync(orders, stoppingToken);
+                _ = operation.Result switch
+                {
+                    SuccessResult _ => LogSuccess(topicName),
+                    FailedResult failure => LogFailure(topicName, failure),
+                    _ => LogError(topicName),
+                };
+
+                operation = await publisherFactory.GetPublisher<CreateOrderMessage>("q-orders").PublishAsync(orders, stoppingToken);
                 _ = operation.Result switch
                 {
                     SuccessResult _ => LogSuccess(topicName),

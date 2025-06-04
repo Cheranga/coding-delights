@@ -1,7 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using Azure.Messaging.ServiceBus;
-using AzureServiceBusLib.Services;
+using AzureServiceBusLib.NewCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -34,32 +33,36 @@ internal static class Bootstrapper
         return services;
     }
 
-    private static IServiceCollection RegisterMessagingServices(this IServiceCollection services)
+    private static IServiceCollection RegisterMessagingServices(
+        this IServiceCollection services,
+        string serviceBusConfigSectionName = nameof(ServiceBusConfig)
+    )
     {
-        //
-        // Registering the ServiceBusClient with the connection string from the configuration
-        //
-        services
-            .AddSingleton(sp =>
-            {
-                var config = sp.GetRequiredService<IOptions<ServiceBusConfig>>().Value;
-                return new ServiceBusClient(config.ConnectionString);
-            })
-            // Registering the `ServiceBusClient` as an `IAsyncDisposable` to ensure it is disposed of correctly
-            .AddSingleton<IAsyncDisposable>(sp => sp.GetRequiredService<ServiceBusClient>());
-
+        services.AddOptions<ServiceBusConfig>().BindConfiguration(serviceBusConfigSectionName);
         //
         // Registering the message publisher for the CreateOrderMessage
         //
+        services.UseServiceBusMessageClientFactory();
         services
-            .RegisterMessageClientBuilder()
-            .AddTopicPublisher<CreateOrderMessage>()
+            .RegisterServiceBusMessagePublisher<CreateOrderMessage>()
             .Configure<IOptions<ServiceBusConfig>>(
                 (config, busConfigOptions) =>
                 {
                     var busConfig = busConfigOptions.Value;
                     config.ConnectionString = busConfig.ConnectionString;
-                    config.TopicName = busConfig.TopicName;
+                    config.PublishTo = busConfig.TopicName;
+                    config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.OrderId.ToString();
+                }
+            );
+
+        services
+            .RegisterServiceBusMessagePublisher<CreateOrderMessage>("q-orders")
+            .Configure<IOptions<ServiceBusConfig>>(
+                (config, busConfigOptions) =>
+                {
+                    var busConfig = busConfigOptions.Value;
+                    config.ConnectionString = busConfig.ConnectionString;
+                    config.PublishTo = busConfig.QueueName;
                     config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.OrderId.ToString();
                 }
             );

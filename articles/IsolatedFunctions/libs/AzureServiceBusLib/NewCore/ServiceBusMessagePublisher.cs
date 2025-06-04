@@ -1,20 +1,20 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Messaging.ServiceBus;
-using AzureServiceBusLib.Core;
 using AzureServiceBusLib.Models;
 using Microsoft.Extensions.Logging;
 
-namespace AzureServiceBusLib.Services;
+namespace AzureServiceBusLib.NewCore;
 
-internal class MessagePublisher<TMessage, TPublisherConfig>(
-    ServiceBusClient serviceBusClient,
-    TPublisherConfig options,
-    ILogger<MessagePublisher<TMessage, TPublisherConfig>> logger
-) : IServiceBusPublisher<TMessage>
+public class ServiceBusMessagePublisher<TMessage>(
+    string publisherName,
+    PublisherConfig<TMessage> options,
+    ILogger<ServiceBusMessagePublisher<TMessage>> logger
+) : IServiceBusMessagePublisher<TMessage>
     where TMessage : IMessage
-    where TPublisherConfig : BasePublisherConfig<TMessage>
 {
+    public string Name { get; } = publisherName;
+
     private JsonSerializerOptions SerializerOptions =>
         options.SerializerOptions
         ?? new JsonSerializerOptions
@@ -29,7 +29,8 @@ internal class MessagePublisher<TMessage, TPublisherConfig>(
         CancellationToken token
     )
     {
-        await using var sender = serviceBusClient.CreateSender(options.PublishTo);
+        await using var client = new ServiceBusClient(options.ConnectionString);
+        await using var sender = client.CreateSender(options.PublishTo);
         var addMessagesOperation = await AddMessagesToBatch(sender, messages, SerializerOptions, options.MessageOptions, token);
         var sendMessagesOperation = addMessagesOperation.Result switch
         {
@@ -58,7 +59,9 @@ internal class MessagePublisher<TMessage, TPublisherConfig>(
             var serviceBusMessage = new ServiceBusMessage(binaryData);
             messageOptions?.Invoke(message, serviceBusMessage);
             if (!batch.TryAddMessage(serviceBusMessage))
+            {
                 return OperationResult.Failure(ErrorCodes.TooManyMessagesInBatch, ErrorMessages.TooManyMessagesInBatch);
+            }
         }
 
         return OperationResult.Success(batch);

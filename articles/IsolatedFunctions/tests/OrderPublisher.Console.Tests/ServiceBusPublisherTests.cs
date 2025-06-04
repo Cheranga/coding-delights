@@ -1,8 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using AutoBogus;
-using AzureServiceBusLib.Core;
-using AzureServiceBusLib.Services;
+using AzureServiceBusLib.NewCore;
 using Microsoft.Extensions.DependencyInjection;
 using OrderPublisher.Console.Models;
 
@@ -29,19 +28,18 @@ public partial class ServiceBusPublisherTests(ServiceBusFixture serviceBusFixtur
         await Arrange(() =>
             {
                 var services = new ServiceCollection();
+                services.AddLogging().UseServiceBusMessageClientFactory();
                 services
-                    .AddLogging()
-                    .RegisterMessageClientBuilder()
-                    .AddQueuePublisher<CreateOrderMessage>()
+                    .RegisterServiceBusMessagePublisher<CreateOrderMessage>()
                     .Configure(config =>
                     {
                         config.ConnectionString = serviceBusFixture.GetConnectionString();
-                        config.QueueName = OrdersQueue;
+                        config.PublishTo = OrdersQueue;
                         config.SerializerOptions = _serializerOptions;
                     });
 
                 var serviceProvider = services.BuildServiceProvider();
-                var publisher = serviceProvider.GetRequiredService<IQueuePublisher<CreateOrderMessage>>();
+                var publisher = serviceProvider.GetRequiredService<IServiceBusMessagePublisher<CreateOrderMessage>>();
 
                 return publisher;
             })
@@ -69,20 +67,19 @@ public partial class ServiceBusPublisherTests(ServiceBusFixture serviceBusFixtur
         await Arrange(() =>
             {
                 var services = new ServiceCollection();
+                services.AddLogging().UseServiceBusMessageClientFactory();
                 services
-                    .AddLogging()
-                    .RegisterMessageClientBuilder()
-                    .AddQueuePublisher<CreateOrderMessage>()
+                    .RegisterServiceBusMessagePublisher<CreateOrderMessage>()
                     .Configure(config =>
                     {
                         config.ConnectionString = serviceBusFixture.GetConnectionString();
-                        config.QueueName = SessionOrdersQueue;
+                        config.PublishTo = SessionOrdersQueue;
                         config.SerializerOptions = _serializerOptions;
                         config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.SessionId;
                     });
 
                 var serviceProvider = services.BuildServiceProvider();
-                var publisher = serviceProvider.GetRequiredService<IQueuePublisher<CreateOrderMessage>>();
+                var publisher = serviceProvider.GetRequiredService<IServiceBusMessagePublisher<CreateOrderMessage>>();
 
                 return publisher;
             })
@@ -120,20 +117,19 @@ public partial class ServiceBusPublisherTests(ServiceBusFixture serviceBusFixtur
         await Arrange(() =>
             {
                 var services = new ServiceCollection();
+                services.AddLogging().UseServiceBusMessageClientFactory();
                 services
-                    .AddLogging()
-                    .RegisterMessageClientBuilder()
-                    .AddTopicPublisher<CreateOrderMessage>()
+                    .RegisterServiceBusMessagePublisher<CreateOrderMessage>()
                     .Configure(config =>
                     {
                         config.ConnectionString = serviceBusFixture.GetConnectionString();
-                        config.TopicName = OrdersTopic;
+                        config.PublishTo = OrdersTopic;
                         config.SerializerOptions = _serializerOptions;
                         config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.SessionId;
                     });
 
                 var serviceProvider = services.BuildServiceProvider();
-                var publisher = serviceProvider.GetRequiredService<ITopicPublisher<CreateOrderMessage>>();
+                var publisher = serviceProvider.GetRequiredService<IServiceBusMessagePublisher<CreateOrderMessage>>();
                 return publisher;
             })
             .Act(async data =>
@@ -160,20 +156,19 @@ public partial class ServiceBusPublisherTests(ServiceBusFixture serviceBusFixtur
         await Arrange(() =>
             {
                 var services = new ServiceCollection();
+                services.AddLogging().UseServiceBusMessageClientFactory();
                 services
-                    .AddLogging()
-                    .RegisterMessageClientBuilder()
-                    .AddTopicPublisher<CreateOrderMessage>()
+                    .RegisterServiceBusMessagePublisher<CreateOrderMessage>()
                     .Configure(config =>
                     {
                         config.ConnectionString = serviceBusFixture.GetConnectionString();
-                        config.TopicName = OrdersTopic;
+                        config.PublishTo = OrdersTopic;
                         config.SerializerOptions = _serializerOptions;
                         config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.SessionId;
                     });
 
                 var serviceProvider = services.BuildServiceProvider();
-                var publisher = serviceProvider.GetRequiredService<ITopicPublisher<CreateOrderMessage>>();
+                var publisher = serviceProvider.GetRequiredService<IServiceBusMessagePublisher<CreateOrderMessage>>();
                 return publisher;
             })
             .Act(async data =>

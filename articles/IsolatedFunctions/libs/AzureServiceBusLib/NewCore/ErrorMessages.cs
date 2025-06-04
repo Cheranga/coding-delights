@@ -1,4 +1,4 @@
-﻿namespace AzureServiceBusLib.Core;
+﻿namespace AzureServiceBusLib.NewCore;
 
 public static class ErrorMessages
 {
