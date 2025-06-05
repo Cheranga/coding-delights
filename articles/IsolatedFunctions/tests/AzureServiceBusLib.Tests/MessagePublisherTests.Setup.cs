@@ -25,43 +25,51 @@ public partial class MessagePublisherTests(ServiceBusFixture serviceBusFixture) 
 
     private readonly AutoFaker<CreateOrderMessage> _orderMessageGenerator = new();
 
-    private static async Task<TModel?> ReadFromQueueAsync<TModel>(
+    private static async Task<IReadOnlyList<TModel?>> ReadFromQueueAsync<TModel>(
         string serviceBusConnectionString,
         string queueName,
         JsonSerializerOptions serializerOptions,
+        int numOfMessages = 1,
         CancellationToken token = default
     )
         where TModel : IMessage
     {
         await using var serviceBusClient = new ServiceBusClient(serviceBusConnectionString);
-        await using var receiver = serviceBusClient.CreateReceiver(queueName);
-        var message = await receiver.ReceiveMessageAsync(TimeSpan.FromSeconds(2), token);
-        var model = message.Body.ToObjectFromJson<TModel>(serializerOptions);
-        return model;
+        await using var receiver = serviceBusClient.CreateReceiver(
+            queueName,
+            new ServiceBusReceiverOptions { PrefetchCount = numOfMessages }
+        );
+        var messages = await receiver.ReceiveMessagesAsync(numOfMessages, TimeSpan.FromSeconds(2), token);
+        return messages.Select(x => x.Body.ToObjectFromJson<TModel>(serializerOptions)).ToList();
     }
 
-    private static async Task<TModel?> ReadFromSubscriptionAsync<TModel>(
+    private static async Task<IReadOnlyList<TModel?>> ReadFromSubscriptionAsync<TModel>(
         string serviceBusConnectionString,
         string topicName,
         string subscriptionName,
         JsonSerializerOptions serializerOptions,
+        int numOfMessages = 1,
         CancellationToken token = default
     )
         where TModel : IMessage
     {
         await using var serviceBusClient = new ServiceBusClient(serviceBusConnectionString);
-        await using var receiver = serviceBusClient.CreateReceiver(topicName, subscriptionName);
-        var message = await receiver.ReceiveMessageAsync(TimeSpan.FromSeconds(2), token);
-        var model = message.Body.ToObjectFromJson<TModel>(serializerOptions);
-        return model;
+        await using var receiver = serviceBusClient.CreateReceiver(
+            topicName,
+            subscriptionName,
+            new ServiceBusReceiverOptions { PrefetchCount = numOfMessages }
+        );
+        var messages = await receiver.ReceiveMessagesAsync(numOfMessages, TimeSpan.FromSeconds(2), token);
+        return messages.Select(x => x.Body.ToObjectFromJson<TModel>(serializerOptions)).ToList();
     }
 
-    private static async Task<TModel?> ReadFromSubscriptionAsSessionAsync<TModel>(
+    private static async Task<IReadOnlyList<TModel?>> ReadFromSubscriptionAsSessionAsync<TModel>(
         string serviceBusConnectionString,
         string topicName,
         string subscriptionName,
         string sessionId,
         JsonSerializerOptions serializerOptions,
+        int numOfMessages = 1,
         CancellationToken token = default
     )
         where TModel : IMessage
@@ -71,26 +79,31 @@ public partial class MessagePublisherTests(ServiceBusFixture serviceBusFixture) 
             topicName,
             subscriptionName,
             sessionId,
-            cancellationToken: token
+            new ServiceBusSessionReceiverOptions { PrefetchCount = numOfMessages },
+            token
         );
-        var message = await receiver.ReceiveMessageAsync(TimeSpan.FromSeconds(2), token);
-        var model = message.Body.ToObjectFromJson<TModel>(serializerOptions);
-        return model;
+        var messages = await receiver.ReceiveMessagesAsync(numOfMessages, TimeSpan.FromSeconds(2), token);
+        return messages.Select(x => x.Body.ToObjectFromJson<TModel>(serializerOptions)).ToList();
     }
 
-    private static async Task<TModel?> ReadFromQueueAsSessionAsync<TModel>(
+    private static async Task<IReadOnlyList<TModel?>> ReadFromQueueAsSessionAsync<TModel>(
         string serviceBusConnectionString,
         string queueName,
         string sessionId,
         JsonSerializerOptions serializerOptions,
+        int numOfMessages = 1,
         CancellationToken token = default
     )
         where TModel : IMessage
     {
         await using var serviceBusClient = new ServiceBusClient(serviceBusConnectionString);
-        await using var receiver = await serviceBusClient.AcceptSessionAsync(queueName, sessionId, cancellationToken: token);
-        var message = await receiver.ReceiveMessageAsync(TimeSpan.FromSeconds(2), token);
-        var model = message.Body.ToObjectFromJson<TModel>(serializerOptions);
-        return model;
+        await using var receiver = await serviceBusClient.AcceptSessionAsync(
+            queueName,
+            sessionId,
+            new ServiceBusSessionReceiverOptions { PrefetchCount = numOfMessages },
+            token
+        );
+        var messages = await receiver.ReceiveMessagesAsync(numOfMessages, TimeSpan.FromSeconds(2), token);
+        return messages.Select(x => x.Body.ToObjectFromJson<TModel>(serializerOptions)).ToList();
     }
 }

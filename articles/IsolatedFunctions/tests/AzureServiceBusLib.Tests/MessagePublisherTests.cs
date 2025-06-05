@@ -1,5 +1,4 @@
-﻿using AutoBogus;
-using AzureServiceBusLib.Core;
+﻿using AzureServiceBusLib.Core;
 using AzureServiceBusLib.DI;
 using AzureServiceBusLib.Publish;
 using AzureServiceBusLib.Tests.Models;
@@ -43,11 +42,11 @@ public partial class MessagePublisherTests
                     var recMessage = await ReadFromQueueAsync<CreateOrderMessage>(
                         serviceBusFixture.GetConnectionString(),
                         JustOrdersQueue,
-                        _serializerOptions,
-                        CancellationToken.None
+                        _serializerOptions
                     );
                     Assert.NotNull(recMessage);
-                    Assert.Equal(data.messages[0].OrderId, recMessage.OrderId);
+                    Assert.Single(recMessage);
+                    Assert.True(recMessage[0] is { } a && data.messages.Exists(x => x.OrderId == a.OrderId));
                 }
             );
     }
@@ -86,26 +85,24 @@ public partial class MessagePublisherTests
                     serviceBusFixture.GetConnectionString(),
                     SessionOrdersQueue,
                     data.messages[0].SessionId,
-                    _serializerOptions,
-                    CancellationToken.None
+                    _serializerOptions
                 );
 
                 var recMessage2 = await ReadFromQueueAsSessionAsync<CreateOrderMessage>(
                     serviceBusFixture.GetConnectionString(),
                     SessionOrdersQueue,
                     data.messages[1].SessionId,
-                    _serializerOptions,
-                    CancellationToken.None
+                    _serializerOptions
                 );
 
                 return (publishOperation, recMessage1, recMessage2);
             })
             .Assert(operation => operation.publishOperation.Result is OperationResult.SuccessResult)
-            .And((data, operation) => operation.recMessage1 != null && data.messages[0].OrderId == operation.recMessage1.OrderId)
-            .And((data, operation) => operation.recMessage2 != null && data.messages[1].OrderId == operation.recMessage2.OrderId);
+            .And((data, operation) => operation.recMessage1 != null && data.messages[0].OrderId == operation.recMessage1[0]!.OrderId)
+            .And((data, operation) => operation.recMessage2 != null && data.messages[1].OrderId == operation.recMessage2[0]!.OrderId);
     }
 
-    [Fact(DisplayName = "Publishing to topic and receiving from non session enabled subscription")]
+    [Fact(DisplayName = "Publishing to topic and receiving from both session enabled and session disabled subscriptions")]
     public async Task Test3()
     {
         await Arrange(() =>
@@ -126,61 +123,45 @@ public partial class MessagePublisherTests
                 var publisher = serviceProvider.GetRequiredService<IMessagePublisher<CreateOrderMessage>>();
                 return publisher;
             })
+            .And(data =>
+            {
+                var messages = _orderMessageGenerator.Generate(2);
+                return (publisher: data, messages);
+            })
             .Act(async data =>
             {
-                var msg = new AutoFaker<CreateOrderMessage>().Generate();
-                var publishOperation = await data.PublishAsync([msg], CancellationToken.None);
-                var recMessage = await ReadFromSubscriptionAsync<CreateOrderMessage>(
+                var publishOperation = await data.publisher.PublishAsync(data.messages, CancellationToken.None);
+                var nonSessionMessages = await ReadFromSubscriptionAsync<CreateOrderMessage>(
                     serviceBusFixture.GetConnectionString(),
                     OrdersTopic,
                     JustOrdersSubscription,
                     _serializerOptions,
-                    CancellationToken.None
+                    10
                 );
 
-                return (publishOperation, msg, recMessage);
-            })
-            .Assert(operation => operation.publishOperation.Result is OperationResult.SuccessResult)
-            .And(operation => operation.recMessage != null && operation.msg.OrderId == operation.recMessage.OrderId);
-    }
-
-    [Fact(DisplayName = "Publishing to topic and receiving from session enabled subscription")]
-    public async Task Test4()
-    {
-        await Arrange(() =>
-            {
-                var services = new ServiceCollection();
-                services.AddLogging().UseServiceBusMessageClientFactory();
-                services
-                    .RegisterMessagePublisher<CreateOrderMessage>()
-                    .Configure(config =>
-                    {
-                        config.ConnectionString = serviceBusFixture.GetConnectionString();
-                        config.PublishTo = OrdersTopic;
-                        config.SerializerOptions = _serializerOptions;
-                        config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.SessionId;
-                    });
-
-                var serviceProvider = services.BuildServiceProvider();
-                var publisher = serviceProvider.GetRequiredService<IMessagePublisher<CreateOrderMessage>>();
-                return publisher;
-            })
-            .Act(async data =>
-            {
-                var msg = new AutoFaker<CreateOrderMessage>().Generate();
-                var publishOperation = await data.PublishAsync([msg], CancellationToken.None);
-                var recMessage = await ReadFromSubscriptionAsSessionAsync<CreateOrderMessage>(
+                var sessionBasedMessages = await ReadFromSubscriptionAsSessionAsync<CreateOrderMessage>(
                     serviceBusFixture.GetConnectionString(),
                     OrdersTopic,
                     SessionBasedOrdersSubscription,
-                    msg.OrderId.ToString(),
+                    data.messages[0].SessionId,
                     _serializerOptions,
-                    CancellationToken.None
+                    10
                 );
 
-                return (publishOperation, msg, recMessage);
+                return (publishOperation, nonSessionMessages, sessionBasedMessage: sessionBasedMessages);
             })
             .Assert(operation => operation.publishOperation.Result is OperationResult.SuccessResult)
-            .And(operation => operation.recMessage != null && operation.msg.OrderId == operation.recMessage.OrderId);
+            .And(
+                (data, operation) =>
+                {
+                    // There should be only one session-based message
+                    Assert.Single(operation.sessionBasedMessage);
+
+                    // Non-session subscription should receive all messages
+                    var expectedOrderIds = data.messages.Select(m => m.OrderId).ToHashSet();
+                    var actualOrderIds = operation.nonSessionMessages.Where(x => x != null).Select(x => x!.OrderId);
+                    Assert.True(expectedOrderIds.SetEquals(actualOrderIds));
+                }
+            );
     }
 }
