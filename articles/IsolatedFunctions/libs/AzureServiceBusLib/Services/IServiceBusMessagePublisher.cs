@@ -7,7 +7,7 @@ public interface IServiceBusMessagePublisher
     public string Name { get; }
 }
 
-public interface IServiceBusMessagePublisher<TMessage> : IServiceBusMessagePublisher
+public interface IServiceBusMessagePublisher<in TMessage> : IServiceBusMessagePublisher
     where TMessage : IMessage
 {
     Task<OperationResponse<OperationResult.FailedResult, OperationResult.SuccessResult>> PublishAsync(

@@ -1,5 +1,4 @@
-﻿using AzureServiceBusLib.Core;
-using AzureServiceBusLib.Models;
+﻿using AzureServiceBusLib.Models;
 
 namespace AzureServiceBusLib.Services;
 

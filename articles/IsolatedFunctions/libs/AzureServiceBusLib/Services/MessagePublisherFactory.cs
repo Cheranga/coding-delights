@@ -7,10 +7,8 @@ internal sealed class MessagePublisherFactory : IMessagePublisherFactory
 {
     private readonly Dictionary<string, IServiceBusMessagePublisher> _publishersMappedByName;
 
-    public MessagePublisherFactory(IEnumerable<IServiceBusMessagePublisher> publishers)
-    {
+    public MessagePublisherFactory(IEnumerable<IServiceBusMessagePublisher> publishers) =>
         _publishersMappedByName = publishers.GroupBy(x => x.Name).ToDictionary(x => x.Key, x => x.First());
-    }
 
     public IServiceBusMessagePublisher<TMessage> GetPublisher<TMessage>()
         where TMessage : IMessage => GetPublisher<TMessage>(typeof(TMessage).Name);
@@ -23,6 +21,6 @@ internal sealed class MessagePublisherFactory : IMessagePublisherFactory
             return publisher;
         }
 
-        throw new Exception($"There's no publisher registered for {publisherName}");
+        throw new MessagePublisherNotFoundException<TMessage>(publisherName);
     }
 }

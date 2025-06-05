@@ -1,7 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using AutoBogus;
-using AzureServiceBusLib.Core;
 using AzureServiceBusLib.Models;
 using AzureServiceBusLib.Services;
 using Microsoft.Extensions.DependencyInjection;

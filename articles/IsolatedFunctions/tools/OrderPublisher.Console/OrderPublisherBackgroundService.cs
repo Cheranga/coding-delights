@@ -1,5 +1,4 @@
-﻿using AzureServiceBusLib.Core;
-using AzureServiceBusLib.Services;
+﻿using AzureServiceBusLib.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -34,7 +33,23 @@ internal class OrderPublisherBackgroundService(
                     _ => LogError(topicName),
                 };
 
+                operation = await publisherFactory.GetPublisher<CreateOrderMessage>().PublishAsync(orders, stoppingToken);
+                _ = operation.Result switch
+                {
+                    SuccessResult _ => LogSuccess(topicName),
+                    FailedResult failure => LogFailure(topicName, failure),
+                    _ => LogError(topicName),
+                };
+
                 operation = await publisherFactory.GetPublisher<CreateOrderMessage>("q-orders").PublishAsync(orders, stoppingToken);
+                _ = operation.Result switch
+                {
+                    SuccessResult _ => LogSuccess(topicName),
+                    FailedResult failure => LogFailure(topicName, failure),
+                    _ => LogError(topicName),
+                };
+
+                operation = await publisherFactory.GetPublisher<CreateOrderMessage>().PublishAsync(orders, stoppingToken);
                 _ = operation.Result switch
                 {
                     SuccessResult _ => LogSuccess(topicName),
