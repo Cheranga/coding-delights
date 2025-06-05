@@ -1,6 +1,6 @@
 ﻿namespace AzureServiceBusLib.Tests.Models;
 
-internal sealed record OrderItem
+public sealed record OrderItem
 {
     public required string ProductId { get; init; }
     public required decimal Quantity { get; init; }

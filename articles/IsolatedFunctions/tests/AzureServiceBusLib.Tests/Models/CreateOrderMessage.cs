@@ -2,7 +2,7 @@
 
 namespace AzureServiceBusLib.Tests.Models;
 
-internal sealed record CreateOrderMessage : ISessionMessage
+public sealed record CreateOrderMessage : ISessionMessage
 {
     public required Guid OrderId { get; set; }
     public required Guid ReferenceId { get; set; }

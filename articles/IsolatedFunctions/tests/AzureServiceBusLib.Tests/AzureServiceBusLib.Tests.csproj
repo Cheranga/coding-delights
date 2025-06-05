@@ -17,6 +17,7 @@
         <PackageReference Include="xunit.runner.visualstudio"/>
         <PackageReference Include="BunsenBurner"/>
         <PackageReference Include="AutoBogus"/>
+        <PackageReference Include="Moq"/>
     </ItemGroup>
 
     <ItemGroup>
