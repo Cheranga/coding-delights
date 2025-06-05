@@ -25,6 +25,10 @@ internal class OrderPublisherBackgroundService(
             while (!stoppingToken.IsCancellationRequested)
             {
                 var orders = await orderGenerator.GenerateOrdersAsync(10, stoppingToken);
+
+                //
+                // using the injected IMessagePublisher<CreateOrderMessage> directly
+                //
                 var operation = await orderPublisher.PublishAsync(orders, stoppingToken);
                 _ = operation.Result switch
                 {
@@ -33,6 +37,9 @@ internal class OrderPublisherBackgroundService(
                     _ => LogError(topicName),
                 };
 
+                //
+                // using the IMessagePublisherFactory to get a publisher for CreateOrderMessage type
+                //
                 operation = await publisherFactory.GetPublisher<CreateOrderMessage>().PublishAsync(orders, stoppingToken);
                 _ = operation.Result switch
                 {
@@ -41,6 +48,9 @@ internal class OrderPublisherBackgroundService(
                     _ => LogError(topicName),
                 };
 
+                //
+                // using the IMessagePublisherFactory to get a publisher for CreateOrderMessage type using a name
+                //
                 operation = await publisherFactory.GetPublisher<CreateOrderMessage>("q-orders").PublishAsync(orders, stoppingToken);
                 _ = operation.Result switch
                 {
