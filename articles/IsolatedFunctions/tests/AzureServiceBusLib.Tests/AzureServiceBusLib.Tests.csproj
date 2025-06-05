@@ -4,25 +4,20 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
-        <WarningsAsErrors>true</WarningsAsErrors>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AsyncFixer"/>
-        <PackageReference Include="Meziantou.Analyzer"/>
-        <PackageReference Include="Roslynator.Analyzers"/>
-        <PackageReference Include="SonarAnalyzer.CSharp"/>
-        
         <PackageReference Include="coverlet.collector"/>
         <PackageReference Include="Microsoft.NET.Test.Sdk"/>
+        <PackageReference Include="Testcontainers.ServiceBus"/>
         <PackageReference Include="xunit"/>
         <PackageReference Include="xunit.runner.visualstudio"/>
-        <PackageReference Include="Moq"/>
-        <PackageReference Include="AutoBogus"/>
         <PackageReference Include="BunsenBurner"/>
+        <PackageReference Include="AutoBogus"/>
+        <PackageReference Include="Moq"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -30,7 +25,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\OrderProcessorFuncApp\OrderProcessorFuncApp.csproj" />
+        <None Update="Config.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\libs\AzureServiceBusLib\AzureServiceBusLib.csproj"/>
     </ItemGroup>
 
 </Project>
