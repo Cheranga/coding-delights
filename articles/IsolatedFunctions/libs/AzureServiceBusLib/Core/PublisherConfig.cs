@@ -1,6 +1,5 @@
 ﻿using System.Text.Json;
 using Azure.Messaging.ServiceBus;
-using AzureServiceBusLib.Models;
 
 namespace AzureServiceBusLib.Core;
 

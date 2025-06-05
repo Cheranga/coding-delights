@@ -1,13 +1,13 @@
-﻿using AzureServiceBusLib.Models;
+﻿using AzureServiceBusLib.Core;
 
-namespace AzureServiceBusLib.Services;
+namespace AzureServiceBusLib.Publish;
 
-public interface IServiceBusMessagePublisher
+public interface IMessagePublisher
 {
     public string Name { get; }
 }
 
-public interface IServiceBusMessagePublisher<in TMessage> : IServiceBusMessagePublisher
+public interface IMessagePublisher<in TMessage> : IMessagePublisher
     where TMessage : IMessage
 {
     Task<OperationResponse<OperationResult.FailedResult, OperationResult.SuccessResult>> PublishAsync(

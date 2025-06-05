@@ -1,4 +1,4 @@
-﻿namespace AzureServiceBusLib.Models;
+﻿namespace AzureServiceBusLib.Core;
 
 public abstract record OperationResult
 {

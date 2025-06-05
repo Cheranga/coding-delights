@@ -12,10 +12,11 @@
     <ItemGroup>
         <PackageReference Include="coverlet.collector"/>
         <PackageReference Include="Microsoft.NET.Test.Sdk"/>
-        <PackageReference Include="Testcontainers.ServiceBus" />
+        <PackageReference Include="Testcontainers.ServiceBus"/>
         <PackageReference Include="xunit"/>
         <PackageReference Include="xunit.runner.visualstudio"/>
-        <PackageReference Include="BunsenBurner" />
+        <PackageReference Include="BunsenBurner"/>
+        <PackageReference Include="AutoBogus"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -23,7 +24,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\tools\OrderPublisher.Console\OrderPublisher.Console.csproj" />
+        <None Update="Config.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\libs\AzureServiceBusLib\AzureServiceBusLib.csproj"/>
     </ItemGroup>
 
 </Project>

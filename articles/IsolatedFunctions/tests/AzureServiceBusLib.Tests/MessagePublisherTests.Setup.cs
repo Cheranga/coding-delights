@@ -1,11 +1,30 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using AutoBogus;
 using Azure.Messaging.ServiceBus;
-using AzureServiceBusLib.Models;
+using AzureServiceBusLib.Core;
+using AzureServiceBusLib.Tests.Fixtures;
+using AzureServiceBusLib.Tests.Models;
 
-namespace OrderPublisher.Console.Tests;
+namespace AzureServiceBusLib.Tests;
 
-public partial class ServiceBusPublisherTests
+public partial class MessagePublisherTests(ServiceBusFixture serviceBusFixture) : IClassFixture<ServiceBusFixture>
 {
+    private const string JustOrdersQueue = "just-orders";
+    private const string SessionOrdersQueue = "session-orders";
+    private const string OrdersTopic = "sbt-orders";
+    private const string JustOrdersSubscription = "just-orders";
+    private const string SessionBasedOrdersSubscription = "sbts-orders";
+
+    private readonly JsonSerializerOptions _serializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = false,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    };
+
+    private readonly AutoFaker<CreateOrderMessage> _orderMessageGenerator = new();
+
     private static async Task<TModel?> ReadFromQueueAsync<TModel>(
         string serviceBusConnectionString,
         string queueName,

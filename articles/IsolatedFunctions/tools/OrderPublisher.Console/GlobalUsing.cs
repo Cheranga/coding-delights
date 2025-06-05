@@ -1,2 +1,2 @@
-﻿global using FailedResult = AzureServiceBusLib.Models.OperationResult.FailedResult;
-global using SuccessResult = AzureServiceBusLib.Models.OperationResult.SuccessResult;
+﻿global using FailedResult = AzureServiceBusLib.Core.OperationResult.FailedResult;
+global using SuccessResult = AzureServiceBusLib.Core.OperationResult.SuccessResult;

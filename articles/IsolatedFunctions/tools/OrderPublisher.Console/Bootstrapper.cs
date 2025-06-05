@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using AzureServiceBusLib.Services;
+using AzureServiceBusLib.DI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -44,7 +44,7 @@ internal static class Bootstrapper
         //
         services.UseServiceBusMessageClientFactory();
         services
-            .RegisterServiceBusMessagePublisher<CreateOrderMessage>()
+            .RegisterMessagePublisher<CreateOrderMessage>()
             .Configure<IOptions<ServiceBusConfig>>(
                 (config, busConfigOptions) =>
                 {
@@ -56,7 +56,7 @@ internal static class Bootstrapper
             );
 
         services
-            .RegisterServiceBusMessagePublisher<CreateOrderMessage>("q-orders")
+            .RegisterMessagePublisher<CreateOrderMessage>("q-orders")
             .Configure<IOptions<ServiceBusConfig>>(
                 (config, busConfigOptions) =>
                 {

@@ -1,6 +1,6 @@
 ﻿using Testcontainers.ServiceBus;
 
-namespace OrderPublisher.Console.Tests;
+namespace AzureServiceBusLib.Tests.Fixtures;
 
 public class ServiceBusFixture : IAsyncLifetime
 {

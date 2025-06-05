@@ -1,6 +1,6 @@
 ﻿using AzureServiceBusLib.Core;
 
-namespace OrderPublisher.Console.Models;
+namespace AzureServiceBusLib.Tests.Models;
 
 internal sealed record CreateOrderMessage : ISessionMessage
 {

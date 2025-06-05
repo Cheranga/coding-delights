@@ -1,29 +1,15 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
-using AutoBogus;
-using AzureServiceBusLib.Models;
-using AzureServiceBusLib.Services;
+﻿using AutoBogus;
+using AzureServiceBusLib.Core;
+using AzureServiceBusLib.DI;
+using AzureServiceBusLib.Publish;
+using AzureServiceBusLib.Tests.Models;
 using Microsoft.Extensions.DependencyInjection;
-using OrderPublisher.Console.Models;
 
-namespace OrderPublisher.Console.Tests;
+namespace AzureServiceBusLib.Tests;
 
-public partial class ServiceBusPublisherTests(ServiceBusFixture serviceBusFixture) : IClassFixture<ServiceBusFixture>
+public partial class MessagePublisherTests
 {
-    private const string OrdersQueue = "just-orders";
-    private const string SessionOrdersQueue = "session-orders";
-    private const string OrdersTopic = "sbt-orders";
-    private const string OrdersSubscription = "just-orders";
-    private const string SessionBasedOrdersSubscription = "sbts-orders";
-
-    private readonly JsonSerializerOptions _serializerOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    };
-
-    [Fact(DisplayName = "Publishing to queue and receiving from queue")]
+    [Fact(DisplayName = "Publishing to non session enabled queue and receiving")]
     public async Task Test1()
     {
         await Arrange(() =>
@@ -31,38 +17,42 @@ public partial class ServiceBusPublisherTests(ServiceBusFixture serviceBusFixtur
                 var services = new ServiceCollection();
                 services.AddLogging().UseServiceBusMessageClientFactory();
                 services
-                    .RegisterServiceBusMessagePublisher<CreateOrderMessage>()
+                    .RegisterMessagePublisher<CreateOrderMessage>()
                     .Configure(config =>
                     {
                         config.ConnectionString = serviceBusFixture.GetConnectionString();
-                        config.PublishTo = OrdersQueue;
+                        config.PublishTo = JustOrdersQueue;
                         config.SerializerOptions = _serializerOptions;
                     });
 
                 var serviceProvider = services.BuildServiceProvider();
-                var publisher = serviceProvider.GetRequiredService<IServiceBusMessagePublisher<CreateOrderMessage>>();
+                var publisher = serviceProvider.GetRequiredService<IMessagePublisher<CreateOrderMessage>>();
 
                 return publisher;
             })
-            .Act(async data =>
+            .And(data =>
             {
-                var msg1 = new AutoFaker<CreateOrderMessage>().Generate();
-                var msg2 = new AutoFaker<CreateOrderMessage>().Generate();
-                var publishOperation = await data.PublishAsync([msg1, msg2], CancellationToken.None);
-                var recMessage = await ReadFromQueueAsync<CreateOrderMessage>(
-                    serviceBusFixture.GetConnectionString(),
-                    OrdersQueue,
-                    _serializerOptions,
-                    CancellationToken.None
-                );
-
-                return (publishOperation, msg: msg1, recMessage);
+                var messages = _orderMessageGenerator.Generate(2);
+                return (publisher: data, messages);
             })
-            .Assert(operation => operation.publishOperation.Result is OperationResult.SuccessResult)
-            .And(operation => operation.recMessage != null && operation.msg.OrderId == operation.recMessage.OrderId);
+            .Act(async data => await data.publisher.PublishAsync(data.messages, CancellationToken.None))
+            .Assert(operation => operation.Result is OperationResult.SuccessResult)
+            .And(
+                async (data, _) =>
+                {
+                    var recMessage = await ReadFromQueueAsync<CreateOrderMessage>(
+                        serviceBusFixture.GetConnectionString(),
+                        JustOrdersQueue,
+                        _serializerOptions,
+                        CancellationToken.None
+                    );
+                    Assert.NotNull(recMessage);
+                    Assert.Equal(data.messages[0].OrderId, recMessage.OrderId);
+                }
+            );
     }
 
-    [Fact(DisplayName = "Publishing to session enabled queue and reading using session ids")]
+    [Fact(DisplayName = "Publishing to session enabled queue and receiving using sessions")]
     public async Task Test2()
     {
         await Arrange(() =>
@@ -70,7 +60,7 @@ public partial class ServiceBusPublisherTests(ServiceBusFixture serviceBusFixtur
                 var services = new ServiceCollection();
                 services.AddLogging().UseServiceBusMessageClientFactory();
                 services
-                    .RegisterServiceBusMessagePublisher<CreateOrderMessage>()
+                    .RegisterMessagePublisher<CreateOrderMessage>()
                     .Configure(config =>
                     {
                         config.ConnectionString = serviceBusFixture.GetConnectionString();
@@ -80,19 +70,22 @@ public partial class ServiceBusPublisherTests(ServiceBusFixture serviceBusFixtur
                     });
 
                 var serviceProvider = services.BuildServiceProvider();
-                var publisher = serviceProvider.GetRequiredService<IServiceBusMessagePublisher<CreateOrderMessage>>();
+                var publisher = serviceProvider.GetRequiredService<IMessagePublisher<CreateOrderMessage>>();
 
                 return publisher;
             })
+            .And(data =>
+            {
+                var messages = _orderMessageGenerator.Generate(2);
+                return (publisher: data, messages);
+            })
             .Act(async data =>
             {
-                var msg1 = new AutoFaker<CreateOrderMessage>().Generate();
-                var msg2 = new AutoFaker<CreateOrderMessage>().Generate();
-                var publishOperation = await data.PublishAsync([msg1, msg2], CancellationToken.None);
+                var publishOperation = await data.publisher.PublishAsync(data.messages, CancellationToken.None);
                 var recMessage1 = await ReadFromQueueAsSessionAsync<CreateOrderMessage>(
                     serviceBusFixture.GetConnectionString(),
                     SessionOrdersQueue,
-                    msg1.SessionId,
+                    data.messages[0].SessionId,
                     _serializerOptions,
                     CancellationToken.None
                 );
@@ -100,19 +93,19 @@ public partial class ServiceBusPublisherTests(ServiceBusFixture serviceBusFixtur
                 var recMessage2 = await ReadFromQueueAsSessionAsync<CreateOrderMessage>(
                     serviceBusFixture.GetConnectionString(),
                     SessionOrdersQueue,
-                    msg2.SessionId,
+                    data.messages[1].SessionId,
                     _serializerOptions,
                     CancellationToken.None
                 );
 
-                return (publishOperation, msg1, msg2, recMessage1, recMessage2);
+                return (publishOperation, recMessage1, recMessage2);
             })
             .Assert(operation => operation.publishOperation.Result is OperationResult.SuccessResult)
-            .And(operation => operation.recMessage1 != null && operation.msg1.OrderId == operation.recMessage1.OrderId)
-            .And(operation => operation.recMessage2 != null && operation.msg2.OrderId == operation.recMessage2.OrderId);
+            .And((data, operation) => operation.recMessage1 != null && data.messages[0].OrderId == operation.recMessage1.OrderId)
+            .And((data, operation) => operation.recMessage2 != null && data.messages[1].OrderId == operation.recMessage2.OrderId);
     }
 
-    [Fact(DisplayName = "Publishing to topic and receiving from subscription")]
+    [Fact(DisplayName = "Publishing to topic and receiving from non session enabled subscription")]
     public async Task Test3()
     {
         await Arrange(() =>
@@ -120,7 +113,7 @@ public partial class ServiceBusPublisherTests(ServiceBusFixture serviceBusFixtur
                 var services = new ServiceCollection();
                 services.AddLogging().UseServiceBusMessageClientFactory();
                 services
-                    .RegisterServiceBusMessagePublisher<CreateOrderMessage>()
+                    .RegisterMessagePublisher<CreateOrderMessage>()
                     .Configure(config =>
                     {
                         config.ConnectionString = serviceBusFixture.GetConnectionString();
@@ -130,7 +123,7 @@ public partial class ServiceBusPublisherTests(ServiceBusFixture serviceBusFixtur
                     });
 
                 var serviceProvider = services.BuildServiceProvider();
-                var publisher = serviceProvider.GetRequiredService<IServiceBusMessagePublisher<CreateOrderMessage>>();
+                var publisher = serviceProvider.GetRequiredService<IMessagePublisher<CreateOrderMessage>>();
                 return publisher;
             })
             .Act(async data =>
@@ -140,7 +133,7 @@ public partial class ServiceBusPublisherTests(ServiceBusFixture serviceBusFixtur
                 var recMessage = await ReadFromSubscriptionAsync<CreateOrderMessage>(
                     serviceBusFixture.GetConnectionString(),
                     OrdersTopic,
-                    OrdersSubscription,
+                    JustOrdersSubscription,
                     _serializerOptions,
                     CancellationToken.None
                 );
@@ -151,7 +144,7 @@ public partial class ServiceBusPublisherTests(ServiceBusFixture serviceBusFixtur
             .And(operation => operation.recMessage != null && operation.msg.OrderId == operation.recMessage.OrderId);
     }
 
-    [Fact(DisplayName = "Publishing to topic with a session id")]
+    [Fact(DisplayName = "Publishing to topic and receiving from session enabled subscription")]
     public async Task Test4()
     {
         await Arrange(() =>
@@ -159,7 +152,7 @@ public partial class ServiceBusPublisherTests(ServiceBusFixture serviceBusFixtur
                 var services = new ServiceCollection();
                 services.AddLogging().UseServiceBusMessageClientFactory();
                 services
-                    .RegisterServiceBusMessagePublisher<CreateOrderMessage>()
+                    .RegisterMessagePublisher<CreateOrderMessage>()
                     .Configure(config =>
                     {
                         config.ConnectionString = serviceBusFixture.GetConnectionString();
@@ -169,7 +162,7 @@ public partial class ServiceBusPublisherTests(ServiceBusFixture serviceBusFixtur
                     });
 
                 var serviceProvider = services.BuildServiceProvider();
-                var publisher = serviceProvider.GetRequiredService<IServiceBusMessagePublisher<CreateOrderMessage>>();
+                var publisher = serviceProvider.GetRequiredService<IMessagePublisher<CreateOrderMessage>>();
                 return publisher;
             })
             .Act(async data =>

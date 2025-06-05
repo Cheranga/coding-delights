@@ -1,4 +1,4 @@
-﻿using AzureServiceBusLib.Services;
+﻿using AzureServiceBusLib.Publish;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -10,7 +10,7 @@ namespace OrderPublisher.Console;
 internal class OrderPublisherBackgroundService(
     IOptions<ServiceBusConfig> options,
     IOrderGenerator<CreateOrderMessage> orderGenerator,
-    IServiceBusMessagePublisher<CreateOrderMessage> orderPublisher,
+    IMessagePublisher<CreateOrderMessage> orderPublisher,
     IMessagePublisherFactory publisherFactory,
     ILogger<OrderPublisherBackgroundService> logger
 ) : BackgroundService
