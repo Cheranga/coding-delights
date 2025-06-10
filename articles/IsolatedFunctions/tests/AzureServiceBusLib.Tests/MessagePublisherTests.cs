@@ -39,14 +39,17 @@ public partial class MessagePublisherTests
             .And(
                 async (data, _) =>
                 {
-                    var recMessage = await ReadFromQueueAsync<CreateOrderMessage>(
+                    var recMessages = await ReadFromQueueAsync<CreateOrderMessage>(
                         serviceBusFixture.GetConnectionString(),
                         JustOrdersQueue,
-                        _serializerOptions
+                        _serializerOptions,
+                        10
                     );
-                    Assert.NotNull(recMessage);
-                    Assert.Single(recMessage);
-                    Assert.True(recMessage[0] is { } a && data.messages.Exists(x => x.OrderId == a.OrderId));
+
+                    Assert.DoesNotContain(recMessages, x => x == null);
+                    var receivedOrders = recMessages.Select(x => x!.OrderId).ToHashSet();
+                    var expectedOrders = data.messages.Select(x => x.OrderId).ToHashSet();
+                    Assert.True(expectedOrders.SetEquals(receivedOrders));
                 }
             );
     }
@@ -81,25 +84,37 @@ public partial class MessagePublisherTests
             .Act(async data =>
             {
                 var publishOperation = await data.publisher.PublishAsync(data.messages, CancellationToken.None);
-                var recMessage1 = await ReadFromQueueAsSessionAsync<CreateOrderMessage>(
-                    serviceBusFixture.GetConnectionString(),
-                    SessionOrdersQueue,
-                    data.messages[0].SessionId,
-                    _serializerOptions
-                );
-
-                var recMessage2 = await ReadFromQueueAsSessionAsync<CreateOrderMessage>(
-                    serviceBusFixture.GetConnectionString(),
-                    SessionOrdersQueue,
-                    data.messages[1].SessionId,
-                    _serializerOptions
-                );
-
-                return (publishOperation, recMessage1, recMessage2);
+                return publishOperation;
             })
-            .Assert(operation => operation.publishOperation.Result is OperationResult.SuccessResult)
-            .And((data, operation) => operation.recMessage1 != null && data.messages[0].OrderId == operation.recMessage1[0]!.OrderId)
-            .And((data, operation) => operation.recMessage2 != null && data.messages[1].OrderId == operation.recMessage2[0]!.OrderId);
+            .Assert(operation => operation.Result is OperationResult.SuccessResult)
+            .And(
+                async (data, _) =>
+                {
+                    var sessionId = data.messages[0].SessionId;
+                    var recMessage = await ReadFromQueueAsSessionAsync<CreateOrderMessage>(
+                        serviceBusFixture.GetConnectionString(),
+                        SessionOrdersQueue,
+                        sessionId,
+                        _serializerOptions
+                    );
+
+                    Assert.True(recMessage != null && data.messages[0].OrderId == recMessage[0]!.OrderId);
+                }
+            )
+            .And(
+                async (data, _) =>
+                {
+                    var sessionId = data.messages[1].SessionId;
+                    var recMessage = await ReadFromQueueAsSessionAsync<CreateOrderMessage>(
+                        serviceBusFixture.GetConnectionString(),
+                        SessionOrdersQueue,
+                        sessionId,
+                        _serializerOptions
+                    );
+
+                    Assert.True(recMessage != null && data.messages[1].OrderId == recMessage[0]!.OrderId);
+                }
+            );
     }
 
     [Fact(DisplayName = "Publishing to topic and receiving from both session enabled and session disabled subscriptions")]
@@ -131,35 +146,39 @@ public partial class MessagePublisherTests
             .Act(async data =>
             {
                 var publishOperation = await data.publisher.PublishAsync(data.messages, CancellationToken.None);
-                var nonSessionMessages = await ReadFromSubscriptionAsync<CreateOrderMessage>(
-                    serviceBusFixture.GetConnectionString(),
-                    OrdersTopic,
-                    JustOrdersSubscription,
-                    _serializerOptions,
-                    10
-                );
-
-                var sessionBasedMessages = await ReadFromSubscriptionAsSessionAsync<CreateOrderMessage>(
-                    serviceBusFixture.GetConnectionString(),
-                    OrdersTopic,
-                    SessionBasedOrdersSubscription,
-                    data.messages[0].SessionId,
-                    _serializerOptions,
-                    10
-                );
-
-                return (publishOperation, nonSessionMessages, sessionBasedMessage: sessionBasedMessages);
+                return publishOperation;
             })
-            .Assert(operation => operation.publishOperation.Result is OperationResult.SuccessResult)
+            .Assert(operation => operation.Result is OperationResult.SuccessResult)
             .And(
-                (data, operation) =>
+                async (data, _) =>
                 {
+                    var sessionBasedMessages = await ReadFromSubscriptionAsSessionAsync<CreateOrderMessage>(
+                        serviceBusFixture.GetConnectionString(),
+                        OrdersTopic,
+                        SessionBasedOrdersSubscription,
+                        data.messages[0].SessionId,
+                        _serializerOptions,
+                        10
+                    );
+
                     // There should be only one session-based message
-                    Assert.Single(operation.sessionBasedMessage);
+                    Assert.Single(sessionBasedMessages);
+                }
+            )
+            .And(
+                async (data, _) =>
+                {
+                    var nonSessionMessages = await ReadFromSubscriptionAsync<CreateOrderMessage>(
+                        serviceBusFixture.GetConnectionString(),
+                        OrdersTopic,
+                        JustOrdersSubscription,
+                        _serializerOptions,
+                        10
+                    );
 
                     // Non-session subscription should receive all messages
                     var expectedOrderIds = data.messages.Select(m => m.OrderId).ToHashSet();
-                    var actualOrderIds = operation.nonSessionMessages.Where(x => x != null).Select(x => x!.OrderId);
+                    var actualOrderIds = nonSessionMessages.Where(x => x != null).Select(x => x!.OrderId);
                     Assert.True(expectedOrderIds.SetEquals(actualOrderIds));
                 }
             );
