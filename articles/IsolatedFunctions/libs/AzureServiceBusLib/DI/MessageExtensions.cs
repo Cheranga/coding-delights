@@ -24,18 +24,18 @@ public static class MessageExtensions
 
         services.AddSingleton<IMessagePublisher>(provider =>
         {
-            var optionsMonitor = provider.GetRequiredService<IOptionsMonitor<PublisherConfig<TMessage>>>();
-            var options = optionsMonitor.Get(publisherName);
-            var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<MessagePublisher<TMessage>>();
-
-            var publisher = new MessagePublisher<TMessage>(publisherName, options, logger);
+            var factory = provider.GetRequiredService<IMessagePublisherFactory>();
+            var publisher = factory.GetPublisher<TMessage>(publisherName);
             return publisher;
         });
 
         services.AddSingleton<IMessagePublisher<TMessage>>(provider =>
         {
-            var factory = provider.GetRequiredService<IMessagePublisherFactory>();
-            var publisher = factory.GetPublisher<TMessage>(publisherName);
+            var optionsMonitor = provider.GetRequiredService<IOptionsMonitor<PublisherConfig<TMessage>>>();
+            var options = optionsMonitor.Get(publisherName);
+            var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<MessagePublisher<TMessage>>();
+
+            var publisher = new MessagePublisher<TMessage>(publisherName, options, logger);
             return publisher;
         });
 
