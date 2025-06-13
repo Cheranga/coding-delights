@@ -6,6 +6,7 @@
     <!--        Analyzers-->
     <PackageVersion Include="AsyncFixer" Version="1.6.0" />
     <PackageVersion Include="Meziantou.Analyzer" Version="2.0.199" />
+    <PackageVersion Include="Microsoft.Extensions.Azure" Version="1.11.0" />
     <PackageVersion Include="Roslynator.Analyzers" Version="4.13.1" />
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.8.0.113526" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="9.0.4" />

@@ -8,6 +8,7 @@
 
     <ItemGroup>
         <PackageReference Include="Azure.Messaging.ServiceBus"/>
+        <PackageReference Include="Microsoft.Extensions.Azure" />
         <PackageReference Include="Microsoft.Extensions.Hosting"/>
     </ItemGroup>
 
