@@ -8,7 +8,7 @@ namespace AzureServiceBusLib.Tests;
 
 public partial class MessagePublisherTests
 {
-    [Fact(DisplayName = "Publishing to non session enabled queue and receiving")]
+    [Fact(DisplayName = "Publishing to non session enabled queue using a typed publisher and receiving")]
     public async Task Test1()
     {
         await Arrange(() =>
@@ -16,8 +16,8 @@ public partial class MessagePublisherTests
                 var services = new ServiceCollection();
                 services
                     .AddLogging()
-                    .RegisterServiceBus(serviceBusFixture.GetConnectionString())
-                    .RegisterServiceBusPublisher<CreateOrderMessage>()
+                    .RegisterServiceBus("orders", serviceBusFixture.GetConnectionString())
+                    .RegisterServiceBusPublisher<CreateOrderMessage>("orders")
                     .Configure(config =>
                     {
                         config.PublishTo = JustOrdersQueue;
@@ -26,9 +26,6 @@ public partial class MessagePublisherTests
 
                 var serviceProvider = services.BuildServiceProvider();
                 var publisher = serviceProvider.GetRequiredService<IServiceBusPublisher<CreateOrderMessage>>();
-
-                var factory = serviceProvider.GetRequiredService<IServiceBusFactory>();
-                var pub = factory.GetPublisher<CreateOrderMessage>(nameof(CreateOrderMessage));
 
                 return publisher;
             })
@@ -57,26 +54,26 @@ public partial class MessagePublisherTests
             );
     }
 
-    [Fact(DisplayName = "Publishing to session enabled queue and receiving using sessions")]
+    [Fact(DisplayName = "Publishing to session enabled queue using typed client through ServiceBusFactory and receiving using sessions")]
     public async Task Test2()
     {
         await Arrange(() =>
             {
                 var services = new ServiceCollection();
-                services.AddLogging().UseServiceBusMessageClientFactory();
                 services
-                    .RegisterMessagePublisher<CreateOrderMessage>()
+                    .AddLogging()
+                    .RegisterServiceBus("orders", serviceBusFixture.GetConnectionString())
+                    .RegisterServiceBusPublisher<CreateOrderMessage>("orders")
                     .Configure(config =>
                     {
-                        config.ConnectionString = serviceBusFixture.GetConnectionString();
                         config.PublishTo = SessionOrdersQueue;
                         config.SerializerOptions = _serializerOptions;
                         config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.SessionId;
                     });
 
                 var serviceProvider = services.BuildServiceProvider();
-                var factory = serviceProvider.GetRequiredService<IMessagePublisherFactory>();
-                var publisher = factory.GetPublisher<CreateOrderMessage>(); //serviceProvider.GetRequiredService<IMessagePublisher<CreateOrderMessage>>();
+                var factory = serviceProvider.GetRequiredService<IServiceBusFactory>();
+                var publisher = factory.GetPublisher<CreateOrderMessage>("orders");
 
                 return publisher;
             })
@@ -121,25 +118,28 @@ public partial class MessagePublisherTests
             );
     }
 
-    [Fact(DisplayName = "Publishing to topic and receiving from both session enabled and session disabled subscriptions")]
+    [Fact(
+        DisplayName = "Publishing to topic using named client through ServiceBusFactory and receiving from both session enabled and session disabled subscriptions"
+    )]
     public async Task Test3()
     {
         await Arrange(() =>
             {
                 var services = new ServiceCollection();
-                services.AddLogging().UseServiceBusMessageClientFactory();
                 services
-                    .RegisterMessagePublisher<CreateOrderMessage>()
+                    .AddLogging()
+                    .RegisterServiceBus("orders", serviceBusFixture.GetConnectionString())
+                    .RegisterServiceBusPublisher<CreateOrderMessage>("orders", "orders-publisher")
                     .Configure(config =>
                     {
-                        config.ConnectionString = serviceBusFixture.GetConnectionString();
                         config.PublishTo = OrdersTopic;
                         config.SerializerOptions = _serializerOptions;
                         config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.SessionId;
                     });
 
                 var serviceProvider = services.BuildServiceProvider();
-                var publisher = serviceProvider.GetRequiredService<IMessagePublisher<CreateOrderMessage>>();
+                var factory = serviceProvider.GetRequiredService<IServiceBusFactory>();
+                var publisher = factory.GetPublisher<CreateOrderMessage>("orders", "orders-publisher");
                 return publisher;
             })
             .And(data =>

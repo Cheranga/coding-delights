@@ -4,7 +4,6 @@ namespace AzureServiceBusLib.DI;
 
 internal sealed class ServiceBusFactory : IServiceBusFactory
 {
-    internal const string DefaultServiceBusName = "DefaultServiceBus";
     private readonly Dictionary<string, Dictionary<string, IServiceBusPublisher>> _publishersMappedByNameInServiceBuses;
 
     public ServiceBusFactory(IEnumerable<IServiceBusPublisher> publishers)
@@ -29,6 +28,6 @@ internal sealed class ServiceBusFactory : IServiceBusFactory
         throw new MessagePublisherNotFoundException<TMessage>(publisherName);
     }
 
-    public IServiceBusPublisher<TMessage> GetPublisher<TMessage>(string publisherName)
-        where TMessage : IMessage => GetPublisher<TMessage>(DefaultServiceBusName, publisherName);
+    public IServiceBusPublisher<TMessage> GetPublisher<TMessage>(string serviceBusName)
+        where TMessage : IMessage => GetPublisher<TMessage>(serviceBusName, typeof(TMessage).Name);
 }

@@ -1,4 +1,5 @@
-﻿using Azure.Messaging.ServiceBus;
+﻿using System.ComponentModel.DataAnnotations;
+using Azure.Messaging.ServiceBus;
 using AzureServiceBusLib.Core;
 using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,17 +12,19 @@ public static class NewMessageExtensions
 {
     public static IServiceCollection RegisterServiceBus(
         this IServiceCollection services,
-        string connectionString,
-        string? serviceBusName = null,
+        [Required] string serviceBusName,
+        [Required] string connectionString,
         Action<ServiceBusClientOptions>? options = null
     )
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(serviceBusName, nameof(serviceBusName));
+        ArgumentException.ThrowIfNullOrWhiteSpace(connectionString, nameof(connectionString));
+
         services.AddSingleton<IServiceBusFactory, ServiceBusFactory>();
 
-        var specifiedServiceBusName = serviceBusName ?? ServiceBusFactory.DefaultServiceBusName;
         services.AddAzureClients(builder =>
         {
-            var clientBuilder = builder.AddServiceBusClient(connectionString).WithName(specifiedServiceBusName);
+            var clientBuilder = builder.AddServiceBusClient(connectionString).WithName(serviceBusName);
             if (options != null)
             {
                 clientBuilder.ConfigureOptions(options);
@@ -33,12 +36,11 @@ public static class NewMessageExtensions
 
     public static OptionsBuilder<PublisherConfig<TMessage>> RegisterServiceBusPublisher<TMessage>(
         this IServiceCollection services,
-        string? serviceBusName = null,
+        [Required] string serviceBusName,
         string? publisherName = null
     )
         where TMessage : IMessage
     {
-        var specifiedServiceBusName = serviceBusName ?? ServiceBusFactory.DefaultServiceBusName;
         var specifiedPublisherName = publisherName ?? typeof(TMessage).Name;
 
         services.AddSingleton<IServiceBusPublisher>(provider =>
@@ -46,23 +48,17 @@ public static class NewMessageExtensions
             var optionsMonitor = provider.GetRequiredService<IOptionsMonitor<PublisherConfig<TMessage>>>();
             var options = optionsMonitor.Get(specifiedPublisherName);
             var factory = provider.GetRequiredService<IAzureClientFactory<ServiceBusClient>>();
-            var serviceBusClient = factory.CreateClient(specifiedServiceBusName);
+            var serviceBusClient = factory.CreateClient(serviceBusName);
             var sender = serviceBusClient.CreateSender(options.PublishTo);
             var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<ServiceBusPublisher<TMessage>>();
-            var serviceBusPublisher = new ServiceBusPublisher<TMessage>(
-                specifiedServiceBusName,
-                specifiedPublisherName,
-                options,
-                sender,
-                logger
-            );
+            var serviceBusPublisher = new ServiceBusPublisher<TMessage>(serviceBusName, specifiedPublisherName, options, sender, logger);
             return serviceBusPublisher;
         });
 
         services.AddSingleton<IServiceBusPublisher<TMessage>>(provider =>
         {
             var factory = provider.GetRequiredService<IServiceBusFactory>();
-            var publisher = factory.GetPublisher<TMessage>(specifiedServiceBusName, specifiedPublisherName);
+            var publisher = factory.GetPublisher<TMessage>(serviceBusName, specifiedPublisherName);
             return publisher;
         });
 

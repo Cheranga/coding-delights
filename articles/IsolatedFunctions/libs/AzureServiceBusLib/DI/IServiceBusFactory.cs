@@ -7,6 +7,6 @@ public interface IServiceBusFactory
     IServiceBusPublisher<TMessage> GetPublisher<TMessage>(string serviceBusName, string publisherName)
         where TMessage : IMessage;
 
-    IServiceBusPublisher<TMessage> GetPublisher<TMessage>(string publisherName)
+    IServiceBusPublisher<TMessage> GetPublisher<TMessage>(string serviceBusName)
         where TMessage : IMessage;
 }
