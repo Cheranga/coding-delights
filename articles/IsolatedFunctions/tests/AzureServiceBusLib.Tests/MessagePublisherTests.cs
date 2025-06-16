@@ -14,18 +14,21 @@ public partial class MessagePublisherTests
         await Arrange(() =>
             {
                 var services = new ServiceCollection();
-                services.AddLogging().UseServiceBusMessageClientFactory();
                 services
-                    .RegisterMessagePublisher<CreateOrderMessage>()
+                    .AddLogging()
+                    .RegisterServiceBus(serviceBusFixture.GetConnectionString())
+                    .RegisterServiceBusPublisher<CreateOrderMessage>()
                     .Configure(config =>
                     {
-                        config.ConnectionString = serviceBusFixture.GetConnectionString();
                         config.PublishTo = JustOrdersQueue;
                         config.SerializerOptions = _serializerOptions;
                     });
 
                 var serviceProvider = services.BuildServiceProvider();
-                var publisher = serviceProvider.GetRequiredService<IMessagePublisher<CreateOrderMessage>>();
+                var publisher = serviceProvider.GetRequiredService<IServiceBusPublisher<CreateOrderMessage>>();
+
+                var factory = serviceProvider.GetRequiredService<IServiceBusFactory>();
+                var pub = factory.GetPublisher<CreateOrderMessage>(nameof(CreateOrderMessage));
 
                 return publisher;
             })
@@ -72,7 +75,8 @@ public partial class MessagePublisherTests
                     });
 
                 var serviceProvider = services.BuildServiceProvider();
-                var publisher = serviceProvider.GetRequiredService<IMessagePublisher<CreateOrderMessage>>();
+                var factory = serviceProvider.GetRequiredService<IMessagePublisherFactory>();
+                var publisher = factory.GetPublisher<CreateOrderMessage>(); //serviceProvider.GetRequiredService<IMessagePublisher<CreateOrderMessage>>();
 
                 return publisher;
             })

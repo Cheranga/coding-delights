@@ -4,17 +4,34 @@ using Azure.Messaging.ServiceBus;
 using AzureServiceBusLib.Core;
 using Microsoft.Extensions.Logging;
 
-namespace AzureServiceBusLib.Publish;
+namespace AzureServiceBusLib.DI;
 
-internal sealed class MessagePublisher<TMessage>(
+public interface IServiceBusPublisher
+{
+    public string ServiceBusName { get; }
+    public string PublisherName { get; }
+}
+
+public interface IServiceBusPublisher<in TMessage> : IServiceBusPublisher
+    where TMessage : IMessage
+{
+    Task<OperationResponse<OperationResult.FailedResult, OperationResult.SuccessResult>> PublishAsync(
+        IReadOnlyCollection<TMessage> messages,
+        CancellationToken token
+    );
+}
+
+public class ServiceBusPublisher<TMessage>(
+    string serviceBusName,
     string publisherName,
     PublisherConfig<TMessage> options,
     ServiceBusSender sender,
-    ILogger<MessagePublisher<TMessage>> logger
-) : IMessagePublisher<TMessage>
+    ILogger<ServiceBusPublisher<TMessage>> logger
+) : IServiceBusPublisher<TMessage>
     where TMessage : IMessage
 {
-    public string Name { get; } = publisherName;
+    public string ServiceBusName { get; } = serviceBusName;
+    public string PublisherName { get; } = publisherName;
 
     private JsonSerializerOptions SerializerOptions =>
         options.SerializerOptions

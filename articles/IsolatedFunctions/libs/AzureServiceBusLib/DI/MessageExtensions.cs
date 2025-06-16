@@ -1,4 +1,5 @@
-﻿using AzureServiceBusLib.Core;
+﻿using Azure.Messaging.ServiceBus;
+using AzureServiceBusLib.Core;
 using AzureServiceBusLib.Publish;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -24,18 +25,20 @@ public static class MessageExtensions
 
         services.AddSingleton<IMessagePublisher>(provider =>
         {
-            var factory = provider.GetRequiredService<IMessagePublisherFactory>();
-            var publisher = factory.GetPublisher<TMessage>(publisherName);
+            var optionsMonitor = provider.GetRequiredService<IOptionsMonitor<PublisherConfig<TMessage>>>();
+            var options = optionsMonitor.Get(publisherName);
+            var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<MessagePublisher<TMessage>>();
+
+            var serviceBusClient = new ServiceBusClient(options.ConnectionString);
+            var sender = serviceBusClient.CreateSender(options.PublishTo);
+            var publisher = new MessagePublisher<TMessage>(publisherName, options, sender, logger);
             return publisher;
         });
 
         services.AddSingleton<IMessagePublisher<TMessage>>(provider =>
         {
-            var optionsMonitor = provider.GetRequiredService<IOptionsMonitor<PublisherConfig<TMessage>>>();
-            var options = optionsMonitor.Get(publisherName);
-            var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<MessagePublisher<TMessage>>();
-
-            var publisher = new MessagePublisher<TMessage>(publisherName, options, logger);
+            var factory = provider.GetRequiredService<IMessagePublisherFactory>();
+            var publisher = factory.GetPublisher<TMessage>(publisherName);
             return publisher;
         });
 
