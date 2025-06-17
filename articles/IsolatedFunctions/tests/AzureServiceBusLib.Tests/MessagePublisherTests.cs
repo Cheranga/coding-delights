@@ -13,11 +13,18 @@ public partial class MessagePublisherTests
     {
         await Arrange(() =>
             {
-                var services = new ServiceCollection();
+                var services = new ServiceCollection().AddLogging().RegisterServiceBus(_serviceBusFixture.GetConnectionString());
+
                 services
-                    .AddLogging()
-                    .RegisterServiceBus("orders", serviceBusFixture.GetConnectionString())
-                    .RegisterServiceBusPublisher<CreateOrderMessage>("orders")
+                    .RegisterServiceBusPublisher<CreateOrderMessage>()
+                    .Configure(config =>
+                    {
+                        config.PublishTo = JustOrdersQueue;
+                        config.SerializerOptions = _serializerOptions;
+                    });
+
+                services
+                    .RegisterServiceBusPublisher<CreateOrderMessage>(publisherName: "another-publisher")
                     .Configure(config =>
                     {
                         config.PublishTo = JustOrdersQueue;
@@ -27,20 +34,31 @@ public partial class MessagePublisherTests
                 var serviceProvider = services.BuildServiceProvider();
                 var publisher = serviceProvider.GetRequiredService<IServiceBusPublisher<CreateOrderMessage>>();
 
-                return publisher;
+                var anotherPublisher = serviceProvider
+                    .GetRequiredService<IServiceBusFactory>()
+                    .GetPublisher<CreateOrderMessage>("another-publisher");
+
+                return (publisher, anotherPublisher);
             })
             .And(data =>
             {
                 var messages = _orderMessageGenerator.Generate(2);
-                return (publisher: data, messages);
+                return (data.publisher, data.anotherPublisher, messages);
             })
-            .Act(async data => await data.publisher.PublishAsync(data.messages, CancellationToken.None))
-            .Assert(operation => operation.Result is OperationResult.SuccessResult)
+            .Act(async data =>
+            {
+                var operation1 = await data.publisher.PublishAsync(data.messages, CancellationToken.None);
+                var operation2 = await data.anotherPublisher.PublishAsync(data.messages, CancellationToken.None);
+
+                return (operation1, operation2);
+            })
+            .Assert(result => result.operation1.Result is OperationResult.SuccessResult)
+            .And(result => result.operation2.Result is OperationResult.SuccessResult)
             .And(
                 async (data, _) =>
                 {
                     var recMessages = await ReadFromQueueAsync<CreateOrderMessage>(
-                        serviceBusFixture.GetConnectionString(),
+                        _serviceBusFixture.GetConnectionString(),
                         JustOrdersQueue,
                         _serializerOptions,
                         10
@@ -62,8 +80,8 @@ public partial class MessagePublisherTests
                 var services = new ServiceCollection();
                 services
                     .AddLogging()
-                    .RegisterServiceBus("orders", serviceBusFixture.GetConnectionString())
-                    .RegisterServiceBusPublisher<CreateOrderMessage>("orders")
+                    .RegisterServiceBus(_serviceBusFixture.GetConnectionString())
+                    .RegisterServiceBusPublisher<CreateOrderMessage>(publisherName: "orders")
                     .Configure(config =>
                     {
                         config.PublishTo = SessionOrdersQueue;
@@ -93,7 +111,7 @@ public partial class MessagePublisherTests
                 {
                     var sessionId = data.messages[0].SessionId;
                     var recMessage = await ReadFromQueueAsSessionAsync<CreateOrderMessage>(
-                        serviceBusFixture.GetConnectionString(),
+                        _serviceBusFixture.GetConnectionString(),
                         SessionOrdersQueue,
                         sessionId,
                         _serializerOptions
@@ -107,7 +125,7 @@ public partial class MessagePublisherTests
                 {
                     var sessionId = data.messages[1].SessionId;
                     var recMessage = await ReadFromQueueAsSessionAsync<CreateOrderMessage>(
-                        serviceBusFixture.GetConnectionString(),
+                        _serviceBusFixture.GetConnectionString(),
                         SessionOrdersQueue,
                         sessionId,
                         _serializerOptions
@@ -128,7 +146,7 @@ public partial class MessagePublisherTests
                 var services = new ServiceCollection();
                 services
                     .AddLogging()
-                    .RegisterServiceBus("orders", serviceBusFixture.GetConnectionString())
+                    .RegisterServiceBus(_serviceBusFixture.GetConnectionString(), "orders")
                     .RegisterServiceBusPublisher<CreateOrderMessage>("orders", "orders-publisher")
                     .Configure(config =>
                     {
@@ -157,7 +175,7 @@ public partial class MessagePublisherTests
                 async (data, _) =>
                 {
                     var sessionBasedMessages = await ReadFromSubscriptionAsSessionAsync<CreateOrderMessage>(
-                        serviceBusFixture.GetConnectionString(),
+                        _serviceBusFixture.GetConnectionString(),
                         OrdersTopic,
                         SessionBasedOrdersSubscription,
                         data.messages[0].SessionId,
@@ -173,7 +191,7 @@ public partial class MessagePublisherTests
                 async (data, _) =>
                 {
                     var nonSessionMessages = await ReadFromSubscriptionAsync<CreateOrderMessage>(
-                        serviceBusFixture.GetConnectionString(),
+                        _serviceBusFixture.GetConnectionString(),
                         OrdersTopic,
                         JustOrdersSubscription,
                         _serializerOptions,

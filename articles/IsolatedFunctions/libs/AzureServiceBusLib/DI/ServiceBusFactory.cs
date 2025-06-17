@@ -28,6 +28,9 @@ internal sealed class ServiceBusFactory : IServiceBusFactory
         throw new MessagePublisherNotFoundException<TMessage>(publisherName);
     }
 
-    public IServiceBusPublisher<TMessage> GetPublisher<TMessage>(string serviceBusName)
-        where TMessage : IMessage => GetPublisher<TMessage>(serviceBusName, typeof(TMessage).Name);
+    public IServiceBusPublisher<TMessage> GetPublisher<TMessage>()
+        where TMessage : IMessage => GetPublisher<TMessage>(NewMessageExtensions.DefaultServiceBusName, typeof(TMessage).Name);
+
+    public IServiceBusPublisher<TMessage> GetPublisher<TMessage>(string publisherName)
+        where TMessage : IMessage => GetPublisher<TMessage>(NewMessageExtensions.DefaultServiceBusName, publisherName);
 }

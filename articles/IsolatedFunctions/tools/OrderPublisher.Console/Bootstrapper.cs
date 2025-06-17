@@ -33,35 +33,33 @@ internal static class Bootstrapper
         return services;
     }
 
-    private static IServiceCollection RegisterMessagingServices(
-        this IServiceCollection services,
-        string serviceBusConfigSectionName = nameof(ServiceBusConfig)
-    )
+    private static IServiceCollection RegisterMessagingServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddOptions<ServiceBusConfig>().BindConfiguration(serviceBusConfigSectionName);
+        var sbConfig = configuration.GetSection(nameof(ServiceBusConfig)).Get<ServiceBusConfig>();
+        ArgumentException.ThrowIfNullOrWhiteSpace(sbConfig?.ConnectionString);
+
+        services.AddOptions<ServiceBusConfig>("orders").BindConfiguration(nameof(ServiceBusConfig));
         //
         // Registering the message publisher for the CreateOrderMessage
         //
-        services.UseServiceBusMessageClientFactory();
+        services.RegisterServiceBus(sbConfig.ConnectionString, "orders");
         services
-            .RegisterMessagePublisher<CreateOrderMessage>()
-            .Configure<IOptions<ServiceBusConfig>>(
-                (config, busConfigOptions) =>
+            .RegisterServiceBusPublisher<CreateOrderMessage>("orders")
+            .Configure<IOptionsMonitor<ServiceBusConfig>>(
+                (config, monitor) =>
                 {
-                    var busConfig = busConfigOptions.Value;
-                    config.ConnectionString = busConfig.ConnectionString;
+                    var busConfig = monitor.Get("orders");
                     config.PublishTo = busConfig.TopicName;
                     config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.OrderId.ToString();
                 }
             );
 
         services
-            .RegisterMessagePublisher<CreateOrderMessage>("q-orders")
-            .Configure<IOptions<ServiceBusConfig>>(
-                (config, busConfigOptions) =>
+            .RegisterServiceBusPublisher<CreateOrderMessage>("orders", "q-orders")
+            .Configure<IOptionsMonitor<ServiceBusConfig>>(
+                (config, monitor) =>
                 {
-                    var busConfig = busConfigOptions.Value;
-                    config.ConnectionString = busConfig.ConnectionString;
+                    var busConfig = monitor.Get("orders");
                     config.PublishTo = busConfig.QueueName;
                     config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.OrderId.ToString();
                 }
@@ -76,6 +74,6 @@ internal static class Bootstrapper
 
     public static void RegisterDependencies(this IServiceCollection services, IConfiguration configuration)
     {
-        services.RegisterConfigurations().RegisterMessagingServices().RegisterApplicationServices();
+        services.RegisterConfigurations().RegisterMessagingServices(configuration).RegisterApplicationServices();
     }
 }

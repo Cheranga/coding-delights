@@ -1,4 +1,5 @@
-﻿using AzureServiceBusLib.Publish;
+﻿using AzureServiceBusLib.DI;
+using AzureServiceBusLib.Publish;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -10,11 +11,12 @@ namespace OrderPublisher.Console;
 internal class OrderPublisherBackgroundService(
     IOptions<ServiceBusConfig> options,
     IOrderGenerator<CreateOrderMessage> orderGenerator,
-    IMessagePublisher<CreateOrderMessage> orderPublisher,
-    IMessagePublisherFactory publisherFactory,
+    IServiceBusFactory publisherFactory,
     ILogger<OrderPublisherBackgroundService> logger
 ) : BackgroundService
 {
+    private readonly IServiceBusPublisher<CreateOrderMessage> _orderPublisher = publisherFactory.GetPublisher<CreateOrderMessage>("orders");
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var serviceBusConfig = options.Value;
@@ -29,7 +31,7 @@ internal class OrderPublisherBackgroundService(
                 //
                 // using the injected IMessagePublisher<CreateOrderMessage> directly
                 //
-                var operation = await orderPublisher.PublishAsync(orders, stoppingToken);
+                var operation = await _orderPublisher.PublishAsync(orders, stoppingToken);
                 _ = operation.Result switch
                 {
                     SuccessResult _ => LogSuccess(topicName),
@@ -40,7 +42,7 @@ internal class OrderPublisherBackgroundService(
                 //
                 // using the IMessagePublisherFactory to get a publisher for CreateOrderMessage type
                 //
-                operation = await publisherFactory.GetPublisher<CreateOrderMessage>().PublishAsync(orders, stoppingToken);
+                operation = await publisherFactory.GetPublisher<CreateOrderMessage>("orders").PublishAsync(orders, stoppingToken);
                 _ = operation.Result switch
                 {
                     SuccessResult _ => LogSuccess(topicName),
@@ -51,7 +53,9 @@ internal class OrderPublisherBackgroundService(
                 //
                 // using the IMessagePublisherFactory to get a publisher for CreateOrderMessage type using a name
                 //
-                operation = await publisherFactory.GetPublisher<CreateOrderMessage>("q-orders").PublishAsync(orders, stoppingToken);
+                operation = await publisherFactory
+                    .GetPublisher<CreateOrderMessage>("orders", "q-orders")
+                    .PublishAsync(orders, stoppingToken);
                 _ = operation.Result switch
                 {
                     SuccessResult _ => LogSuccess(topicName),
@@ -59,7 +63,9 @@ internal class OrderPublisherBackgroundService(
                     _ => LogError(topicName),
                 };
 
-                operation = await publisherFactory.GetPublisher<CreateOrderMessage>().PublishAsync(orders, stoppingToken);
+                operation = await publisherFactory
+                    .GetPublisher<CreateOrderMessage>("orders", nameof(CreateOrderMessage))
+                    .PublishAsync(orders, stoppingToken);
                 _ = operation.Result switch
                 {
                     SuccessResult _ => LogSuccess(topicName),
