@@ -42,24 +42,26 @@ internal static class Bootstrapper
         //
         // Registering the message publisher for the CreateOrderMessage
         //
-        services.RegisterServiceBus(sbConfig.ConnectionString, "orders");
+        services.RegisterServiceBus();
         services
             .RegisterServiceBusPublisher<CreateOrderMessage>("orders")
             .Configure<IOptionsMonitor<ServiceBusConfig>>(
                 (config, monitor) =>
                 {
                     var busConfig = monitor.Get("orders");
+                    config.ConnectionString = busConfig.ConnectionString;
                     config.PublishTo = busConfig.TopicName;
                     config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.OrderId.ToString();
                 }
             );
 
         services
-            .RegisterServiceBusPublisher<CreateOrderMessage>("orders", "q-orders")
+            .RegisterServiceBusPublisher<CreateOrderMessage>("q-orders")
             .Configure<IOptionsMonitor<ServiceBusConfig>>(
                 (config, monitor) =>
                 {
                     var busConfig = monitor.Get("orders");
+                    config.ConnectionString = busConfig.ConnectionString;
                     config.PublishTo = busConfig.QueueName;
                     config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.OrderId.ToString();
                 }

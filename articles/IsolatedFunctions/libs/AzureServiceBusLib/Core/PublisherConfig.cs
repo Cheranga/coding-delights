@@ -10,4 +10,5 @@ public sealed record PublisherConfig<TMessage>
     public required string PublishTo { get; set; }
     public JsonSerializerOptions? SerializerOptions { get; set; }
     public Action<TMessage, ServiceBusMessage>? MessageOptions { get; set; }
+    public ServiceBusClientOptions? ServiceBusClientOptions { get; set; }
 }

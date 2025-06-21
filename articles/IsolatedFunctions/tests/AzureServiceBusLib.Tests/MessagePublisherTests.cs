@@ -1,6 +1,5 @@
 ﻿using AzureServiceBusLib.Core;
 using AzureServiceBusLib.DI;
-using AzureServiceBusLib.Publish;
 using AzureServiceBusLib.Tests.Models;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,52 +7,55 @@ namespace AzureServiceBusLib.Tests;
 
 public partial class MessagePublisherTests
 {
-    [Fact(DisplayName = "Publishing to non session enabled queue using a typed publisher and receiving")]
+    [Fact(DisplayName = "Using both typed and named publishers to publish messages to a queue")]
     public async Task Test1()
     {
         await Arrange(() =>
             {
-                var services = new ServiceCollection().AddLogging().RegisterServiceBus(_serviceBusFixture.GetConnectionString());
+                var connectionString = _serviceBusFixture.GetConnectionString();
+                var services = new ServiceCollection().AddLogging().RegisterServiceBus();
 
                 services
                     .RegisterServiceBusPublisher<CreateOrderMessage>()
                     .Configure(config =>
                     {
+                        config.ConnectionString = connectionString;
                         config.PublishTo = JustOrdersQueue;
                         config.SerializerOptions = _serializerOptions;
                     });
 
                 services
-                    .RegisterServiceBusPublisher<CreateOrderMessage>(publisherName: "another-publisher")
+                    .RegisterServiceBusPublisher<CreateOrderMessage>("another-publisher")
                     .Configure(config =>
                     {
+                        config.ConnectionString = connectionString;
                         config.PublishTo = JustOrdersQueue;
                         config.SerializerOptions = _serializerOptions;
                     });
 
                 var serviceProvider = services.BuildServiceProvider();
-                var publisher = serviceProvider.GetRequiredService<IServiceBusPublisher<CreateOrderMessage>>();
+                var typedPublisher = serviceProvider.GetRequiredService<IServiceBusPublisher<CreateOrderMessage>>();
 
-                var anotherPublisher = serviceProvider
+                var namedPublisher = serviceProvider
                     .GetRequiredService<IServiceBusFactory>()
                     .GetPublisher<CreateOrderMessage>("another-publisher");
 
-                return (publisher, anotherPublisher);
+                return (typedPublisher, namedPublisher);
             })
             .And(data =>
             {
                 var messages = _orderMessageGenerator.Generate(2);
-                return (data.publisher, data.anotherPublisher, messages);
+                return (data.typedPublisher, data.namedPublisher, messages);
             })
             .Act(async data =>
             {
-                var operation1 = await data.publisher.PublishAsync(data.messages, CancellationToken.None);
-                var operation2 = await data.anotherPublisher.PublishAsync(data.messages, CancellationToken.None);
+                var typedOperation = await data.typedPublisher.PublishAsync(data.messages, CancellationToken.None);
+                var namedOperation = await data.namedPublisher.PublishAsync(data.messages, CancellationToken.None);
 
-                return (operation1, operation2);
+                return (typedOperation, namedOperation);
             })
-            .Assert(result => result.operation1.Result is OperationResult.SuccessResult)
-            .And(result => result.operation2.Result is OperationResult.SuccessResult)
+            .Assert(result => result.typedOperation.Result is OperationResult.SuccessResult)
+            .And(result => result.namedOperation.Result is OperationResult.SuccessResult)
             .And(
                 async (data, _) =>
                 {
@@ -72,18 +74,27 @@ public partial class MessagePublisherTests
             );
     }
 
-    [Fact(DisplayName = "Publishing to session enabled queue using typed client through ServiceBusFactory and receiving using sessions")]
+    [Fact(DisplayName = "Using both typed and named publishers to publish messages to a session enabled queue")]
     public async Task Test2()
     {
         await Arrange(() =>
             {
-                var services = new ServiceCollection();
+                var services = new ServiceCollection().AddLogging().RegisterServiceBus();
+
                 services
-                    .AddLogging()
-                    .RegisterServiceBus(_serviceBusFixture.GetConnectionString())
-                    .RegisterServiceBusPublisher<CreateOrderMessage>(publisherName: "orders")
+                    .RegisterServiceBusPublisher<CreateOrderMessage>()
                     .Configure(config =>
                     {
+                        config.ConnectionString = _serviceBusFixture.GetConnectionString();
+                        config.PublishTo = SessionOrdersQueue;
+                        config.SerializerOptions = _serializerOptions;
+                        config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.SessionId;
+                    });
+                services
+                    .RegisterServiceBusPublisher<CreateOrderMessage>("orders")
+                    .Configure(config =>
+                    {
+                        config.ConnectionString = _serviceBusFixture.GetConnectionString();
                         config.PublishTo = SessionOrdersQueue;
                         config.SerializerOptions = _serializerOptions;
                         config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.SessionId;
@@ -91,54 +102,57 @@ public partial class MessagePublisherTests
 
                 var serviceProvider = services.BuildServiceProvider();
                 var factory = serviceProvider.GetRequiredService<IServiceBusFactory>();
-                var publisher = factory.GetPublisher<CreateOrderMessage>("orders");
+                var typedPublisher = serviceProvider.GetRequiredService<IServiceBusPublisher<CreateOrderMessage>>();
+                var namedPublisher = factory.GetPublisher<CreateOrderMessage>("orders");
 
-                return publisher;
+                return (typedPublisher, namedPublisher);
             })
             .And(data =>
             {
                 var messages = _orderMessageGenerator.Generate(2);
-                return (publisher: data, messages);
+                return (data.typedPublisher, data.namedPublisher, messages);
             })
             .Act(async data =>
             {
-                var publishOperation = await data.publisher.PublishAsync(data.messages, CancellationToken.None);
-                return publishOperation;
+                var typedOperation = await data.typedPublisher.PublishAsync(data.messages, CancellationToken.None);
+                var namedOperation = await data.namedPublisher.PublishAsync(data.messages, CancellationToken.None);
+                return (typedOperation, namedOperation);
             })
-            .Assert(operation => operation.Result is OperationResult.SuccessResult)
+            .Assert(operation => operation.typedOperation.Result is OperationResult.SuccessResult)
+            .And(operation => operation.namedOperation.Result is OperationResult.SuccessResult)
             .And(
                 async (data, _) =>
                 {
                     var sessionId = data.messages[0].SessionId;
-                    var recMessage = await ReadFromQueueAsSessionAsync<CreateOrderMessage>(
+                    var recMessages = await ReadFromQueueAsSessionAsync<CreateOrderMessage>(
                         _serviceBusFixture.GetConnectionString(),
                         SessionOrdersQueue,
                         sessionId,
-                        _serializerOptions
+                        _serializerOptions,
+                        10
                     );
 
-                    Assert.True(recMessage != null && data.messages[0].OrderId == recMessage[0]!.OrderId);
+                    Assert.Equal(2, recMessages.Count);
                 }
             )
             .And(
                 async (data, _) =>
                 {
                     var sessionId = data.messages[1].SessionId;
-                    var recMessage = await ReadFromQueueAsSessionAsync<CreateOrderMessage>(
+                    var recMessages = await ReadFromQueueAsSessionAsync<CreateOrderMessage>(
                         _serviceBusFixture.GetConnectionString(),
                         SessionOrdersQueue,
                         sessionId,
-                        _serializerOptions
+                        _serializerOptions,
+                        10
                     );
 
-                    Assert.True(recMessage != null && data.messages[1].OrderId == recMessage[0]!.OrderId);
+                    Assert.Equal(2, recMessages.Count);
                 }
             );
     }
 
-    [Fact(
-        DisplayName = "Publishing to topic using named client through ServiceBusFactory and receiving from both session enabled and session disabled subscriptions"
-    )]
+    [Fact(DisplayName = "Publishing to topic using a typed publisher and receiving from subscribers")]
     public async Task Test3()
     {
         await Arrange(() =>
@@ -146,18 +160,18 @@ public partial class MessagePublisherTests
                 var services = new ServiceCollection();
                 services
                     .AddLogging()
-                    .RegisterServiceBus(_serviceBusFixture.GetConnectionString(), "orders")
-                    .RegisterServiceBusPublisher<CreateOrderMessage>("orders", "orders-publisher")
+                    .RegisterServiceBus()
+                    .RegisterServiceBusPublisher<CreateOrderMessage>()
                     .Configure(config =>
                     {
+                        config.ConnectionString = _serviceBusFixture.GetConnectionString();
                         config.PublishTo = OrdersTopic;
                         config.SerializerOptions = _serializerOptions;
                         config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.SessionId;
                     });
 
                 var serviceProvider = services.BuildServiceProvider();
-                var factory = serviceProvider.GetRequiredService<IServiceBusFactory>();
-                var publisher = factory.GetPublisher<CreateOrderMessage>("orders", "orders-publisher");
+                var publisher = serviceProvider.GetRequiredService<IServiceBusFactory>().GetPublisher<CreateOrderMessage>();
                 return publisher;
             })
             .And(data =>
@@ -174,6 +188,9 @@ public partial class MessagePublisherTests
             .And(
                 async (data, _) =>
                 {
+                    //
+                    // Read from a session-based subscription
+                    //
                     var sessionBasedMessages = await ReadFromSubscriptionAsSessionAsync<CreateOrderMessage>(
                         _serviceBusFixture.GetConnectionString(),
                         OrdersTopic,
@@ -183,13 +200,15 @@ public partial class MessagePublisherTests
                         10
                     );
 
-                    // There should be only one session-based message
                     Assert.Single(sessionBasedMessages);
                 }
             )
             .And(
                 async (data, _) =>
                 {
+                    //
+                    // Read from a non-session subscription
+                    //
                     var nonSessionMessages = await ReadFromSubscriptionAsync<CreateOrderMessage>(
                         _serviceBusFixture.GetConnectionString(),
                         OrdersTopic,

@@ -11,12 +11,11 @@ namespace OrderPublisher.Console;
 internal class OrderPublisherBackgroundService(
     IOptions<ServiceBusConfig> options,
     IOrderGenerator<CreateOrderMessage> orderGenerator,
+    IServiceBusPublisher<CreateOrderMessage> orderPublisher,
     IServiceBusFactory publisherFactory,
     ILogger<OrderPublisherBackgroundService> logger
 ) : BackgroundService
 {
-    private readonly IServiceBusPublisher<CreateOrderMessage> _orderPublisher = publisherFactory.GetPublisher<CreateOrderMessage>("orders");
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var serviceBusConfig = options.Value;
@@ -29,9 +28,9 @@ internal class OrderPublisherBackgroundService(
                 var orders = await orderGenerator.GenerateOrdersAsync(10, stoppingToken);
 
                 //
-                // using the injected IMessagePublisher<CreateOrderMessage> directly
+                // using the injected IServiceBusPublisher<CreateOrderMessage> directly
                 //
-                var operation = await _orderPublisher.PublishAsync(orders, stoppingToken);
+                var operation = await orderPublisher.PublishAsync(orders, stoppingToken);
                 _ = operation.Result switch
                 {
                     SuccessResult _ => LogSuccess(topicName),
@@ -40,7 +39,7 @@ internal class OrderPublisherBackgroundService(
                 };
 
                 //
-                // using the IMessagePublisherFactory to get a publisher for CreateOrderMessage type
+                // using the IServiceBusFactory to get a named publisher
                 //
                 operation = await publisherFactory.GetPublisher<CreateOrderMessage>("orders").PublishAsync(orders, stoppingToken);
                 _ = operation.Result switch
@@ -51,21 +50,9 @@ internal class OrderPublisherBackgroundService(
                 };
 
                 //
-                // using the IMessagePublisherFactory to get a publisher for CreateOrderMessage type using a name
+                // using the IServiceBusFactory to get another named publisher
                 //
-                operation = await publisherFactory
-                    .GetPublisher<CreateOrderMessage>("orders", "q-orders")
-                    .PublishAsync(orders, stoppingToken);
-                _ = operation.Result switch
-                {
-                    SuccessResult _ => LogSuccess(topicName),
-                    FailedResult failure => LogFailure(topicName, failure),
-                    _ => LogError(topicName),
-                };
-
-                operation = await publisherFactory
-                    .GetPublisher<CreateOrderMessage>("orders", nameof(CreateOrderMessage))
-                    .PublishAsync(orders, stoppingToken);
+                operation = await publisherFactory.GetPublisher<CreateOrderMessage>("q-orders").PublishAsync(orders, stoppingToken);
                 _ = operation.Result switch
                 {
                     SuccessResult _ => LogSuccess(topicName),

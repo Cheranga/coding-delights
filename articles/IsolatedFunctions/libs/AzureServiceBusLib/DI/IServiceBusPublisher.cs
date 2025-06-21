@@ -8,7 +8,6 @@ namespace AzureServiceBusLib.DI;
 
 public interface IServiceBusPublisher
 {
-    public string ServiceBusName { get; }
     public string PublisherName { get; }
 }
 
@@ -21,8 +20,7 @@ public interface IServiceBusPublisher<in TMessage> : IServiceBusPublisher
     );
 }
 
-public class ServiceBusPublisher<TMessage>(
-    string serviceBusName,
+internal class ServiceBusPublisher<TMessage>(
     string publisherName,
     PublisherConfig<TMessage> options,
     ServiceBusSender sender,
@@ -30,7 +28,6 @@ public class ServiceBusPublisher<TMessage>(
 ) : IServiceBusPublisher<TMessage>
     where TMessage : IMessage
 {
-    public string ServiceBusName { get; } = serviceBusName;
     public string PublisherName { get; } = publisherName;
 
     private JsonSerializerOptions SerializerOptions =>

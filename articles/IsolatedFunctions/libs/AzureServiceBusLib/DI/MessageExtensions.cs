@@ -1,6 +1,5 @@
 ﻿using Azure.Messaging.ServiceBus;
 using AzureServiceBusLib.Core;
-using AzureServiceBusLib.Publish;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -9,39 +8,42 @@ namespace AzureServiceBusLib.DI;
 
 public static class MessageExtensions
 {
-    public static IServiceCollection UseServiceBusMessageClientFactory(this IServiceCollection services)
-    {
-        services.AddSingleton<IMessagePublisherFactory, MessagePublisherFactory>();
-        return services;
-    }
-
-    public static OptionsBuilder<PublisherConfig<TMessage>> RegisterMessagePublisher<TMessage>(
+    public static OptionsBuilder<PublisherConfig<TMessage>> RegisterServiceBusPublisher<TMessage>(
         this IServiceCollection services,
         string? publisherName = null
     )
         where TMessage : IMessage
     {
-        publisherName ??= typeof(TMessage).Name;
+        var specifiedPublisherName = publisherName ?? typeof(TMessage).Name;
 
-        services.AddSingleton<IMessagePublisher>(provider =>
+        services.AddSingleton<IServiceBusPublisher>(provider =>
         {
             var optionsMonitor = provider.GetRequiredService<IOptionsMonitor<PublisherConfig<TMessage>>>();
-            var options = optionsMonitor.Get(publisherName);
-            var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<MessagePublisher<TMessage>>();
+            var options = optionsMonitor.Get(specifiedPublisherName);
 
-            var serviceBusClient = new ServiceBusClient(options.ConnectionString);
+            var serviceBusClient = options.ServiceBusClientOptions is null
+                ? new ServiceBusClient(options.ConnectionString)
+                : new ServiceBusClient(options.ConnectionString, options.ServiceBusClientOptions);
             var sender = serviceBusClient.CreateSender(options.PublishTo);
-            var publisher = new MessagePublisher<TMessage>(publisherName, options, sender, logger);
-            return publisher;
+            var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<ServiceBusPublisher<TMessage>>();
+            var serviceBusPublisher = new ServiceBusPublisher<TMessage>(specifiedPublisherName, options, sender, logger);
+            return serviceBusPublisher;
         });
 
-        services.AddSingleton<IMessagePublisher<TMessage>>(provider =>
+        services.AddSingleton<IServiceBusPublisher<TMessage>>(provider =>
         {
-            var factory = provider.GetRequiredService<IMessagePublisherFactory>();
-            var publisher = factory.GetPublisher<TMessage>(publisherName);
+            var factory = provider.GetRequiredService<IServiceBusFactory>();
+            var publisher = factory.GetPublisher<TMessage>(specifiedPublisherName);
             return publisher;
         });
 
-        return services.AddOptions<PublisherConfig<TMessage>>(publisherName);
+        return services.AddOptions<PublisherConfig<TMessage>>(specifiedPublisherName);
+    }
+
+    public static IServiceCollection RegisterServiceBus(this IServiceCollection services)
+    {
+        services.AddSingleton<IServiceBusFactory, ServiceBusFactory>();
+
+        return services;
     }
 }
