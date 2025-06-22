@@ -4,19 +4,23 @@ namespace AzureServiceBusLib.Tests.Fixtures;
 
 public class ServiceBusFixture : IAsyncLifetime
 {
-    private readonly ServiceBusContainer _serviceBusContainer;
+    public ServiceBusContainer Container { get; init; }
 
     public ServiceBusFixture()
     {
-        _serviceBusContainer = new ServiceBusBuilder()
+        Container = new ServiceBusBuilder()
             .WithAcceptLicenseAgreement(true)
             .WithResourceMapping("Config.json", "/ServiceBus_Emulator/ConfigFiles/")
             .Build();
     }
 
-    public Task InitializeAsync() => _serviceBusContainer.StartAsync();
+    public string GetConnectionString() => Container.GetConnectionString();
 
-    public Task DisposeAsync() => _serviceBusContainer.DisposeAsync().AsTask();
+    public Task InitializeAsync() => Container.StartAsync();
 
-    public string GetConnectionString() => _serviceBusContainer.GetConnectionString();
+    public async Task DisposeAsync()
+    {
+        await Container.StopAsync();
+        await Container.DisposeAsync();
+    }
 }

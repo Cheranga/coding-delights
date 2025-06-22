@@ -2,6 +2,7 @@
 using AzureServiceBusLib.DI;
 using AzureServiceBusLib.Tests.Models;
 using Microsoft.Extensions.DependencyInjection;
+using static AzureServiceBusLib.Tests.Helpers.ServiceBusReaderExtensions;
 
 namespace AzureServiceBusLib.Tests;
 
