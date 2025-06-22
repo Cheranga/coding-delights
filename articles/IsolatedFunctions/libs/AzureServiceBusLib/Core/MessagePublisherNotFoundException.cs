@@ -1,6 +1,4 @@
-﻿using AzureServiceBusLib.Models;
-
-namespace AzureServiceBusLib.Core;
+﻿namespace AzureServiceBusLib.Core;
 
 public sealed class MessagePublisherNotFoundException<TMessage> : Exception
     where TMessage : IMessage
@@ -9,5 +7,8 @@ public sealed class MessagePublisherNotFoundException<TMessage> : Exception
         : base($"There's no publisher registered for message type {typeof(TMessage).Name} with the name {publisherName}") { }
 
     public MessagePublisherNotFoundException()
-        : base($"There's no publisher registered for message type {typeof(TMessage).Name}") { }
+        : this(typeof(TMessage).Name) { }
+
+    public MessagePublisherNotFoundException(string? message, Exception? innerException)
+        : base(message, innerException) { }
 }

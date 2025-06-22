@@ -36,7 +36,7 @@ public sealed class MessagePublisherFactoryTests
             .Assert(result => result != null)
             .And(result =>
             {
-                var actualPublisherNames = result.Select(x => x.Name).ToHashSet();
+                var actualPublisherNames = result.Select(x => x.Name).ToHashSet(StringComparer.Ordinal);
                 Assert.True(actualPublisherNames.SetEquals(Enumerable.Range(1, 10).Select(x => $"publisher{x}")));
             });
     }

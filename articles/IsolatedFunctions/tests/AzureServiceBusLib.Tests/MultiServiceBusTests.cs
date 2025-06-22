@@ -4,7 +4,6 @@ using AutoBogus;
 using Azure.Messaging.ServiceBus;
 using AzureServiceBusLib.Core;
 using AzureServiceBusLib.DI;
-using AzureServiceBusLib.Models;
 using AzureServiceBusLib.Services;
 using AzureServiceBusLib.Tests.Fixtures;
 using AzureServiceBusLib.Tests.Models;
@@ -12,12 +11,6 @@ using Microsoft.Extensions.DependencyInjection;
 using static AzureServiceBusLib.Tests.Helpers.ServiceBusReaderExtensions;
 
 namespace AzureServiceBusLib.Tests;
-
-internal sealed record OrderCreatedEvent(Guid OrderId, DateTimeOffset CreatedAt) : IMessage
-{
-    public string MessageType => nameof(OrderCreatedEvent);
-    public string CorrelationId => OrderId.ToString();
-}
 
 public class MultiServiceBusTests : IAsyncLifetime
 {

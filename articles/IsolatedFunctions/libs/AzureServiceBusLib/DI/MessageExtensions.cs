@@ -1,5 +1,4 @@
-﻿using Azure.Messaging.ServiceBus;
-using AzureServiceBusLib.Core;
+﻿using AzureServiceBusLib.Core;
 using AzureServiceBusLib.Models;
 using AzureServiceBusLib.Services;
 using Microsoft.Extensions.DependencyInjection;

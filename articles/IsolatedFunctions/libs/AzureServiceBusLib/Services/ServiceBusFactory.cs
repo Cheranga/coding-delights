@@ -8,7 +8,9 @@ internal sealed class ServiceBusFactory : IServiceBusFactory
 
     public ServiceBusFactory(IEnumerable<IServiceBusPublisher> publishers)
     {
-        _publishersMappedByNameInServiceBuses = publishers.GroupBy(x => x.PublisherName).ToDictionary(x => x.Key, x => x.First());
+        _publishersMappedByNameInServiceBuses = publishers
+            .GroupBy(x => x.PublisherName, StringComparer.Ordinal)
+            .ToDictionary(x => x.Key, x => x.First(), StringComparer.Ordinal);
     }
 
     public IServiceBusPublisher<TMessage> GetPublisher<TMessage>(string publisherName)
