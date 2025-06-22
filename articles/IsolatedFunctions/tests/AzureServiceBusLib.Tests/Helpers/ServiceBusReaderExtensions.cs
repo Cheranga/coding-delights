@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using AzureServiceBusLib.Core;
+using AzureServiceBusLib.Models;
 
 namespace AzureServiceBusLib.Tests.Helpers;
 

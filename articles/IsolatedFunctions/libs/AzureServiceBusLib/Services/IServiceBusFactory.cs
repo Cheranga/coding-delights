@@ -1,6 +1,6 @@
 ﻿using AzureServiceBusLib.Core;
 
-namespace AzureServiceBusLib.DI;
+namespace AzureServiceBusLib.Services;
 
 public interface IServiceBusFactory
 {

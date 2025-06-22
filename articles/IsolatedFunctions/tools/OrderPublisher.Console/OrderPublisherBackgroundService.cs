@@ -1,5 +1,5 @@
 ﻿using AzureServiceBusLib.DI;
-using AzureServiceBusLib.Publish;
+using AzureServiceBusLib.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

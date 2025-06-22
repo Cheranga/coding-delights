@@ -1,8 +1,11 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using AutoBogus;
+using Azure.Messaging.ServiceBus;
 using AzureServiceBusLib.Core;
 using AzureServiceBusLib.DI;
+using AzureServiceBusLib.Models;
+using AzureServiceBusLib.Services;
 using AzureServiceBusLib.Tests.Fixtures;
 using AzureServiceBusLib.Tests.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,7 +56,7 @@ public class MultiServiceBusTests : IAsyncLifetime
                     .RegisterServiceBusPublisher<CreateOrderMessage>("A")
                     .Configure(config =>
                     {
-                        config.ConnectionString = connectionString1;
+                        config.GetServiceBusClientFunc = () => new ServiceBusClient(connectionString1);
                         config.PublishTo = JustOrdersQueue;
                         config.SerializerOptions = _serializerOptions;
                     });
@@ -62,7 +65,7 @@ public class MultiServiceBusTests : IAsyncLifetime
                     .RegisterServiceBusPublisher<OrderCreatedEvent>("B")
                     .Configure(config =>
                     {
-                        config.ConnectionString = connectionString2;
+                        config.GetServiceBusClientFunc = () => new ServiceBusClient(connectionString2);
                         config.PublishTo = JustOrdersQueue;
                         config.SerializerOptions = _serializerOptions;
                     });

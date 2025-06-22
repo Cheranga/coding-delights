@@ -1,4 +1,4 @@
-﻿namespace AzureServiceBusLib.Core;
+﻿namespace AzureServiceBusLib.Models;
 
 internal static class ErrorCodes
 {

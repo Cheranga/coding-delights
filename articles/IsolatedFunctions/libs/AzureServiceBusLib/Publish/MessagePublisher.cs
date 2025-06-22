@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using Azure.Messaging.ServiceBus;
 using AzureServiceBusLib.Core;
+using AzureServiceBusLib.Models;
 using Microsoft.Extensions.Logging;
 
 namespace AzureServiceBusLib.Publish;

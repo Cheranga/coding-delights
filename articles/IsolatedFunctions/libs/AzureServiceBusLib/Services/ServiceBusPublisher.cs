@@ -2,23 +2,10 @@
 using System.Text.Json.Serialization;
 using Azure.Messaging.ServiceBus;
 using AzureServiceBusLib.Core;
+using AzureServiceBusLib.Models;
 using Microsoft.Extensions.Logging;
 
-namespace AzureServiceBusLib.DI;
-
-public interface IServiceBusPublisher
-{
-    public string PublisherName { get; }
-}
-
-public interface IServiceBusPublisher<in TMessage> : IServiceBusPublisher
-    where TMessage : IMessage
-{
-    Task<OperationResponse<OperationResult.FailedResult, OperationResult.SuccessResult>> PublishAsync(
-        IReadOnlyCollection<TMessage> messages,
-        CancellationToken token
-    );
-}
+namespace AzureServiceBusLib.Services;
 
 internal class ServiceBusPublisher<TMessage>(
     string publisherName,

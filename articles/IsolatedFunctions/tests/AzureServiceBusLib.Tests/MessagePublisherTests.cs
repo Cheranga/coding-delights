@@ -1,5 +1,7 @@
-﻿using AzureServiceBusLib.Core;
+﻿using Azure.Messaging.ServiceBus;
+using AzureServiceBusLib.Core;
 using AzureServiceBusLib.DI;
+using AzureServiceBusLib.Services;
 using AzureServiceBusLib.Tests.Models;
 using Microsoft.Extensions.DependencyInjection;
 using static AzureServiceBusLib.Tests.Helpers.ServiceBusReaderExtensions;
@@ -20,7 +22,7 @@ public partial class MessagePublisherTests
                     .RegisterServiceBusPublisher<CreateOrderMessage>()
                     .Configure(config =>
                     {
-                        config.ConnectionString = connectionString;
+                        config.GetServiceBusClientFunc = () => new ServiceBusClient(connectionString);
                         config.PublishTo = JustOrdersQueue;
                         config.SerializerOptions = _serializerOptions;
                     });
@@ -29,7 +31,7 @@ public partial class MessagePublisherTests
                     .RegisterServiceBusPublisher<CreateOrderMessage>("another-publisher")
                     .Configure(config =>
                     {
-                        config.ConnectionString = connectionString;
+                        config.GetServiceBusClientFunc = () => new ServiceBusClient(connectionString);
                         config.PublishTo = JustOrdersQueue;
                         config.SerializerOptions = _serializerOptions;
                     });
@@ -86,7 +88,7 @@ public partial class MessagePublisherTests
                     .RegisterServiceBusPublisher<CreateOrderMessage>()
                     .Configure(config =>
                     {
-                        config.ConnectionString = _serviceBusFixture.GetConnectionString();
+                        config.GetServiceBusClientFunc = () => new ServiceBusClient(_serviceBusFixture.GetConnectionString());
                         config.PublishTo = SessionOrdersQueue;
                         config.SerializerOptions = _serializerOptions;
                         config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.SessionId;
@@ -95,7 +97,7 @@ public partial class MessagePublisherTests
                     .RegisterServiceBusPublisher<CreateOrderMessage>("orders")
                     .Configure(config =>
                     {
-                        config.ConnectionString = _serviceBusFixture.GetConnectionString();
+                        config.GetServiceBusClientFunc = () => new ServiceBusClient(_serviceBusFixture.GetConnectionString());
                         config.PublishTo = SessionOrdersQueue;
                         config.SerializerOptions = _serializerOptions;
                         config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.SessionId;
@@ -165,7 +167,7 @@ public partial class MessagePublisherTests
                     .RegisterServiceBusPublisher<CreateOrderMessage>()
                     .Configure(config =>
                     {
-                        config.ConnectionString = _serviceBusFixture.GetConnectionString();
+                        config.GetServiceBusClientFunc = () => new ServiceBusClient(_serviceBusFixture.GetConnectionString());
                         config.PublishTo = OrdersTopic;
                         config.SerializerOptions = _serializerOptions;
                         config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.SessionId;

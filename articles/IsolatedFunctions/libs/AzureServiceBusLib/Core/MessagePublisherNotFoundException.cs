@@ -1,4 +1,6 @@
-﻿namespace AzureServiceBusLib.Core;
+﻿using AzureServiceBusLib.Models;
+
+namespace AzureServiceBusLib.Core;
 
 public sealed class MessagePublisherNotFoundException<TMessage> : Exception
     where TMessage : IMessage

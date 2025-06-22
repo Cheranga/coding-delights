@@ -1,4 +1,5 @@
 ﻿using AzureServiceBusLib.Core;
+using AzureServiceBusLib.Models;
 
 namespace AzureServiceBusLib.Tests.Models;
 

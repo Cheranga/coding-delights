@@ -1,5 +1,7 @@
 ﻿using Azure.Messaging.ServiceBus;
 using AzureServiceBusLib.Core;
+using AzureServiceBusLib.Models;
+using AzureServiceBusLib.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -21,9 +23,7 @@ public static class MessageExtensions
             var optionsMonitor = provider.GetRequiredService<IOptionsMonitor<PublisherConfig<TMessage>>>();
             var options = optionsMonitor.Get(specifiedPublisherName);
 
-            var serviceBusClient = options.ServiceBusClientOptions is null
-                ? new ServiceBusClient(options.ConnectionString)
-                : new ServiceBusClient(options.ConnectionString, options.ServiceBusClientOptions);
+            var serviceBusClient = options.GetServiceBusClientFunc();
             var sender = serviceBusClient.CreateSender(options.PublishTo);
             var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<ServiceBusPublisher<TMessage>>();
             var serviceBusPublisher = new ServiceBusPublisher<TMessage>(specifiedPublisherName, options, sender, logger);

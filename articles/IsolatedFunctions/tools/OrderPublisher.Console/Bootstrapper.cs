@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using Azure.Messaging.ServiceBus;
 using AzureServiceBusLib.DI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,7 +50,7 @@ internal static class Bootstrapper
                 (config, monitor) =>
                 {
                     var busConfig = monitor.Get("orders");
-                    config.ConnectionString = busConfig.ConnectionString;
+                    config.GetServiceBusClientFunc = () => new ServiceBusClient(busConfig.ConnectionString);
                     config.PublishTo = busConfig.TopicName;
                     config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.OrderId.ToString();
                 }
@@ -61,7 +62,7 @@ internal static class Bootstrapper
                 (config, monitor) =>
                 {
                     var busConfig = monitor.Get("orders");
-                    config.ConnectionString = busConfig.ConnectionString;
+                    config.GetServiceBusClientFunc = () => new ServiceBusClient(busConfig.ConnectionString);
                     config.PublishTo = busConfig.QueueName;
                     config.MessageOptions = (message, busMessage) => busMessage.SessionId = message.OrderId.ToString();
                 }
