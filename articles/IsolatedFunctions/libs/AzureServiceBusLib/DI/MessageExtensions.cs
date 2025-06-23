@@ -39,6 +39,12 @@ public static class MessageExtensions
         return services.AddOptions<PublisherConfig<TMessage>>(specifiedPublisherName);
     }
 
+    /// <summary>
+    /// Registers the Azure Service Bus factory in the dependency injection container.
+    /// Must be called before registering any publishers or subscribers.
+    /// </summary>
+    /// <param name="services">The IServiceCollection to add the Service Bus factory to.</param>
+    /// <returns>The IServiceCollection instance to enable method chaining.</returns>
     public static IServiceCollection RegisterServiceBus(this IServiceCollection services)
     {
         services.AddSingleton<IServiceBusFactory, ServiceBusFactory>();
