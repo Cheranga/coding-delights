@@ -7,8 +7,19 @@ using Microsoft.Extensions.Options;
 
 namespace AzureServiceBusLib.DI;
 
+/// <summary>
+/// Provides extension methods for registering Azure Service Bus messaging components in the dependency injection container.
+/// </summary>
 public static class MessageExtensions
 {
+    /// <summary>
+    /// Registers a Service Bus publisher for a specific message type in the dependency injection container.
+    /// The method registers both generic and non-generic publisher interfaces and configures the necessary dependencies.
+    /// </summary>
+    /// <typeparam name="TMessage">The type of message to be published, must implement IMessage interface.</typeparam>
+    /// <param name="services">The IServiceCollection to add the publisher services to.</param>
+    /// <param name="publisherName">Optional name for the publisher configuration. If not specified, the message type name is used.</param>
+    /// <returns>An OptionsBuilder instance for configuring the publisher options.</returns>
     public static OptionsBuilder<PublisherConfig<TMessage>> RegisterServiceBusPublisher<TMessage>(
         this IServiceCollection services,
         string? publisherName = null
