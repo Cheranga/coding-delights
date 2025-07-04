@@ -14,6 +14,7 @@
     <ItemGroup>
         <PackageReference Include="AsyncFixer"/>
         <PackageReference Include="Meziantou.Analyzer"/>
+        <PackageReference Include="Microsoft.Net.Http.Headers" />
         <PackageReference Include="Roslynator.Analyzers"/>
         <PackageReference Include="SonarAnalyzer.CSharp"/>
 

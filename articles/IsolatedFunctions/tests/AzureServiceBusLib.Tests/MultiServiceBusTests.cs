@@ -50,8 +50,7 @@ public class MultiServiceBusTests : IAsyncLifetime
                     .RegisterServiceBusPublisher<CreateOrderMessage>("A")
                     .Configure(config =>
                     {
-                        config.GetServiceBusClientFunc = () =>
-                            new ServiceBusClient("[azure service bus namespace name]", new ManagedIdentityCredential());
+                        config.GetServiceBusClientFunc = () => new ServiceBusClient(connectionString1);
                         config.PublishTo = JustOrdersQueue;
                         config.SerializerOptions = _serializerOptions;
                     });

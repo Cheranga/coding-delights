@@ -12,13 +12,14 @@ namespace OrderProcessorFuncApp.Tests;
 
 public class CreateOrderFunctionTests
 {
-    private readonly OrderApiResponseGenerator _responseGenerator;
     private readonly OrderProcessor _orderProcessor;
     private readonly IApiRequestReader<CreateOrderRequestDto, CreateOrderRequestDto.Validator> _apiRequestReader;
+    private readonly JsonSerializerOptions _serializerOptions;
+    private readonly IOrderApiResponseGenerator _responseGenerator;
 
     public CreateOrderFunctionTests()
     {
-        var serializerOptions = new JsonSerializerOptions
+        _serializerOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             PropertyNameCaseInsensitive = true,
@@ -27,12 +28,13 @@ public class CreateOrderFunctionTests
         };
 
         _apiRequestReader = new ApiRequestReader<CreateOrderRequestDto, CreateOrderRequestDto.Validator>(
-            serializerOptions,
+            _serializerOptions,
             new CreateOrderRequestDto.Validator(new OrderItem.Validator()),
             NullLogger<ApiRequestReader<CreateOrderRequestDto, CreateOrderRequestDto.Validator>>.Instance
         );
 
-        _responseGenerator = new OrderApiResponseGenerator(serializerOptions);
+        _responseGenerator = new OrderApiResponseGenerator();
+
         _orderProcessor = new OrderProcessor(NullLogger<OrderProcessor>.Instance);
     }
 
@@ -48,6 +50,7 @@ public class CreateOrderFunctionTests
             _apiRequestReader,
             _orderProcessor,
             _responseGenerator,
+            _serializerOptions,
             NullLogger<CreateOrderFunction>.Instance
         );
         var response = await function.Run(request, context.Object);
@@ -68,6 +71,7 @@ public class CreateOrderFunctionTests
             _apiRequestReader,
             _orderProcessor,
             _responseGenerator,
+            _serializerOptions,
             NullLogger<CreateOrderFunction>.Instance
         );
         var response = await function.Run(request, context.Object);

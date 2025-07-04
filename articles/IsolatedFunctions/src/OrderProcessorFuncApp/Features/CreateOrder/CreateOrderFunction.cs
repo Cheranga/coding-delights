@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Text.Json;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -10,6 +11,7 @@ internal sealed class CreateOrderFunction(
     IApiRequestReader<CreateOrderRequestDto, CreateOrderRequestDto.Validator> requestReader,
     IOrderProcessor orderProcessor,
     IOrderApiResponseGenerator responseGenerator,
+    JsonSerializerOptions serializerOptions,
     ILogger<CreateOrderFunction> logger
 )
 {
@@ -22,33 +24,29 @@ internal sealed class CreateOrderFunction(
         logger.LogInformation("starting to process order");
         var token = context.CancellationToken;
         var readOperation = await requestReader.ReadRequestAsync(req, token);
-        var response = readOperation.Result switch
-        {
-            FailedResult f => await GenerateErrorResponse(req, f.Error, token),
-            SuccessResult<CreateOrderRequestDto> s => await ProcessOrderAsync(req, s.Result, token),
-            _ => await GenerateErrorResponse(req, ErrorResponse.New(ErrorCodes.Unknown, ErrorMessages.Unknown), token),
-        };
+        var response = await readOperation.Match(
+            x => GenerateErrorResponse(req, x, HttpStatusCode.BadRequest, token),
+            x => ProcessOrderAsync(req, x.Result, token)
+        );
 
         logger.LogInformation("finished processing order");
         return response;
     }
 
-    private Task<OrderApiResponse> GenerateErrorResponse(HttpRequestData req, ErrorResponse error, CancellationToken token) =>
-        responseGenerator.GenerateErrorResponseAsync(req, error, HttpStatusCode.BadRequest, token);
+    private Task<OrderApiResponse> GenerateErrorResponse(
+        HttpRequestData req,
+        FailedResult x,
+        HttpStatusCode statusCode,
+        CancellationToken token
+    ) => responseGenerator.GenerateErrorResponseAsync(req, x.Error, statusCode, serializerOptions, token);
 
     private async Task<OrderApiResponse> ProcessOrderAsync(HttpRequestData request, CreateOrderRequestDto dto, CancellationToken token)
     {
         var operation = await orderProcessor.ProcessAsync(dto, token);
-        var response = operation.Result switch
-        {
-            FailedResult f => await responseGenerator.GenerateErrorResponseAsync(request, f.Error, HttpStatusCode.BadRequest, token),
-            SuccessResult<OrderAcceptedData> s => await responseGenerator.GenerateOrderAcceptedResponseAsync(
-                request,
-                s.Result.OrderId,
-                token
-            ),
-            _ => await GenerateErrorResponse(request, ErrorResponse.New(ErrorCodes.Unknown, ErrorMessages.Unknown), token),
-        };
+        var response = await operation.Match(
+            x => GenerateErrorResponse(request, x, HttpStatusCode.InternalServerError, token),
+            x => responseGenerator.GenerateOrderAcceptedResponseAsync(request, x.Result.OrderId, serializerOptions, token)
+        );
 
         return response;
     }
