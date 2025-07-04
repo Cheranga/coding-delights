@@ -1,4 +1,4 @@
-﻿using AzureServiceBusLib.Core;
+﻿using ShotCaller.Azure.ServiceBus.Messaging.Core;
 
 namespace OrderPublisher.Console.Services;
 

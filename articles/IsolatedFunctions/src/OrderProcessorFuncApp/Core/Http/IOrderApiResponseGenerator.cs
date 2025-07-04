@@ -2,7 +2,6 @@
 using System.Net.Mime;
 using System.Text.Json;
 using Microsoft.Azure.Functions.Worker.Http;
-using OrderProcessorFuncApp.Core.Shared;
 using OrderProcessorFuncApp.Features.CreateOrder;
 
 namespace OrderProcessorFuncApp.Core.Http;
@@ -12,7 +11,7 @@ public interface IOrderApiResponseGenerator
     Task<OrderApiResponse> GenerateOrderAcceptedResponseAsync(HttpRequestData request, Guid orderId, CancellationToken token);
     Task<OrderApiResponse> GenerateErrorResponseAsync(
         HttpRequestData request,
-        OperationResult.FailedResult failure,
+        ErrorResponse errorResponse,
         HttpStatusCode statusCode,
         CancellationToken token
     );

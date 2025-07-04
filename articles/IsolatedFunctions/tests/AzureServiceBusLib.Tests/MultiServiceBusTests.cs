@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using AutoBogus;
+using Azure.Identity;
 using Azure.Messaging.ServiceBus;
 using AzureServiceBusLib.Core;
 using AzureServiceBusLib.DI;
@@ -49,7 +50,8 @@ public class MultiServiceBusTests : IAsyncLifetime
                     .RegisterServiceBusPublisher<CreateOrderMessage>("A")
                     .Configure(config =>
                     {
-                        config.GetServiceBusClientFunc = () => new ServiceBusClient(connectionString1);
+                        config.GetServiceBusClientFunc = () =>
+                            new ServiceBusClient("[azure service bus namespace name]", new ManagedIdentityCredential());
                         config.PublishTo = JustOrdersQueue;
                         config.SerializerOptions = _serializerOptions;
                     });

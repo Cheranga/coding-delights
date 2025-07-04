@@ -3,7 +3,6 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using OrderProcessorFuncApp.Core.Http;
-using OrderProcessorFuncApp.Core.Shared;
 
 namespace OrderProcessorFuncApp.Features.CreateOrder;
 
@@ -25,32 +24,30 @@ internal sealed class CreateOrderFunction(
         var readOperation = await requestReader.ReadRequestAsync(req, token);
         var response = readOperation.Result switch
         {
-            OperationResult.FailedResult f => await responseGenerator.GenerateErrorResponseAsync(req, f, HttpStatusCode.BadRequest, token),
-            OperationResult.SuccessResult<CreateOrderRequestDto> s => await ProcessOrderAsync(req, s.Result, token),
-            _ => await responseGenerator.GenerateUnknownErrorAsync(req, token),
+            FailedResult f => await GenerateErrorResponse(req, f.Error, token),
+            SuccessResult<CreateOrderRequestDto> s => await ProcessOrderAsync(req, s.Result, token),
+            _ => await GenerateErrorResponse(req, ErrorResponse.New(ErrorCodes.Unknown, ErrorMessages.Unknown), token),
         };
 
         logger.LogInformation("finished processing order");
         return response;
     }
 
+    private Task<OrderApiResponse> GenerateErrorResponse(HttpRequestData req, ErrorResponse error, CancellationToken token) =>
+        responseGenerator.GenerateErrorResponseAsync(req, error, HttpStatusCode.BadRequest, token);
+
     private async Task<OrderApiResponse> ProcessOrderAsync(HttpRequestData request, CreateOrderRequestDto dto, CancellationToken token)
     {
         var operation = await orderProcessor.ProcessAsync(dto, token);
         var response = operation.Result switch
         {
-            OperationResult.FailedResult f => await responseGenerator.GenerateErrorResponseAsync(
-                request,
-                f,
-                HttpStatusCode.BadRequest,
-                token
-            ),
-            OperationResult.SuccessResult<OrderAcceptedData> s => await responseGenerator.GenerateOrderAcceptedResponseAsync(
+            FailedResult f => await responseGenerator.GenerateErrorResponseAsync(request, f.Error, HttpStatusCode.BadRequest, token),
+            SuccessResult<OrderAcceptedData> s => await responseGenerator.GenerateOrderAcceptedResponseAsync(
                 request,
                 s.Result.OrderId,
                 token
             ),
-            _ => await responseGenerator.GenerateUnknownErrorAsync(request, token),
+            _ => await GenerateErrorResponse(request, ErrorResponse.New(ErrorCodes.Unknown, ErrorMessages.Unknown), token),
         };
 
         return response;

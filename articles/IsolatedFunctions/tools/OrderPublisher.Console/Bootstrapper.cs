@@ -1,13 +1,13 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Messaging.ServiceBus;
-using AzureServiceBusLib.DI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using OrderPublisher.Console.Models;
 using OrderPublisher.Console.Services;
+using ShotCaller.Azure.ServiceBus.Messaging.DI;
 
 namespace OrderPublisher.Console;
 

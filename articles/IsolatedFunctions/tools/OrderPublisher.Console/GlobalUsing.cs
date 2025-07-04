@@ -1,2 +1,2 @@
-﻿global using FailedResult = AzureServiceBusLib.Core.OperationResult.FailedResult;
-global using SuccessResult = AzureServiceBusLib.Core.OperationResult.SuccessResult;
+﻿global using FailedResult = ShotCaller.Azure.ServiceBus.Messaging.Core.OperationResult.FailedResult;
+global using SuccessResult = ShotCaller.Azure.ServiceBus.Messaging.Core.OperationResult.SuccessResult;

@@ -14,6 +14,7 @@
         <PackageReference Include="AsyncFixer"/>
         <PackageReference Include="Meziantou.Analyzer"/>
         <PackageReference Include="Roslynator.Analyzers"/>
+        <PackageReference Include="ShotCaller.Azure.ServiceBus.Messaging" />
         <PackageReference Include="SonarAnalyzer.CSharp"/>
         <PackageReference Include="AutoBogus"/>
         <PackageReference Include="Azure.Messaging.ServiceBus"/>
@@ -30,10 +31,6 @@
         <None Update="appsettings.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\..\libs\AzureServiceBusLib\AzureServiceBusLib.csproj" />
     </ItemGroup>
 
 </Project>

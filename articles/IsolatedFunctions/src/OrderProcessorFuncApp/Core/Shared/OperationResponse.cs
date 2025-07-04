@@ -1,12 +1,12 @@
 ﻿namespace OrderProcessorFuncApp.Core.Shared;
 
 public sealed class OperationResponse<TA, TB>
-    where TA : OperationResult
-    where TB : OperationResult
+    where TA : IOperationResult
+    where TB : IOperationResult
 {
-    public OperationResult Result { get; }
+    public IOperationResult Result { get; }
 
-    private OperationResponse(OperationResult result)
+    private OperationResponse(IOperationResult result)
     {
         Result = result;
     }

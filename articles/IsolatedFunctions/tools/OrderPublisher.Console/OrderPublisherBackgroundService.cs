@@ -1,9 +1,9 @@
-﻿using AzureServiceBusLib.Services;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OrderPublisher.Console.Models;
 using OrderPublisher.Console.Services;
+using ShotCaller.Azure.ServiceBus.Messaging.Services;
 
 namespace OrderPublisher.Console;
 
