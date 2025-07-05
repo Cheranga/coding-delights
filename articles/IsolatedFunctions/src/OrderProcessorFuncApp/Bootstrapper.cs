@@ -55,7 +55,7 @@ public static class Bootstrapper
                     );
                     services.AddSingleton(typeof(IApiRequestReader<,>), typeof(ApiRequestReader<,>));
                     services.AddSingleton<IOrderApiResponseGenerator, OrderApiResponseGenerator>();
-                    services.AddSingleton<IOrderProcessor, OrderProcessor>();
+                    services.AddSingleton<OrderProcessor>();
                     services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
                     services.AddApplicationInsightsTelemetryWorkerService();

@@ -1,3 +1,3 @@
 ﻿namespace OrderProcessorFuncApp.Features.CreateOrder;
 
-public sealed record OrderAcceptedData(Guid OrderId);
+public sealed record OrderAcceptedResponse(Guid OrderId);

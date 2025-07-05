@@ -6,6 +6,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using OrderProcessorFuncApp.Core.Http;
+using OrderProcessorFuncApp.Domain.Models;
 using OrderProcessorFuncApp.Features.CreateOrder;
 
 namespace OrderProcessorFuncApp.Tests;

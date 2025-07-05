@@ -2,9 +2,9 @@
 
 namespace OrderProcessorFuncApp.Features.CreateOrder;
 
-internal sealed class OrderProcessor(ILogger<OrderProcessor> logger) : IOrderProcessor
+internal sealed class OrderProcessor(ILogger<OrderProcessor> logger)
 {
-    public async Task<OperationResponse<FailedResult, SuccessResult<OrderAcceptedData>>> ProcessAsync(
+    public async Task<OperationResponse<FailedResult, SuccessResult<OrderAcceptedResponse>>> ProcessAsync(
         CreateOrderRequestDto request,
         CancellationToken token
     )
@@ -12,7 +12,7 @@ internal sealed class OrderProcessor(ILogger<OrderProcessor> logger) : IOrderPro
         try
         {
             await Task.Delay(TimeSpan.FromSeconds(1), token);
-            return SuccessResult<OrderAcceptedData>.New(new OrderAcceptedData(request.OrderId));
+            return SuccessResult<OrderAcceptedResponse>.New(new OrderAcceptedResponse(request.OrderId));
         }
         catch (Exception exception)
         {

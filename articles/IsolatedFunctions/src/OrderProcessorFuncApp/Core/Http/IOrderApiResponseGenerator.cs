@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Text.Json;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -10,7 +9,7 @@ namespace OrderProcessorFuncApp.Core.Http;
 
 public interface IOrderApiResponseGenerator
 {
-    async Task<OrderApiResponse> GenerateOrderAcceptedResponseAsync(
+    async Task<CreateOrderApiResponse> GenerateOrderAcceptedResponseAsync(
         HttpRequestData request,
         Guid orderId,
         JsonSerializerOptions serializerOptions,
@@ -19,13 +18,13 @@ public interface IOrderApiResponseGenerator
     {
         var httpResponse = request.CreateResponse(HttpStatusCode.Accepted);
         httpResponse.Headers.Add("Content-Type", MediaTypeNames.Application.Json);
-        var responseData = new OrderAcceptedData(orderId);
+        var responseData = new OrderAcceptedResponse(orderId);
         await JsonSerializer.SerializeAsync(httpResponse.Body, responseData, serializerOptions, token);
 
-        return new OrderApiResponse { HttpResponse = httpResponse };
+        return new CreateOrderApiResponse { HttpResponse = httpResponse };
     }
 
-    async Task<OrderApiResponse> GenerateErrorResponseAsync(
+    async Task<CreateOrderApiResponse> GenerateErrorResponseAsync(
         HttpRequestData request,
         ErrorResponse errorResponse,
         HttpStatusCode statusCode,
@@ -37,6 +36,6 @@ public interface IOrderApiResponseGenerator
         httpResponse.Headers.Add(HeaderNames.ContentType, MediaTypeNames.Application.Json);
         await JsonSerializer.SerializeAsync(httpResponse.Body, errorResponse, serializerOptions, token);
 
-        return new OrderApiResponse { HttpResponse = httpResponse };
+        return new CreateOrderApiResponse { HttpResponse = httpResponse };
     }
 }

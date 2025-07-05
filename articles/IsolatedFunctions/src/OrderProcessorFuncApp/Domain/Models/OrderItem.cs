@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using OrderProcessorFuncApp.Core.Http;
 
-namespace OrderProcessorFuncApp.Features.CreateOrder;
+namespace OrderProcessorFuncApp.Domain.Models;
 
 public sealed record OrderItem : IApiRequestDto<OrderItem, OrderItem.Validator>
 {

@@ -9,14 +9,14 @@ namespace OrderProcessorFuncApp.Features.CreateOrder;
 
 internal sealed class CreateOrderFunction(
     IApiRequestReader<CreateOrderRequestDto, CreateOrderRequestDto.Validator> requestReader,
-    IOrderProcessor orderProcessor,
+    OrderProcessor orderProcessor,
     IOrderApiResponseGenerator responseGenerator,
     JsonSerializerOptions serializerOptions,
     ILogger<CreateOrderFunction> logger
 )
 {
     [Function(nameof(CreateOrderFunction))]
-    public async Task<OrderApiResponse> Run(
+    public async Task<CreateOrderApiResponse> Run(
         [HttpTrigger(AuthorizationLevel.Anonymous, WebRequestMethods.Http.Post, Route = "orders")] HttpRequestData req,
         FunctionContext context
     )
@@ -33,14 +33,18 @@ internal sealed class CreateOrderFunction(
         return response;
     }
 
-    private Task<OrderApiResponse> GenerateErrorResponse(
+    private Task<CreateOrderApiResponse> GenerateErrorResponse(
         HttpRequestData req,
         FailedResult x,
         HttpStatusCode statusCode,
         CancellationToken token
     ) => responseGenerator.GenerateErrorResponseAsync(req, x.Error, statusCode, serializerOptions, token);
 
-    private async Task<OrderApiResponse> ProcessOrderAsync(HttpRequestData request, CreateOrderRequestDto dto, CancellationToken token)
+    private async Task<CreateOrderApiResponse> ProcessOrderAsync(
+        HttpRequestData request,
+        CreateOrderRequestDto dto,
+        CancellationToken token
+    )
     {
         var operation = await orderProcessor.ProcessAsync(dto, token);
         var response = await operation.Match(

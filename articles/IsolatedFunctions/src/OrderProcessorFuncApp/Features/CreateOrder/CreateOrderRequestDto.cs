@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using OrderProcessorFuncApp.Core.Http;
+using OrderProcessorFuncApp.Domain.Models;
 
 namespace OrderProcessorFuncApp.Features.CreateOrder;
 
