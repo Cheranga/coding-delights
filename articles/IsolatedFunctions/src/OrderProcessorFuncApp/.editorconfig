@@ -1,0 +1,15 @@
+﻿root = true
+
+[*.cs]
+# Use Task.ConfigureAwait
+dotnet_diagnostic.MA0004.severity = none
+
+# Method is too long (64 lines; maximum allowed: 60)
+dotnet_diagnostic.MA0051.severity = none
+
+# ReSharper inspection severities
+resharper_condition_is_always_true_or_false_according_to_nullable_api_contract_highlighting = none
+resharper_convert_to_local_function_highlighting = none
+
+# Add comma after the last value
+dotnet_diagnostic.MA0007.severity = none

@@ -9,6 +9,7 @@
         <WarningsAsErrors>true</WarningsAsErrors>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <UserSecretsId>16e3d9c7-e050-43ca-96e4-671700be6dad</UserSecretsId>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
     <ItemGroup>
@@ -59,5 +60,11 @@
     <ItemGroup>
       <Compile Remove="Core\Http\IHttpRequestReader.cs" />
       <Compile Remove="Core\Http\HttpRequestReader.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
     </ItemGroup>
 </Project>

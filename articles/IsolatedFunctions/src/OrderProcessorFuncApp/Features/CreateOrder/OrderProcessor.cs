@@ -2,7 +2,7 @@
 
 namespace OrderProcessorFuncApp.Features.CreateOrder;
 
-internal sealed class OrderProcessor(ILogger<OrderProcessor> logger)
+internal sealed class OrderProcessor(ILogger<OrderProcessor> logger) : IOrderProcessor
 {
     public async Task<OperationResponse<FailedResult, SuccessResult<OrderAcceptedResponse>>> ProcessAsync(
         CreateOrderRequestDto request,

@@ -24,6 +24,8 @@ public static class Bootstrapper
             .ConfigureFunctionsWorkerDefaults(builder =>
             {
                 builder.UseMiddleware<EnrichmentMiddleware>();
+                builder.UseMiddleware<DtoRequestValidationMiddleware<CreateOrderRequestDto>>();
+
                 var services = builder.Services;
                 services.Configure<JsonSerializerOptions>(options =>
                 {
@@ -55,7 +57,7 @@ public static class Bootstrapper
                     );
                     services.AddSingleton(typeof(IApiRequestReader<,>), typeof(ApiRequestReader<,>));
                     services.AddSingleton<IOrderApiResponseGenerator, OrderApiResponseGenerator>();
-                    services.AddSingleton<OrderProcessor>();
+                    services.AddSingleton<IOrderProcessor, OrderProcessor>();
                     services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
                     services.AddApplicationInsightsTelemetryWorkerService();

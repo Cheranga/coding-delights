@@ -21,10 +21,11 @@ public class OrderProcessorFuncAppTests
     public async Task Test1() =>
         await Arrange(() =>
             {
+                var createOrderRequestDto = new AutoFaker<CreateOrderRequestDto>().Generate();
                 var mockedContext = new Mock<FunctionContext>();
                 mockedContext.Setup(x => x.CancellationToken).Returns(CancellationToken.None);
+                mockedContext.Setup(x => x.Items).Returns(new Dictionary<object, object> { { "Dto", createOrderRequestDto } });
 
-                var createOrderRequestDto = new AutoFaker<CreateOrderRequestDto>().Generate();
                 var httpRequestData = new TestHttpRequestData<CreateOrderRequestDto>(mockedContext.Object, createOrderRequestDto);
 
                 var serviceProvider = _host.Services;
@@ -37,5 +38,5 @@ public class OrderProcessorFuncAppTests
                 var response = await data.createOrderFunction.Run(data.httpRequestData, data.context);
                 return response;
             })
-            .Assert(result => result.HttpResponse != null && result.HttpResponse.StatusCode == HttpStatusCode.Accepted);
+            .Assert(result => result.StatusCode == HttpStatusCode.Accepted);
 }
