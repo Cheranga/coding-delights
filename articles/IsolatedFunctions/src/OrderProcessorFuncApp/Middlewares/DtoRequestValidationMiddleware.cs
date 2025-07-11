@@ -1,4 +1,7 @@
 ﻿using System.Net;
+using System.Text;
+using System.Text.Json;
+using System.Xml;
 using FluentValidation;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
