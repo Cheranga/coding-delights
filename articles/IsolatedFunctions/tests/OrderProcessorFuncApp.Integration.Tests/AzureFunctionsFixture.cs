@@ -1,6 +1,7 @@
 ﻿using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using DotNet.Testcontainers.Images;
+using Testcontainers.Azurite;
 
 namespace OrderProcessorFuncApp.Integration.Tests;
 
@@ -16,11 +17,14 @@ public sealed class AzureFunctionsFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
+        var azurite = new AzuriteBuilder().Build();
+        await azurite.StartAsync();
         await _funcImage.CreateAsync();
         FuncContainer = new ContainerBuilder()
             .WithImage(_funcImage)
+            .WithEnvironment("AzureWebJobsStorage", azurite.GetConnectionString())
             .WithPortBinding(80, true)
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(80).UntilMessageIsLogged("Host lock lease acquired"))
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Application started"))
             .Build();
 
         await FuncContainer.StartAsync();

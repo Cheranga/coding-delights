@@ -12,4 +12,5 @@ FROM base AS final
 WORKDIR /home/site/wwwroot
 COPY --from=build /app/publish .
 ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
-    AzureFunctionsJobHost__Logging__Console__IsEnabled=true
+    AzureFunctionsJobHost__Logging__Console__IsEnabled=true \
+    AzureWebJobsStorage=""
