@@ -3,6 +3,27 @@
   "extensions": {
     "http": {
       "routePrefix": "api"
+    },
+    "queues": {
+      "maxPollingInterval": "00:00:10",
+      "visibilityTimeout": "00:00:30",
+      "batchSize": 16,
+      "maxDequeueCount": 2,
+      "messageEncoding": "base64"
+    }
+  },
+  "logging": {
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true,
+        "maxTelemetryItemsPerSecond": 5
+      }
+    },
+    "logLevel": {
+      "default": "Information",
+      "Function.*": "Information",
+      "Host.*": "Error",
+      "Azure.*": "Error"
     }
   }
 }

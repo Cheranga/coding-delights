@@ -23,6 +23,7 @@ public static class Bootstrapper
         var host = new HostBuilder()
             .ConfigureFunctionsWorkerDefaults(builder =>
             {
+                builder.UseMiddleware<PerformanceMonitoringMiddleware>();
                 builder.UseMiddleware<EnrichmentMiddleware>();
                 builder.UseMiddleware<DtoRequestValidationMiddleware<CreateOrderRequestDto>>();
 
