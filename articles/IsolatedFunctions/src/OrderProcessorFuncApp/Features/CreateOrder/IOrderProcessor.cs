@@ -1,4 +1,6 @@
-﻿namespace OrderProcessorFuncApp.Features.CreateOrder;
+﻿using OrderProcessorFuncApp.Domain.Models;
+
+namespace OrderProcessorFuncApp.Features.CreateOrder;
 
 internal interface IOrderProcessor
 {

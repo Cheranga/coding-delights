@@ -1,8 +1,14 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using OrderProcessorFuncApp.Domain.Models;
+using OrderProcessorFuncApp.Infrastructure.StorageQueues;
 
 namespace OrderProcessorFuncApp.Features.CreateOrder;
 
-internal sealed class OrderProcessor(ILogger<OrderProcessor> logger) : IOrderProcessor
+internal sealed class OrderProcessor(
+    [FromKeyedServices("process-order")] IStorageQueuePublisher storageQueuePublisher,
+    ILogger<OrderProcessor> logger
+) : IOrderProcessor
 {
     public async Task<OperationResponse<FailedResult, SuccessResult<OrderAcceptedResponse>>> ProcessAsync(
         CreateOrderRequestDto request,
@@ -11,8 +17,14 @@ internal sealed class OrderProcessor(ILogger<OrderProcessor> logger) : IOrderPro
     {
         try
         {
-            await Task.Delay(TimeSpan.FromSeconds(1), token);
-            return SuccessResult<OrderAcceptedResponse>.New(new OrderAcceptedResponse(request.OrderId));
+            var processOrderMessage = request.ToMessage();
+            var operation = await storageQueuePublisher.PublishAsync(processOrderMessage, token);
+            return operation.Result switch
+            {
+                FailedResult f => f,
+                SuccessResult _ => SuccessResult<OrderAcceptedResponse>.New(new OrderAcceptedResponse(request.OrderId)),
+                _ => FailedResult.New(ErrorCodes.Unknown, ErrorMessages.Unknown),
+            };
         }
         catch (Exception exception)
         {

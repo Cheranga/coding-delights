@@ -7,4 +7,5 @@ internal static class ErrorMessages
     public const string ErrorOccurredWhenProcessingOrder = "An error occurred when processing the order";
     public const string CannotDeserialize = "Cannot deserialize the request body";
     public const string Unknown = "Unknown";
+    public const string ErrorOccurredWhenPublishingToQueue = "An error occurred when publishing to the queue";
 }

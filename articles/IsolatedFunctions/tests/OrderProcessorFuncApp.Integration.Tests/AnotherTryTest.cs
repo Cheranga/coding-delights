@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using AutoBogus;
 using Azure.Storage.Queues;
 using DotNet.Testcontainers.Builders;
+using OrderProcessorFuncApp.Domain.Models;
 using OrderProcessorFuncApp.Features.ProcessOrder;
 using Testcontainers.Azurite;
 
@@ -69,10 +70,10 @@ public class AnotherTryTest
         await function.StartAsync();
 
         // Enqueue customer-created event to the queue
-        var customerCreatedEvent = new AutoFaker<CustomerCreatedEvent>().Generate();
+        var processOrderMessage = new AutoFaker<ProcessOrderMessage>().Generate();
         await qc.SendMessageAsync(
             BinaryData.FromObjectAsJson(
-                customerCreatedEvent,
+                processOrderMessage,
                 new JsonSerializerOptions
                 {
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase,

@@ -8,4 +8,5 @@ internal static class ErrorCodes
     public const string NoHttpContext = nameof(NoHttpContext);
     public const string SerializationError = nameof(SerializationError);
     public const string Unknown = nameof(Unknown);
+    public const string ErrorOccurredWhenPublishingToQueue = nameof(ErrorOccurredWhenProcessingOrder);
 }

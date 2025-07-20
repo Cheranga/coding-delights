@@ -4,6 +4,7 @@ using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using DotNet.Testcontainers.Images;
 using DotNet.Testcontainers.Networks;
+using OrderProcessorFuncApp.Domain.Models;
 using OrderProcessorFuncApp.Features.ProcessOrder;
 using Testcontainers.Azurite;
 
@@ -82,7 +83,7 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
 
     public HttpClient Client { get; private set; }
 
-    public Task PublishCustomerCreatedEvent(CustomerCreatedEvent @event, JsonSerializerOptions serializerOptions)
+    public Task PublishProcessOrderMessage(ProcessOrderMessage message, JsonSerializerOptions serializerOptions)
     {
         var queueClient = new QueueClient(
             _originalAzuriteConnectionString,
@@ -90,7 +91,7 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
             new QueueClientOptions { MessageEncoding = QueueMessageEncoding.Base64 }
         );
 
-        return queueClient.SendMessageAsync(BinaryData.FromObjectAsJson(@event, serializerOptions));
+        return queueClient.SendMessageAsync(BinaryData.FromObjectAsJson(message, serializerOptions));
     }
 
     public Task<(string StdOut, string StdError)> GetFunctionLogs() => _isolatedFunc.GetLogsAsync();

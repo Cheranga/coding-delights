@@ -3,6 +3,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using OrderProcessorFuncApp.Core.Http;
+using OrderProcessorFuncApp.Domain.Models;
 
 namespace OrderProcessorFuncApp.Features.CreateOrder;
 

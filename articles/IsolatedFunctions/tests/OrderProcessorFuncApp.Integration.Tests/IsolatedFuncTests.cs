@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using AutoBogus;
+using OrderProcessorFuncApp.Domain.Models;
 using OrderProcessorFuncApp.Features.ProcessOrder;
 
 namespace OrderProcessorFuncApp.Integration.Tests;
@@ -11,7 +12,7 @@ public class IsolatedFuncTests(IsolatedFunctionsTestFixture funcFixture)
     [Fact]
     public async Task Test1()
     {
-        var customerCreatedEvent = new AutoFaker<CustomerCreatedEvent>().Generate();
+        var processOrderMessage = new AutoFaker<ProcessOrderMessage>().Generate();
         var serializerOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -19,7 +20,7 @@ public class IsolatedFuncTests(IsolatedFunctionsTestFixture funcFixture)
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         };
 
-        await funcFixture.PublishCustomerCreatedEvent(customerCreatedEvent, serializerOptions);
+        await funcFixture.PublishProcessOrderMessage(processOrderMessage, serializerOptions);
         await Task.Delay(TimeSpan.FromSeconds(5));
         var logData = await funcFixture.GetFunctionLogs();
         Assert.Contains("Processing order message:", logData.StdOut, StringComparison.OrdinalIgnoreCase);
