@@ -17,7 +17,8 @@ public class AnotherTryTest
 
         var functionImage = new ImageFromDockerfileBuilder()
             .WithDockerfileDirectory(CommonDirectoryPath.GetSolutionDirectory(), "src/OrderProcessorFuncApp")
-            .WithName(nameof(AzureFunctionsFixture).ToLowerInvariant())
+            .WithName("test-isolated-func")
+            .WithCleanUp(true)
             .Build();
 
         await functionImage.CreateAsync();
@@ -29,14 +30,17 @@ public class AnotherTryTest
             .WithImage("mcr.microsoft.com/azure-storage/azurite")
             .WithNetwork(network)
             .WithNetworkAliases("azurite")
-            .WithPortBinding(10000, 10000)
-            .WithPortBinding(10001, 10001)
-            .WithPortBinding(10002, 10002)
+            .WithPortBinding(10000)
+            .WithPortBinding(10001)
+            .WithPortBinding(10002)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(10000).UntilPortIsAvailable(10001).UntilPortIsAvailable(10002))
             .Build();
 
+        // Start the Azurite container first
+        await azurite.StartAsync();
+
         var originalAzuriteConnectionString =
-            $"DefaultEndpointsProtocol=http;AccountName={AzuriteBuilder.AccountName};AccountKey={AzuriteBuilder.AccountKey};BlobEndpoint=http://127.0.0.1:10000/{AzuriteBuilder.AccountName};QueueEndpoint=http://127.0.0.1:10001/{AzuriteBuilder.AccountName};TableEndpoint=http://127.0.0.1:10002/{AzuriteBuilder.AccountName};";
+            $"DefaultEndpointsProtocol=http;AccountName={AzuriteBuilder.AccountName};AccountKey={AzuriteBuilder.AccountKey};BlobEndpoint=http://127.0.0.1:{azurite.GetMappedPublicPort(10000)}/{AzuriteBuilder.AccountName};QueueEndpoint=http://127.0.0.1:{azurite.GetMappedPublicPort(10001)}/{AzuriteBuilder.AccountName};TableEndpoint=http://127.0.0.1:{azurite.GetMappedPublicPort(10002)}/{AzuriteBuilder.AccountName};";
         var dnsAzuriteOriginalConnectionString = originalAzuriteConnectionString.Replace("127.0.0.1", "azurite");
         var function = new ContainerBuilder()
             .WithImage(functionImage)
@@ -49,9 +53,6 @@ public class AnotherTryTest
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(80))
             .DependsOn(azurite)
             .Build();
-
-        // Start the Azurite container first
-        await azurite.StartAsync();
 
         // Create the queue and enqueue a message
         var qc = new QueueClient(
