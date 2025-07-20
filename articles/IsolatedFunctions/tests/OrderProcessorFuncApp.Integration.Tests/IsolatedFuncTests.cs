@@ -1,8 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using AutoBogus;
-using OrderProcessorFuncApp.Domain.Models;
-using OrderProcessorFuncApp.Features.ProcessOrder;
+using OrderProcessorFuncApp.Domain.Messaging;
 
 namespace OrderProcessorFuncApp.Integration.Tests;
 

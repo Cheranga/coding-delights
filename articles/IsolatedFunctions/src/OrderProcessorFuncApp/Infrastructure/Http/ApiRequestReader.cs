@@ -2,8 +2,10 @@
 using FluentValidation;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
+using OrderProcessorFuncApp.Core;
+using OrderProcessorFuncApp.Domain;
 
-namespace OrderProcessorFuncApp.Core.Http;
+namespace OrderProcessorFuncApp.Infrastructure.Http;
 
 internal sealed class ApiRequestReader<TDto, TDtoValidator>(
     JsonSerializerOptions serializerOptions,

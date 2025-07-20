@@ -1,11 +1,8 @@
-﻿using System;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Azure.Storage.Queues.Models;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OrderProcessorFuncApp.Domain.Models;
-using OrderProcessorFuncApp.Infrastructure.StorageQueues;
+using OrderProcessorFuncApp.Domain.Messaging;
 
 namespace OrderProcessorFuncApp.Features.ProcessOrder;
 

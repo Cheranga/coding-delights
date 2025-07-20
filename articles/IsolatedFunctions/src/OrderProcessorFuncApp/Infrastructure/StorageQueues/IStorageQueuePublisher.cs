@@ -1,4 +1,6 @@
-﻿namespace OrderProcessorFuncApp.Infrastructure.StorageQueues;
+﻿using OrderProcessorFuncApp.Core;
+
+namespace OrderProcessorFuncApp.Infrastructure.StorageQueues;
 
 public interface IStorageQueuePublisher
 {

@@ -1,15 +1,19 @@
 ﻿using System.Net;
 using Microsoft.Azure.Functions.Worker.Http;
-using OrderProcessorFuncApp.Features.CreateOrder;
+using OrderProcessorFuncApp.Core;
 
-namespace OrderProcessorFuncApp.Core.Http;
+namespace OrderProcessorFuncApp.Infrastructure.Http;
 
 public interface IOrderApiResponseGenerator
 {
-    async Task<HttpResponseData> GenerateOrderAcceptedResponseAsync(HttpRequestData request, Guid orderId, CancellationToken token)
+    async Task<HttpResponseData> GenerateOrderAcceptedResponseAsync<TResponseData>(
+        HttpRequestData request,
+        TResponseData responseData,
+        CancellationToken token
+    )
     {
         var httpResponse = request.CreateResponse(HttpStatusCode.Accepted);
-        await httpResponse.WriteAsJsonAsync(new OrderAcceptedResponse(orderId), cancellationToken: token);
+        await httpResponse.WriteAsJsonAsync(responseData, cancellationToken: token);
         return httpResponse;
     }
 
@@ -21,7 +25,6 @@ public interface IOrderApiResponseGenerator
     )
     {
         var httpResponse = request.CreateResponse(statusCode);
-        // Serialize the error response to JSON and set it as the content of the response
         await httpResponse.WriteAsJsonAsync(errorResponse, cancellationToken: token);
         return httpResponse;
     }

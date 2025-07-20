@@ -1,7 +1,8 @@
 ﻿using FluentValidation;
 using Microsoft.Azure.Functions.Worker.Http;
+using OrderProcessorFuncApp.Core;
 
-namespace OrderProcessorFuncApp.Core.Http;
+namespace OrderProcessorFuncApp.Infrastructure.Http;
 
 public interface IApiRequestReader<TDto, TDtoValidator>
     where TDto : class, IApiRequestDto<TDto, TDtoValidator>

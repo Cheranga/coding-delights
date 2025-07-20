@@ -1,7 +1,8 @@
 ﻿using System.Text.Json;
 using Azure.Storage.Queues;
-using Azure.Storage.Queues.Models;
 using Microsoft.Extensions.Logging;
+using OrderProcessorFuncApp.Core;
+using OrderProcessorFuncApp.Domain;
 
 namespace OrderProcessorFuncApp.Infrastructure.StorageQueues;
 

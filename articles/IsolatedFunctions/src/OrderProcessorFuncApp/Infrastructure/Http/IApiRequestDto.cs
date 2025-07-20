@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 
-namespace OrderProcessorFuncApp.Core.Http;
+namespace OrderProcessorFuncApp.Infrastructure.Http;
 
 public interface IApiRequestDto<TDto, TDtoValidator>
     where TDto : class, IApiRequestDto<TDto, TDtoValidator>

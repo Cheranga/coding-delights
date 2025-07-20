@@ -1,4 +1,4 @@
-﻿namespace OrderProcessorFuncApp.Core.Shared;
+﻿namespace OrderProcessorFuncApp.Core;
 
 public static class OperationResponseExtensions
 {

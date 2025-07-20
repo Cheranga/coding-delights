@@ -1,16 +1,26 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OrderProcessorFuncApp.Domain.Models;
+using OrderProcessorFuncApp.Core;
+using OrderProcessorFuncApp.Domain;
 using OrderProcessorFuncApp.Infrastructure.StorageQueues;
 
 namespace OrderProcessorFuncApp.Features.CreateOrder;
 
-internal sealed class OrderProcessor(
-    [FromKeyedServices("process-order")] IStorageQueuePublisher storageQueuePublisher,
-    ILogger<OrderProcessor> logger
-) : IOrderProcessor
+#pragma warning disable MA0048
+internal interface ICreateOrderHandler
 {
-    public async Task<OperationResponse<FailedResult, SuccessResult<OrderAcceptedResponse>>> ProcessAsync(
+    Task<OperationResponse<FailedResult, SuccessResult<OrderAcceptedResponseDto>>> ProcessAsync(
+        CreateOrderRequestDto request,
+        CancellationToken token
+    );
+}
+
+public sealed class CreateOrderHandler(
+    [FromKeyedServices("process-order")] IStorageQueuePublisher storageQueuePublisher,
+    ILogger<CreateOrderHandler> logger
+) : ICreateOrderHandler
+{
+    public async Task<OperationResponse<FailedResult, SuccessResult<OrderAcceptedResponseDto>>> ProcessAsync(
         CreateOrderRequestDto request,
         CancellationToken token
     )
@@ -22,7 +32,7 @@ internal sealed class OrderProcessor(
             return operation.Result switch
             {
                 FailedResult f => f,
-                SuccessResult _ => SuccessResult<OrderAcceptedResponse>.New(new OrderAcceptedResponse(request.OrderId)),
+                SuccessResult _ => SuccessResult<OrderAcceptedResponseDto>.New(new OrderAcceptedResponseDto(request.OrderId)),
                 _ => FailedResult.New(ErrorCodes.Unknown, ErrorMessages.Unknown),
             };
         }
@@ -34,3 +44,4 @@ internal sealed class OrderProcessor(
         return FailedResult.New(ErrorCodes.ErrorOccurredWhenProcessingOrder, ErrorMessages.ErrorOccurredWhenProcessingOrder);
     }
 }
+#pragma warning restore MA0048

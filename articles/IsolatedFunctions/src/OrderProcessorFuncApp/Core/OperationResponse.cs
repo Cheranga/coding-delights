@@ -1,4 +1,4 @@
-﻿namespace OrderProcessorFuncApp.Core.Shared;
+﻿namespace OrderProcessorFuncApp.Core;
 
 public sealed class OperationResponse<TA, TB>
     where TA : IOperationResult

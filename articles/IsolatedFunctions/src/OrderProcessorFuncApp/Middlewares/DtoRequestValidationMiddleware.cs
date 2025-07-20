@@ -1,13 +1,12 @@
 ﻿using System.Net;
-using System.Text;
-using System.Text.Json;
-using System.Xml;
 using FluentValidation;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using OrderProcessorFuncApp.Core;
+using OrderProcessorFuncApp.Domain;
 
 namespace OrderProcessorFuncApp.Middlewares;
 

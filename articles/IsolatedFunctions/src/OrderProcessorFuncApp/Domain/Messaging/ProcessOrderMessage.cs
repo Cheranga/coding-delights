@@ -1,4 +1,6 @@
-﻿namespace OrderProcessorFuncApp.Domain.Models;
+﻿using OrderProcessorFuncApp.Domain.Models;
+
+namespace OrderProcessorFuncApp.Domain.Messaging;
 
 public sealed record ProcessOrderMessage
 {

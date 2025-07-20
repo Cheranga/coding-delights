@@ -8,9 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OrderProcessorFuncApp.Configs;
-using OrderProcessorFuncApp.Core.Http;
-using OrderProcessorFuncApp.Domain.Models;
 using OrderProcessorFuncApp.Features.CreateOrder;
+using OrderProcessorFuncApp.Infrastructure.Http;
 using OrderProcessorFuncApp.Infrastructure.StorageQueues;
 using OrderProcessorFuncApp.Middlewares;
 using Serilog;
@@ -62,21 +61,11 @@ public static class Bootstrapper
                     );
                     services.AddSingleton(typeof(IApiRequestReader<,>), typeof(ApiRequestReader<,>));
                     services.AddSingleton<IOrderApiResponseGenerator, OrderApiResponseGenerator>();
-                    services.AddSingleton<IOrderProcessor, OrderProcessor>();
+                    services.AddSingleton<ICreateOrderHandler, CreateOrderHandler>();
                     services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
                     services.AddApplicationInsightsTelemetryWorkerService();
                     services.ConfigureFunctionsApplicationInsights();
-
-                    services.AddSingleton<QueueServiceClient>(_ =>
-                    {
-                        var storageConfig = context.Configuration.GetSection(nameof(StorageConfig)).Get<StorageConfig>();
-                        ArgumentException.ThrowIfNullOrWhiteSpace(storageConfig?.ConnectionString);
-                        return new QueueServiceClient(
-                            storageConfig.ConnectionString,
-                            new QueueClientOptions { MessageEncoding = QueueMessageEncoding.Base64 }
-                        );
-                    });
 
                     services.AddKeyedSingleton<IStorageQueuePublisher>(
                         "process-order",
@@ -84,9 +73,13 @@ public static class Bootstrapper
                         {
                             var storageConfig = context.Configuration.GetSection(nameof(StorageConfig)).Get<StorageConfig>();
                             ArgumentException.ThrowIfNullOrWhiteSpace(storageConfig?.ConnectionString);
+
                             var serializerOptions = provider.GetRequiredService<JsonSerializerOptions>();
-                            var queueServiceClient = provider.GetRequiredService<QueueServiceClient>();
-                            var qClient = queueServiceClient.GetQueueClient(storageConfig.ProcessingQueueName);
+                            var qServiceClient = new QueueServiceClient(
+                                storageConfig.ConnectionString,
+                                new QueueClientOptions { MessageEncoding = QueueMessageEncoding.Base64 }
+                            );
+                            var qClient = qServiceClient.GetQueueClient(storageConfig.ProcessingQueueName);
 
                             return new StorageQueuePublisher(
                                 qClient,

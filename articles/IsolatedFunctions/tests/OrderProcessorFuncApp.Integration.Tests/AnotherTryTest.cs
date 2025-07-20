@@ -3,8 +3,7 @@ using System.Text.Json.Serialization;
 using AutoBogus;
 using Azure.Storage.Queues;
 using DotNet.Testcontainers.Builders;
-using OrderProcessorFuncApp.Domain.Models;
-using OrderProcessorFuncApp.Features.ProcessOrder;
+using OrderProcessorFuncApp.Domain.Messaging;
 using Testcontainers.Azurite;
 
 namespace OrderProcessorFuncApp.Integration.Tests;

@@ -1,6 +1,6 @@
 ﻿using FluentValidation.Results;
 
-namespace OrderProcessorFuncApp.Core.Shared;
+namespace OrderProcessorFuncApp.Core;
 
 public sealed class FailedResult : IOperationResult
 {

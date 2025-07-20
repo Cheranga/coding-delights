@@ -1,3 +1,3 @@
-﻿namespace OrderProcessorFuncApp.Core.Http;
+﻿namespace OrderProcessorFuncApp.Infrastructure.Http;
 
 internal sealed class OrderApiResponseGenerator : IOrderApiResponseGenerator;

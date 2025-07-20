@@ -2,18 +2,18 @@
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
-using OrderProcessorFuncApp.Core.Http;
-using OrderProcessorFuncApp.Domain.Models;
+using OrderProcessorFuncApp.Core;
+using OrderProcessorFuncApp.Infrastructure.Http;
 
 namespace OrderProcessorFuncApp.Features.CreateOrder;
 
-internal sealed class CreateOrderFunction(
-    IOrderProcessor orderProcessor,
+internal sealed class CreateOrderEndPointFunction(
+    ICreateOrderHandler orderProcessor,
     IOrderApiResponseGenerator responseGenerator,
-    ILogger<CreateOrderFunction> logger
+    ILogger<CreateOrderEndPointFunction> logger
 )
 {
-    [Function(nameof(CreateOrderFunction))]
+    [Function(nameof(CreateOrderEndPointFunction))]
     public async Task<HttpResponseData> Run(
         [HttpTrigger(AuthorizationLevel.Anonymous, WebRequestMethods.Http.Post, Route = "orders")] HttpRequestData req,
         FunctionContext context
@@ -36,7 +36,7 @@ internal sealed class CreateOrderFunction(
         var operation = await orderProcessor.ProcessAsync(dto, token);
         var response = await operation.Match(
             x => responseGenerator.GenerateErrorResponseAsync(request, x, HttpStatusCode.InternalServerError, token),
-            x => responseGenerator.GenerateOrderAcceptedResponseAsync(request, x.Result.OrderId, token)
+            x => responseGenerator.GenerateOrderAcceptedResponseAsync(request, new OrderAcceptedResponseDto(x.Result.OrderId), token)
         );
 
         return response;

@@ -4,7 +4,8 @@ using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
 using AutoBogus;
-using OrderProcessorFuncApp.Core.Shared;
+using OrderProcessorFuncApp.Core;
+using OrderProcessorFuncApp.Domain;
 using OrderProcessorFuncApp.Domain.Models;
 using OrderProcessorFuncApp.Features.CreateOrder;
 

@@ -1,4 +1,4 @@
-﻿namespace OrderProcessorFuncApp.Core.Shared;
+﻿namespace OrderProcessorFuncApp.Domain;
 
 internal static class ErrorCodes
 {

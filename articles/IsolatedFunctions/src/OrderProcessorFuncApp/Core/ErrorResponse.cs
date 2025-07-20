@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using FluentValidation.Results;
 
-namespace OrderProcessorFuncApp.Core.Shared;
+namespace OrderProcessorFuncApp.Core;
 
 public sealed record ErrorResponse
 {
