@@ -13,19 +13,11 @@ public class AnotherTryTest
     [Fact]
     public async Task Test1()
     {
-        var customerCreatedEvent = new AutoFaker<CustomerCreatedEvent>().Generate();
-
-        var functionImage = new ImageFromDockerfileBuilder()
-            .WithDockerfileDirectory(CommonDirectoryPath.GetSolutionDirectory(), "src/OrderProcessorFuncApp")
-            .WithName("test-isolated-func")
-            .WithCleanUp(true)
-            .Build();
-
-        await functionImage.CreateAsync();
-
+        // Create a network for the containers to communicate
         var network = new NetworkBuilder().Build();
         await network.CreateAsync();
 
+        // Create an Azurite container
         var azurite = new ContainerBuilder()
             .WithImage("mcr.microsoft.com/azure-storage/azurite")
             .WithNetwork(network)
@@ -39,9 +31,28 @@ public class AnotherTryTest
         // Start the Azurite container first
         await azurite.StartAsync();
 
+        // Create the queue
         var originalAzuriteConnectionString =
             $"DefaultEndpointsProtocol=http;AccountName={AzuriteBuilder.AccountName};AccountKey={AzuriteBuilder.AccountKey};BlobEndpoint=http://127.0.0.1:{azurite.GetMappedPublicPort(10000)}/{AzuriteBuilder.AccountName};QueueEndpoint=http://127.0.0.1:{azurite.GetMappedPublicPort(10001)}/{AzuriteBuilder.AccountName};TableEndpoint=http://127.0.0.1:{azurite.GetMappedPublicPort(10002)}/{AzuriteBuilder.AccountName};";
+        var qc = new QueueClient(
+            originalAzuriteConnectionString,
+            "processing-queue",
+            new QueueClientOptions { MessageEncoding = QueueMessageEncoding.Base64 }
+        );
+        await qc.CreateIfNotExistsAsync();
+
+        // Build the function image from the Dockerfile
+        var functionImage = new ImageFromDockerfileBuilder()
+            .WithDockerfileDirectory(CommonDirectoryPath.GetSolutionDirectory(), "src/OrderProcessorFuncApp")
+            .WithName("test-isolated-func")
+            .WithCleanUp(true)
+            .Build();
+
+        await functionImage.CreateAsync();
+
+        // Replace the localhost IP with the DNS name of the Azurite container
         var dnsAzuriteOriginalConnectionString = originalAzuriteConnectionString.Replace("127.0.0.1", "azurite");
+        // Create the function container using the image and the Azurite connection string
         var function = new ContainerBuilder()
             .WithImage(functionImage)
             .WithNetwork(network)
@@ -54,19 +65,12 @@ public class AnotherTryTest
             .DependsOn(azurite)
             .Build();
 
-        // Create the queue and enqueue a message
-        var qc = new QueueClient(
-            originalAzuriteConnectionString,
-            "processing-queue",
-            new QueueClientOptions { MessageEncoding = QueueMessageEncoding.Base64 }
-        );
-        await qc.CreateIfNotExistsAsync();
-
         // Start the function container
         await function.StartAsync();
 
-        // Enqueue the message
-        var operation = await qc.SendMessageAsync(
+        // Enqueue customer-created event to the queue
+        var customerCreatedEvent = new AutoFaker<CustomerCreatedEvent>().Generate();
+        await qc.SendMessageAsync(
             BinaryData.FromObjectAsJson(
                 customerCreatedEvent,
                 new JsonSerializerOptions
