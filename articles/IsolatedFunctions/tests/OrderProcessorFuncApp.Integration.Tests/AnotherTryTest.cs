@@ -10,7 +10,7 @@ namespace OrderProcessorFuncApp.Integration.Tests;
 
 public class AnotherTryTest
 {
-    [Fact]
+    [Fact(Skip = "This test is no longer required. This was monument to design the collection fixture and the tests associated with it.")]
     public async Task Test1()
     {
         // Create a network for the containers to communicate

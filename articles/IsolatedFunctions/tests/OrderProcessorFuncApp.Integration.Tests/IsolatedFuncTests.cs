@@ -5,7 +5,8 @@ using OrderProcessorFuncApp.Features.ProcessOrder;
 
 namespace OrderProcessorFuncApp.Integration.Tests;
 
-public class IsolatedFuncTests(IsolatedFunctionsTestFixture funcFixture) : IClassFixture<IsolatedFunctionsTestFixture>
+[Collection(FunctionsTestFixtureCollection.Name)]
+public class IsolatedFuncTests(IsolatedFunctionsTestFixture funcFixture)
 {
     [Fact]
     public async Task Test1()

@@ -9,6 +9,7 @@ using Testcontainers.Azurite;
 
 namespace OrderProcessorFuncApp.Integration.Tests;
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
 {
     private INetwork _network;
@@ -67,14 +68,19 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
             .WithEnvironment("AzureWebJobsStorage", _dnsAzuriteOriginalConnectionString)
             .WithEnvironment("StorageConfig__ProcessingQueueName", "processing-queue")
             .WithEnvironment("StorageConfig__ConnectionString", _dnsAzuriteOriginalConnectionString)
-            .WithPortBinding(80, 7071) // if you still want to hit it from your host on 7071
+            .WithPortBinding(80, true) // if you still want to hit it from your host on 7071
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(80))
             .DependsOn(_azurite)
             .Build();
 
         // Start the function container
         await _isolatedFunc.StartAsync();
+
+        var uri = new UriBuilder("http", _isolatedFunc.Hostname, _isolatedFunc.GetMappedPublicPort(80)).Uri;
+        Client = new HttpClient() { BaseAddress = uri };
     }
+
+    public HttpClient Client { get; private set; }
 
     public Task PublishCustomerCreatedEvent(CustomerCreatedEvent @event, JsonSerializerOptions serializerOptions)
     {
@@ -101,3 +107,4 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
         await _network.DisposeAsync();
     }
 }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.

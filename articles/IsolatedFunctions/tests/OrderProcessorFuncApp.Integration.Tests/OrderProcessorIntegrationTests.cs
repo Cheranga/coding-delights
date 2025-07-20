@@ -10,7 +10,8 @@ using OrderProcessorFuncApp.Features.CreateOrder;
 
 namespace OrderProcessorFuncApp.Integration.Tests;
 
-public class OrderProcessorIntegrationTests(AzureFunctionsFixture fixture) : IClassFixture<AzureFunctionsFixture>
+[Collection(FunctionsTestFixtureCollection.Name)]
+public class OrderProcessorIntegrationTests(IsolatedFunctionsTestFixture fixture)
 {
     [Fact(DisplayName = "Valid order creation should return Accepted status")]
     public async Task CreateOrder_ShouldReturnAccepted()

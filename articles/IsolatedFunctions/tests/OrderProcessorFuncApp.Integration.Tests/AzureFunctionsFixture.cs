@@ -56,7 +56,7 @@ public sealed class AzureFunctionsFixture : IAsyncLifetime
             }
         );
         var queueClient = QServiceClient.GetQueueClient("processing-queue");
-        var a = await queueClient.CreateIfNotExistsAsync();
+        await queueClient.CreateIfNotExistsAsync();
         await _funcImage.CreateAsync();
         FuncContainer = new ContainerBuilder()
             .WithImage(_funcImage)
