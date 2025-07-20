@@ -21,10 +21,8 @@ public class AnotherTryTest
             .Build();
 
         await functionImage.CreateAsync();
-        var imageName = functionImage.FullName;
 
-        var network = new NetworkBuilder().WithName("test-network").Build();
-
+        var network = new NetworkBuilder().Build();
         await network.CreateAsync();
 
         var azurite = new ContainerBuilder()
@@ -78,5 +76,13 @@ public class AnotherTryTest
                 }
             )
         );
+
+        // Wait for the function to process the message
+        await Task.Delay(TimeSpan.FromSeconds(5));
+
+        // Check the logs to see if the message was processed
+        // Later assert for middlewares, etc.
+        var dataTuple = await function.GetLogsAsync();
+        Assert.Contains("Processing order message:", dataTuple.Stdout, StringComparison.OrdinalIgnoreCase);
     }
 }
