@@ -33,7 +33,7 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
             .WithPortBinding(10000)
             .WithPortBinding(10001)
             .WithPortBinding(10002)
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(10000).UntilPortIsAvailable(10001).UntilPortIsAvailable(10002))
+            .WithWaitStrategy(Wait.ForUnixContainer())
             .Build();
 
         // Start the Azurite container first

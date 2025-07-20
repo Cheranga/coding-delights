@@ -9,7 +9,7 @@ namespace OrderProcessorFuncApp.Integration.Tests;
 [Collection(FunctionsTestFixtureCollection.Name)]
 public class IsolatedFuncTests(IsolatedFunctionsTestFixture funcFixture)
 {
-    [Fact]
+    [Fact(DisplayName = "Processing valid process order message")]
     public async Task Test1()
     {
         var processOrderMessage = new AutoFaker<ProcessOrderMessage>().Generate();
