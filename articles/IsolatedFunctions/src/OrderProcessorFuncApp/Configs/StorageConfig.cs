@@ -2,6 +2,6 @@
 
 internal sealed record StorageConfig
 {
-    public required string ConnectionString { get; init; }
+    public required string Connection { get; init; }
     public required string ProcessingQueueName { get; init; }
 }

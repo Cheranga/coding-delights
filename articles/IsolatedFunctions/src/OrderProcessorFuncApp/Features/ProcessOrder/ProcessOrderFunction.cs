@@ -18,9 +18,7 @@ public class ProcessOrderFunction
     }
 
     [Function(nameof(ProcessOrderFunction))]
-    public async Task Run(
-        [QueueTrigger("%StorageConfig:ProcessingQueueName%", Connection = "StorageConfig:ConnectionString")] QueueMessage message
-    )
+    public async Task Run([QueueTrigger("%StorageConfig:ProcessingQueueName%", Connection = "QueueConnection")] QueueMessage message)
     {
         var processOrderMessage = message.Body.ToObjectFromJson<ProcessOrderMessage>(_serializerOptions);
         ArgumentNullException.ThrowIfNull(processOrderMessage);

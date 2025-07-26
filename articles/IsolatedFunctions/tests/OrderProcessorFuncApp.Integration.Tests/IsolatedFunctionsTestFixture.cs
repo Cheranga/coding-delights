@@ -65,10 +65,11 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
             .WithNetwork(_network)
             // inside this network, “azurite” → the Azurite container
             .WithEnvironment("AzureWebJobsStorage", _dnsAzuriteOriginalConnectionString)
+            .WithEnvironment("AzureWebJobsQueueConnection", _dnsAzuriteOriginalConnectionString)
+            .WithEnvironment("StorageConfig__Connection", _dnsAzuriteOriginalConnectionString)
             .WithEnvironment("StorageConfig__ProcessingQueueName", "processing-queue")
-            .WithEnvironment("StorageConfig__ConnectionString", _dnsAzuriteOriginalConnectionString)
             .WithPortBinding(80, true) // if you still want to hit it from your host on 7071
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(80))
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(80).UntilMessageIsLogged("Application started"))
             .DependsOn(_azurite)
             .Build();
 

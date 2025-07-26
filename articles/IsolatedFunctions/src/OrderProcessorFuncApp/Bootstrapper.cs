@@ -72,11 +72,12 @@ public static class Bootstrapper
                         (provider, _) =>
                         {
                             var storageConfig = context.Configuration.GetSection(nameof(StorageConfig)).Get<StorageConfig>();
-                            ArgumentException.ThrowIfNullOrWhiteSpace(storageConfig?.ConnectionString);
+                            ArgumentException.ThrowIfNullOrWhiteSpace(storageConfig?.Connection);
 
                             var serializerOptions = provider.GetRequiredService<JsonSerializerOptions>();
+
                             var qServiceClient = new QueueServiceClient(
-                                storageConfig.ConnectionString,
+                                storageConfig.Connection,
                                 new QueueClientOptions { MessageEncoding = QueueMessageEncoding.Base64 }
                             );
                             var qClient = qServiceClient.GetQueueClient(storageConfig.ProcessingQueueName);

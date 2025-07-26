@@ -22,7 +22,7 @@ Content-Type: application/json
       "quantity": 2,
       "price": 10.99,
       "metric": "kg"
-    }    
+    }
   ]
 }
 
@@ -33,39 +33,27 @@ POST {{baseUrl}}/api/orders
 Content-Type: application/json
 
 {
-  "orderId": "0452FDD7-918D-49DD-BC19-CBF84FAB6264",
-  "referenceId": "9EB8B2D4-110C-4F56-A228-ADDDCC812620",
-  "orderDate": "2023-10-01T00:00:00Z",
+  "orderId": "9b4392cb-5d20-be12-89fd-f7355f88017b",
+  "referenceId": "a2f451c5-692a-add7-603e-f3ee5e9f0c5f",
+  "orderDate": "2025-07-10T16:16:12.3211713+10:00",
   "items": [
     {
-      "productId": "PROD_0001",
-      "quantity": 2,
-      "price": 10.99,
-      "metric": "kg"
+      "productId": "Wooden",
+      "quantity": 0.537435905422287,
+      "price": 0.839432867658018,
+      "metric": "maximize"
     },
     {
-      "productId": "PROD_0002",
-      "quantity": 1,
-      "price": 5.99,
-      "metric": "kg"
+      "productId": "Coordinator",
+      "quantity": 0.185874875120189,
+      "price": 0.365329000411639,
+      "metric": "Future"
     },
     {
-      "productId": "PROD_0003",
-      "quantity": 1,
-      "price": 15.99,
-      "metric": "L"
-    },
-    {
-      "productId": "PROD_0004",
-      "quantity": 1,
-      "price": 20.99,
-      "metric": "m"
-    },
-    {
-      "productId": "PROD_0005",
-      "quantity": 50,
-      "price": 30.99,
-      "metric": "cm"
+      "productId": "Field",
+      "quantity": 0.160758452577773,
+      "price": 0.663034589061726,
+      "metric": "Greenland"
     }
   ]
 }
