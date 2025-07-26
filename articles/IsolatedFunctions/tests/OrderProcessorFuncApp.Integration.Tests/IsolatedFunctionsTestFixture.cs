@@ -12,10 +12,8 @@ namespace OrderProcessorFuncApp.Integration.Tests;
 public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
 {
     private INetwork _network;
-    private IContainer _azurite;
+    private AzuriteContainer _azurite;
     private IContainer _isolatedFunc;
-    private string _originalAzuriteConnectionString;
-    private string _dnsAzuriteOriginalConnectionString;
 
     public async Task InitializeAsync()
     {
@@ -23,71 +21,84 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
         _network = new NetworkBuilder().Build();
         await _network.CreateAsync();
 
-        // Create an Azurite container
         _azurite = GetAzuriteContainer(_network);
+        await ProvisionQueues(_azurite, "processing-queue");
 
-        // Start the Azurite container first
-        await _azurite.StartAsync();
-
-        _originalAzuriteConnectionString =
-            $"DefaultEndpointsProtocol=http;AccountName={AzuriteBuilder.AccountName};AccountKey={AzuriteBuilder.AccountKey};BlobEndpoint=http://127.0.0.1:{_azurite.GetMappedPublicPort(10000)}/{AzuriteBuilder.AccountName};QueueEndpoint=http://127.0.0.1:{_azurite.GetMappedPublicPort(10001)}/{AzuriteBuilder.AccountName};TableEndpoint=http://127.0.0.1:{_azurite.GetMappedPublicPort(10002)}/{AzuriteBuilder.AccountName};";
-
-        var qsClient = new QueueServiceClient(
-            _originalAzuriteConnectionString,
-            new QueueClientOptions { MessageEncoding = QueueMessageEncoding.Base64 }
-        );
-        await qsClient.GetQueueClient("processing-queue").CreateIfNotExistsAsync();
-
-        // Build the function image from the Dockerfile
-        var functionImage = new ImageFromDockerfileBuilder()
-            .WithDockerfileDirectory(CommonDirectoryPath.GetSolutionDirectory(), "src/OrderProcessorFuncApp")
-            .WithName("test-isolated-func")
-            .WithCleanUp(true)
-            .Build();
-
-        await functionImage.CreateAsync();
-
-        // Replace the localhost IP with the DNS name of the Azurite container
-        _dnsAzuriteOriginalConnectionString = _originalAzuriteConnectionString.Replace("127.0.0.1", "azurite");
-
-        // Create the function container using the image and the Azurite connection string
-        _isolatedFunc = new ContainerBuilder()
-            .WithImage(functionImage)
-            .WithNetwork(_network)
-            // inside this network, “azurite” → the Azurite container
-            .WithEnvironment("AzureWebJobsStorage", _dnsAzuriteOriginalConnectionString)
-            .WithEnvironment("AzureWebJobsQueueConnection", _dnsAzuriteOriginalConnectionString)
-            .WithEnvironment("StorageConfig__Connection", _dnsAzuriteOriginalConnectionString)
-            .WithEnvironment("StorageConfig__ProcessingQueueName", "processing-queue")
-            .WithPortBinding(80, true)
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(80).UntilMessageIsLogged("Application started"))
-            .DependsOn(_azurite)
-            .Build();
-
-        // Start the function container
+        _isolatedFunc = await GetFunctionContainer("test-isolated-func", "src/OrderProcessorFuncApp", _network, (_azurite, "azurite"));
         await _isolatedFunc.StartAsync();
 
         var uri = new UriBuilder("http", _isolatedFunc.Hostname, _isolatedFunc.GetMappedPublicPort(80)).Uri;
         Client = new HttpClient() { BaseAddress = uri };
     }
 
-    private IContainer GetAzuriteContainer(INetwork network) =>
-        new ContainerBuilder()
+    private static async Task ProvisionQueues(AzuriteContainer azurite, params string[] queueNames)
+    {
+        await azurite.StartAsync();
+
+        var qsClient = new QueueServiceClient(
+            azurite.GetConnectionString(),
+            new QueueClientOptions { MessageEncoding = QueueMessageEncoding.Base64 }
+        );
+        foreach (var queueName in queueNames)
+        {
+            await qsClient.GetQueueClient(queueName).CreateIfNotExistsAsync();
+        }
+    }
+
+    private async Task<IContainer> GetFunctionContainer(
+        string imageName,
+        string dockerfileDirectory,
+        INetwork network,
+        (AzuriteContainer Azurite, string NetworkAlias) azuriteData
+    )
+    {
+        // Creating the function image from the Dockerfile
+        var functionImage = new ImageFromDockerfileBuilder()
+            .WithDockerfileDirectory(CommonDirectoryPath.GetSolutionDirectory(), dockerfileDirectory)
+            .WithName(imageName)
+            .WithCleanUp(true)
+            .Build();
+
+        await functionImage.CreateAsync();
+
+        var dnsConnectionString = azuriteData.Azurite.GetConnectionString().Replace(_azurite.Hostname, azuriteData.NetworkAlias);
+        var container = new ContainerBuilder()
+            .WithImage(functionImage)
+            .WithNetwork(network)
+            // inside this network, “azurite” → the Azurite container
+            .WithEnvironment("AzureWebJobsStorage", dnsConnectionString)
+            .WithEnvironment("AzureWebJobsQueueConnection", dnsConnectionString)
+            .WithEnvironment("StorageConfig__Connection", dnsConnectionString)
+            .WithEnvironment("StorageConfig__ProcessingQueueName", "processing-queue")
+            .WithPortBinding(80, true)
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(80).UntilMessageIsLogged("Application started"))
+            .DependsOn(_azurite)
+            .Build();
+
+        return container;
+    }
+
+    private static AzuriteContainer GetAzuriteContainer(INetwork network)
+    {
+        var container = new AzuriteBuilder()
             .WithImage("mcr.microsoft.com/azure-storage/azurite")
             .WithNetwork(network)
             .WithNetworkAliases("azurite")
-            .WithPortBinding(10000)
-            .WithPortBinding(10001)
-            .WithPortBinding(10002)
-            .WithWaitStrategy(Wait.ForUnixContainer())
+            .WithPortBinding(10000) // Blob service
+            .WithPortBinding(10001) // Queue service
+            .WithPortBinding(10002) // Table service
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(10000).UntilPortIsAvailable(10001).UntilPortIsAvailable(10002))
             .Build();
+
+        return container;
+    }
 
     public HttpClient Client { get; private set; }
 
     public Task PublishProcessOrderMessage(ProcessOrderMessage message, JsonSerializerOptions serializerOptions)
     {
         var queueClient = new QueueClient(
-            _originalAzuriteConnectionString,
+            _azurite.GetConnectionString(),
             "processing-queue",
             new QueueClientOptions { MessageEncoding = QueueMessageEncoding.Base64 }
         );
