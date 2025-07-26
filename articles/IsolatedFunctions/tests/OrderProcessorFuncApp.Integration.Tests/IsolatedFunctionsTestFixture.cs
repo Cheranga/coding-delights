@@ -24,15 +24,7 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
         await _network.CreateAsync();
 
         // Create an Azurite container
-        _azurite = new ContainerBuilder()
-            .WithImage("mcr.microsoft.com/azure-storage/azurite")
-            .WithNetwork(_network)
-            .WithNetworkAliases("azurite")
-            .WithPortBinding(10000)
-            .WithPortBinding(10001)
-            .WithPortBinding(10002)
-            .WithWaitStrategy(Wait.ForUnixContainer())
-            .Build();
+        _azurite = GetAzuriteContainer(_network);
 
         // Start the Azurite container first
         await _azurite.StartAsync();
@@ -40,12 +32,11 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
         _originalAzuriteConnectionString =
             $"DefaultEndpointsProtocol=http;AccountName={AzuriteBuilder.AccountName};AccountKey={AzuriteBuilder.AccountKey};BlobEndpoint=http://127.0.0.1:{_azurite.GetMappedPublicPort(10000)}/{AzuriteBuilder.AccountName};QueueEndpoint=http://127.0.0.1:{_azurite.GetMappedPublicPort(10001)}/{AzuriteBuilder.AccountName};TableEndpoint=http://127.0.0.1:{_azurite.GetMappedPublicPort(10002)}/{AzuriteBuilder.AccountName};";
 
-        var qc = new QueueClient(
+        var qsClient = new QueueServiceClient(
             _originalAzuriteConnectionString,
-            "processing-queue",
             new QueueClientOptions { MessageEncoding = QueueMessageEncoding.Base64 }
         );
-        await qc.CreateIfNotExistsAsync();
+        await qsClient.GetQueueClient("processing-queue").CreateIfNotExistsAsync();
 
         // Build the function image from the Dockerfile
         var functionImage = new ImageFromDockerfileBuilder()
@@ -68,7 +59,7 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
             .WithEnvironment("AzureWebJobsQueueConnection", _dnsAzuriteOriginalConnectionString)
             .WithEnvironment("StorageConfig__Connection", _dnsAzuriteOriginalConnectionString)
             .WithEnvironment("StorageConfig__ProcessingQueueName", "processing-queue")
-            .WithPortBinding(80, true) // if you still want to hit it from your host on 7071
+            .WithPortBinding(80, true)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(80).UntilMessageIsLogged("Application started"))
             .DependsOn(_azurite)
             .Build();
@@ -79,6 +70,17 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
         var uri = new UriBuilder("http", _isolatedFunc.Hostname, _isolatedFunc.GetMappedPublicPort(80)).Uri;
         Client = new HttpClient() { BaseAddress = uri };
     }
+
+    private IContainer GetAzuriteContainer(INetwork network) =>
+        new ContainerBuilder()
+            .WithImage("mcr.microsoft.com/azure-storage/azurite")
+            .WithNetwork(network)
+            .WithNetworkAliases("azurite")
+            .WithPortBinding(10000)
+            .WithPortBinding(10001)
+            .WithPortBinding(10002)
+            .WithWaitStrategy(Wait.ForUnixContainer())
+            .Build();
 
     public HttpClient Client { get; private set; }
 
