@@ -27,6 +27,7 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
     {
         // Create a network for the containers to communicate
         _network = new NetworkBuilder().Build();
+        await _network.CreateAsync();
 
         // provisioning servicebus container
         _serviceBusContainer = await GetServiceBusContainer(_network);
@@ -38,9 +39,6 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
         await sender.SendMessageAsync(
             new ServiceBusMessage(BinaryData.FromString("test message")) { ApplicationProperties = { { "prop1", "1" } } }
         );
-
-        await _network.CreateAsync();
-        // await _network.CreateAsync();
 
         _azurite = GetAzuriteContainer(_network);
         await ProvisionQueues(_azurite, "processing-queue");
