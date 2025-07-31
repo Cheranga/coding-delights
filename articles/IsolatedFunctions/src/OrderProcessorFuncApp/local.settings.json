@@ -6,6 +6,7 @@
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
     "FUNCTIONS_WORKER_RUNTIME_VERSION": "8.0",
     "AzureWebJobsQueueConnection": "UseDevelopmentStorage=true",
+    "AzureWebJobsAsbConnection": "Endpoint=sb://cchat-sbns-shared.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=g4BkiaNlXQxojLP25s1WPMV3KctgwWqqD+ASbP0n244=",
     "StorageConfig__ProcessingQueueName": "processing-queue"
   }
 }

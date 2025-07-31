@@ -6,11 +6,11 @@
     <!--        Analyzers-->
     <PackageVersion Include="AsyncFixer" Version="1.6.0" />
     <PackageVersion Include="Meziantou.Analyzer" Version="2.0.199" />
+    <PackageVersion Include="Microsoft.Azure.Functions.Worker.Extensions.ServiceBus" Version="5.23.0" />
     <PackageVersion Include="Microsoft.Azure.Functions.Worker.Extensions.Storage.Queues" Version="5.5.2" />
     <PackageVersion Include="Microsoft.Extensions.Azure" Version="1.11.0" />
     <PackageVersion Include="Microsoft.Net.Http.Headers" Version="8.0.17" />
     <PackageVersion Include="Roslynator.Analyzers" Version="4.13.1" />
-    <PackageVersion Include="ShotCaller.Azure.ServiceBus.Messaging" Version="1.0.0" />
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.8.0.113526" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="9.0.4" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="9.0.4" />

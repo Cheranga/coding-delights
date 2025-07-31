@@ -8,6 +8,7 @@ using OrderProcessorFuncApp.Core;
 using OrderProcessorFuncApp.Domain;
 using OrderProcessorFuncApp.Domain.Models;
 using OrderProcessorFuncApp.Features.CreateOrder;
+using OrderProcessorFuncApp.Features.ProcessOrder;
 
 namespace OrderProcessorFuncApp.Integration.Tests;
 
@@ -23,6 +24,14 @@ public class OrderProcessorIntegrationTests(IsolatedFunctionsTestFixture fixture
         var response = await fixture.Client.PostAsync("/api/orders", jsonContent);
 
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+
+        await Task.Delay(TimeSpan.FromSeconds(5));
+        var functionLogs = await fixture.GetFunctionLogs();
+        Assert.Contains(
+            $"{nameof(AsbProcessOrderFunction)} processing message body:",
+            functionLogs.StdOut,
+            StringComparison.OrdinalIgnoreCase
+        );
     }
 
     [Fact(DisplayName = "Invalid order creation should return BadRequest status")]

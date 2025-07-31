@@ -15,6 +15,7 @@
     <ItemGroup>
         <PackageReference Include="AsyncFixer"/>
         <PackageReference Include="Meziantou.Analyzer"/>
+        <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.ServiceBus" />
         <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage.Queues" />
         <PackageReference Include="Microsoft.Net.Http.Headers" />
         <PackageReference Include="Roslynator.Analyzers"/>
