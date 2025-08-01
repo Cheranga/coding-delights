@@ -15,7 +15,8 @@ public class AsbProcessOrderFunction
 
     [Function(nameof(AsbProcessOrderFunction))]
     public async Task Run(
-        [ServiceBusTrigger("temp-orders", Connection = "AsbConnection", AutoCompleteMessages = false)] ServiceBusReceivedMessage message,
+        [ServiceBusTrigger("%ServiceBusConfig:ProcessingQueueName%", Connection = "AsbConnection", AutoCompleteMessages = false)]
+            ServiceBusReceivedMessage message,
         ServiceBusMessageActions messageActions
     )
     {

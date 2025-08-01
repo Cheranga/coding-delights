@@ -2,7 +2,7 @@
   "UserConfig": {
     "Namespaces": [
       {
-        "Name": "sbemulatorns",
+        "Name": "sbemulator",
         "Queues": [
           {
             "Name": "temp-orders",

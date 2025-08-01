@@ -98,6 +98,7 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
             .WithEnvironment("AzureWebJobsAsbConnection", dnsAsbConnectionString)
             .WithEnvironment("StorageConfig__Connection", dnsConnectionString)
             .WithEnvironment("StorageConfig__ProcessingQueueName", "processing-queue")
+            .WithEnvironment("ServiceBusConfig__ProcessingQueueName", "temp-orders")
             .WithPortBinding(80, true)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(80).UntilMessageIsLogged("Application started"))
             .DependsOn(_azurite)
