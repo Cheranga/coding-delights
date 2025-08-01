@@ -26,53 +26,77 @@ public class OrderProcessorIntegrationTests(IsolatedFunctionsTestFixture fixture
     [Fact(DisplayName = "Valid order creation should return Accepted status")]
     public async Task CreateOrder_ShouldReturnAccepted()
     {
-        var createOrderRequestDto = new AutoFaker<CreateOrderRequestDto>().Generate();
-        var serialized = JsonSerializer.Serialize(createOrderRequestDto, _serializerOptions);
-        var jsonContent = new StringContent(serialized, Encoding.UTF8, MediaTypeNames.Application.Json);
-        var response = await fixture.Client.PostAsync("/api/orders", jsonContent);
+        await Arrange(() =>
+            {
+                var createOrderRequestDto = new AutoFaker<CreateOrderRequestDto>().Generate();
+                return createOrderRequestDto;
+            })
+            .Act(async data =>
+            {
+                var serialized = JsonSerializer.Serialize(data, _serializerOptions);
+                var jsonContent = new StringContent(serialized, Encoding.UTF8, MediaTypeNames.Application.Json);
+                var response = await fixture.Client.PostAsync("/api/orders", jsonContent);
 
-        await fixture.PublishServiceBusMessage("temp-orders", createOrderRequestDto, _serializerOptions, CancellationToken.None);
+                // Publish the service bus message
+                await fixture.PublishServiceBusMessage("temp-orders", data, _serializerOptions, CancellationToken.None);
 
-        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+                // Delay to allow the functions to process the message
+                await Task.Delay(TimeSpan.FromSeconds(5));
+                return response;
+            })
+            .Assert((_, result) => result.StatusCode == HttpStatusCode.Accepted)
+            .And(
+                async (_, _) =>
+                {
+                    var functionLogs = await fixture.GetFunctionLogs();
 
-        await Task.Delay(TimeSpan.FromSeconds(5));
-        var functionLogs = await fixture.GetFunctionLogs();
-
-        Assert.Contains("Processing order message:", functionLogs.StdOut, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains(
-            $"{nameof(AsbProcessOrderFunction)} processing message body:",
-            functionLogs.StdOut,
-            StringComparison.OrdinalIgnoreCase
-        );
+                    Assert.Contains("Processing order message:", functionLogs.StdOut, StringComparison.OrdinalIgnoreCase);
+                    Assert.Contains(
+                        $"{nameof(AsbProcessOrderFunction)} processing message body:",
+                        functionLogs.StdOut,
+                        StringComparison.OrdinalIgnoreCase
+                    );
+                }
+            );
     }
 
     [Fact(DisplayName = "Invalid order creation should return BadRequest status")]
     public async Task CreateOrder_ShouldReturnBadRequest_WhenInvalidData()
     {
-        var invalidDto = new CreateOrderRequestDto
-        {
-            OrderId = Guid.Empty, // Invalid customer ID
-            Items = new List<OrderItem>
+        await Arrange(() =>
             {
-                new()
+                var invalidDto = new CreateOrderRequestDto
                 {
-                    ProductId = string.Empty,
-                    Quantity = 0,
-                    Price = 0,
-                    Metric = string.Empty,
-                },
-            },
-        };
+                    OrderId = Guid.Empty, // Invalid customer ID
+                    Items = new List<OrderItem>
+                    {
+                        new()
+                        {
+                            ProductId = string.Empty,
+                            Quantity = 0,
+                            Price = 0,
+                            Metric = string.Empty,
+                        },
+                    },
+                };
 
-        var serialized = JsonSerializer.Serialize(invalidDto);
-        var jsonContent = new StringContent(serialized, Encoding.UTF8, MediaTypeNames.Application.Json);
-        var response = await fixture.Client.PostAsync("/api/orders", jsonContent);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var errorResponse = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-        Assert.NotNull(errorResponse);
-        Assert.Equal(ErrorCodes.InvalidDataInRequest, errorResponse.ErrorCode);
-        Assert.NotNull(errorResponse.ErrorDetails);
-        Assert.NotEmpty(errorResponse.ErrorDetails);
+                return invalidDto;
+            })
+            .Act(async data =>
+            {
+                var serialized = JsonSerializer.Serialize(data, _serializerOptions);
+                var jsonContent = new StringContent(serialized, Encoding.UTF8, MediaTypeNames.Application.Json);
+                var response = await fixture.Client.PostAsync("/api/orders", jsonContent);
+                return response;
+            })
+            .Assert(result => result.StatusCode == HttpStatusCode.BadRequest)
+            .And(async result =>
+            {
+                var errorResponse = await result.Content.ReadFromJsonAsync<ErrorResponse>();
+                Assert.NotNull(errorResponse);
+                Assert.Equal(ErrorCodes.InvalidDataInRequest, errorResponse.ErrorCode);
+                Assert.NotNull(errorResponse.ErrorDetails);
+                Assert.NotEmpty(errorResponse.ErrorDetails);
+            });
     }
 }
