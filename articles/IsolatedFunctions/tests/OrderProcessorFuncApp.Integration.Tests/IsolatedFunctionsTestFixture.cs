@@ -1,17 +1,13 @@
 ﻿using System.Text.Json;
-using Azure;
 using Azure.Messaging.ServiceBus;
-using Azure.Messaging.ServiceBus.Administration;
 using Azure.Storage.Queues;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using DotNet.Testcontainers.Networks;
-using Microsoft.Extensions.Azure;
 using OrderProcessorFuncApp.Domain.Messaging;
 using Testcontainers.Azurite;
 using Testcontainers.MsSql;
 using Testcontainers.ServiceBus;
-using Testcontainers.SqlEdge;
 
 namespace OrderProcessorFuncApp.Integration.Tests;
 
@@ -31,8 +27,8 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
 
         // provisioning servicebus container
         _serviceBusContainer = await GetServiceBusContainer(_network);
-        var serviceBusConnectionString =
-            @"Endpoint=sb://localhost;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;";
+        var serviceBusConnectionString = GetServiceBusConnectionString();
+
         var serviceBusClient = new ServiceBusClient(serviceBusConnectionString);
         // Create a sender for the "orders" queue
         var sender = serviceBusClient.CreateSender("temp-orders");
@@ -56,6 +52,9 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
         var uri = new UriBuilder("http", _isolatedFunc.Hostname, _isolatedFunc.GetMappedPublicPort(80)).Uri;
         Client = new HttpClient() { BaseAddress = uri };
     }
+
+    private static string GetServiceBusConnectionString() =>
+        @"Endpoint=sb://localhost;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;";
 
     private static async Task ProvisionQueues(AzuriteContainer azurite, params string[] queueNames)
     {
@@ -133,6 +132,28 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
         );
 
         return queueClient.SendMessageAsync(BinaryData.FromObjectAsJson(message, serializerOptions));
+    }
+
+    public Task PublishServiceBusMessage<TMessage>(
+        string publishTo,
+        TMessage message,
+        JsonSerializerOptions serializerOptions,
+        CancellationToken token,
+        params (string Key, object Value)[] additionalProperties
+    )
+    {
+        var serviceBusConnectionString = GetServiceBusConnectionString();
+        var serviceBusClient = new ServiceBusClient(serviceBusConnectionString);
+        // Create a sender for the "orders" queue
+        var sender = serviceBusClient.CreateSender(publishTo);
+
+        var serviceBusMessage = new ServiceBusMessage(BinaryData.FromObjectAsJson(message, serializerOptions));
+        foreach (var additionalProperty in additionalProperties)
+        {
+            serviceBusMessage.ApplicationProperties.Add(additionalProperty.Key, additionalProperty.Value);
+        }
+
+        return sender.SendMessageAsync(serviceBusMessage, token);
     }
 
     public Task<(string StdOut, string StdError)> GetFunctionLogs() => _isolatedFunc.GetLogsAsync();

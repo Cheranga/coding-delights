@@ -15,18 +15,30 @@ namespace OrderProcessorFuncApp.Integration.Tests;
 [Collection(FunctionsTestFixtureCollection.Name)]
 public class OrderProcessorIntegrationTests(IsolatedFunctionsTestFixture fixture)
 {
+    private readonly JsonSerializerOptions _serializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true,
+        WriteIndented = false,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+    };
+
     [Fact(DisplayName = "Valid order creation should return Accepted status")]
     public async Task CreateOrder_ShouldReturnAccepted()
     {
         var createOrderRequestDto = new AutoFaker<CreateOrderRequestDto>().Generate();
-        var serialized = JsonSerializer.Serialize(createOrderRequestDto);
+        var serialized = JsonSerializer.Serialize(createOrderRequestDto, _serializerOptions);
         var jsonContent = new StringContent(serialized, Encoding.UTF8, MediaTypeNames.Application.Json);
         var response = await fixture.Client.PostAsync("/api/orders", jsonContent);
+
+        await fixture.PublishServiceBusMessage("temp-orders", createOrderRequestDto, _serializerOptions, CancellationToken.None);
 
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
 
         await Task.Delay(TimeSpan.FromSeconds(5));
         var functionLogs = await fixture.GetFunctionLogs();
+
+        Assert.Contains("Processing order message:", functionLogs.StdOut, StringComparison.OrdinalIgnoreCase);
         Assert.Contains(
             $"{nameof(AsbProcessOrderFunction)} processing message body:",
             functionLogs.StdOut,
