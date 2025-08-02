@@ -17,7 +17,7 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
     private INetwork _network;
     private AzuriteContainer _azurite;
     private IContainer _isolatedFunc;
-    private IContainer _serviceBusContainer;
+    private ServiceBusContainer _serviceBusContainer;
 
     public async Task InitializeAsync()
     {
@@ -25,21 +25,15 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
         _network = new NetworkBuilder().Build();
         await _network.CreateAsync();
 
-        // provisioning servicebus container
+        // provisioning Azure Service Bus container
         _serviceBusContainer = await GetServiceBusContainer(_network);
         var serviceBusConnectionString = GetServiceBusConnectionString();
 
-        var serviceBusClient = new ServiceBusClient(serviceBusConnectionString);
-        // Create a sender for the "orders" queue
-        var sender = serviceBusClient.CreateSender("temp-orders");
-        await sender.SendMessageAsync(
-            new ServiceBusMessage(BinaryData.FromString("test message")) { ApplicationProperties = { { "prop1", "1" } } }
-        );
-
+        // provisioning Azurite container for Azure Storage emulation
         _azurite = GetAzuriteContainer(_network);
         await ProvisionQueues(_azurite, "processing-queue");
 
-        var dnsAsbConnectionString = serviceBusConnectionString.Replace("localhost", "sb-emulator");
+        var dnsAsbConnectionString = serviceBusConnectionString.Replace("127.0.0.1", "sb-emulator");
         _isolatedFunc = await GetFunctionContainer(
             "test-isolated-func",
             "src/OrderProcessorFuncApp",
@@ -53,8 +47,7 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
         Client = new HttpClient() { BaseAddress = uri };
     }
 
-    private static string GetServiceBusConnectionString() =>
-        @"Endpoint=sb://localhost;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;";
+    private string GetServiceBusConnectionString() => _serviceBusContainer.GetConnectionString();
 
     private static async Task ProvisionQueues(AzuriteContainer azurite, params string[] queueNames)
     {
@@ -158,21 +151,19 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
 
     public Task<(string StdOut, string StdError)> GetFunctionLogs() => _isolatedFunc.GetLogsAsync();
 
-    public async Task<IContainer> GetServiceBusContainer(INetwork network)
+    public static async Task<ServiceBusContainer> GetServiceBusContainer(INetwork network)
     {
         // MSSQL container
         var sqlContainer = new MsSqlBuilder()
             .WithPassword("YourStr0ng@Passw0rd")
             .WithNetwork(network)
             .WithNetworkAliases("db")
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(1433))
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(MsSqlBuilder.MsSqlPort))
             .Build();
         await sqlContainer.StartAsync();
 
-        // Service Bus container
-        var serviceBus = new ContainerBuilder()
-            .WithImage("mcr.microsoft.com/azure-messaging/servicebus-emulator:latest")
-            .WithNetwork(network)
+        var serviceBus = new ServiceBusBuilder()
+            .WithMsSqlContainer(network, sqlContainer, "db", "YourStr0ng@Passw0rd")
             .WithNetworkAliases("sb-emulator")
             .WithPortBinding(ServiceBusBuilder.ServiceBusPort) // AMQP port
             .WithPortBinding(ServiceBusBuilder.ServiceBusHttpPort) // HTTP port
