@@ -12,8 +12,7 @@ using OrderProcessorFuncApp.Features.ProcessOrder;
 
 namespace OrderProcessorFuncApp.Integration.Tests;
 
-[Collection(FunctionsTestFixtureCollection.Name)]
-public class OrderProcessorIntegrationTests(IsolatedFunctionsTestFixture fixture)
+public class AnotherOrderProcessorIntegrationTests(IsolatedFunctionsTestFixture fixture) : IClassFixture<IsolatedFunctionsTestFixture>
 {
     private readonly JsonSerializerOptions _serializerOptions = new()
     {
@@ -23,7 +22,7 @@ public class OrderProcessorIntegrationTests(IsolatedFunctionsTestFixture fixture
         DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
     };
 
-    [Fact(DisplayName = "Valid order creation should return Accepted status")]
+    [Fact(DisplayName = "Another - Valid order creation should return Accepted status")]
     public async Task CreateOrder_ShouldReturnAccepted()
     {
         await Arrange(() =>
@@ -46,11 +45,11 @@ public class OrderProcessorIntegrationTests(IsolatedFunctionsTestFixture fixture
             })
             .Assert((_, result) => result.StatusCode == HttpStatusCode.Accepted)
             .And(
-                async (data, _) =>
+                async (_, _) =>
                 {
                     var functionLogs = await fixture.GetFunctionLogs();
 
-                    Assert.Contains($"Order Id: {data.OrderId}", functionLogs.StdOut, StringComparison.OrdinalIgnoreCase);
+                    Console.WriteLine(functionLogs.StdOut);
                     Assert.Contains("Processing order message:", functionLogs.StdOut, StringComparison.OrdinalIgnoreCase);
                     Assert.Contains(
                         $"{nameof(AsbProcessOrderFunction)} processing message body:",
@@ -61,7 +60,7 @@ public class OrderProcessorIntegrationTests(IsolatedFunctionsTestFixture fixture
             );
     }
 
-    [Fact(DisplayName = "Invalid order creation should return BadRequest status")]
+    [Fact(DisplayName = "Another - Invalid order creation should return BadRequest status")]
     public async Task CreateOrder_ShouldReturnBadRequest_WhenInvalidData()
     {
         await Arrange(() =>

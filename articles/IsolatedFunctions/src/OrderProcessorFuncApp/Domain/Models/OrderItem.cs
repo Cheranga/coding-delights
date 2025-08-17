@@ -5,10 +5,10 @@ namespace OrderProcessorFuncApp.Domain.Models;
 
 public sealed record OrderItem : IApiRequestDto<OrderItem, OrderItem.Validator>
 {
-    public required string ProductId { get; init; }
-    public required decimal Quantity { get; init; }
-    public required decimal Price { get; init; }
-    public required string Metric { get; init; }
+    public required string ProductId { get; set; }
+    public required decimal Quantity { get; set; }
+    public required decimal Price { get; set; }
+    public required string Metric { get; set; }
 
     public sealed class Validator : AbstractValidator<OrderItem>
     {

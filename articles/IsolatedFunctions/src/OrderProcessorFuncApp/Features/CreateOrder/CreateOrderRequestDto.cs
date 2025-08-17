@@ -6,11 +6,11 @@ namespace OrderProcessorFuncApp.Features.CreateOrder;
 
 public sealed record CreateOrderRequestDto : IApiRequestDto<CreateOrderRequestDto, CreateOrderRequestDto.Validator>
 {
-    public Guid OrderId { get; init; }
-    public Guid ReferenceId { get; init; }
-    public DateTimeOffset OrderDate { get; init; }
+    public Guid OrderId { get; set; }
+    public Guid ReferenceId { get; set; }
+    public DateTimeOffset OrderDate { get; set; }
 
-    public IReadOnlyCollection<OrderItem> Items { get; init; } = [];
+    public IReadOnlyCollection<OrderItem> Items { get; set; } = [];
 
     public sealed class Validator : AbstractValidator<CreateOrderRequestDto>
     {

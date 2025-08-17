@@ -3,6 +3,7 @@ using Azure.Messaging.ServiceBus;
 using Azure.Storage.Queues;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
+using DotNet.Testcontainers.Images;
 using DotNet.Testcontainers.Networks;
 using Testcontainers.Azurite;
 using Testcontainers.MsSql;
@@ -17,6 +18,7 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
     private AzuriteContainer _azurite;
     private IContainer _isolatedFunc;
     private ServiceBusContainer _serviceBusContainer;
+    private IFutureDockerImage _functionImage;
 
     public async Task InitializeAsync()
     {
@@ -25,17 +27,16 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
         await _network.CreateAsync();
 
         // provisioning Azure Service Bus container
-        var serviceBusData = await GetServiceBusContainer(_network);
+        var serviceBusContainer = await GetServiceBusContainer(_network, "sb-emulator", Path.GetFullPath("Config.json"));
 
         // provisioning Azurite container for Azure Storage emulation
-        var azuriteContainerData = await GetAzuriteContainer(_network, "processing-queue");
+        var azuriteContainer = await GetAzuriteContainer(_network, networkAlias: "azurite", queueNames: "processing-queue");
 
         _isolatedFunc = await GetFunctionContainer(
-            "test-isolated-func",
             "src/OrderProcessorFuncApp",
             _network,
-            azuriteContainerData,
-            serviceBusData
+            (azuriteContainer, "azurite"),
+            (serviceBusContainer, "sb-emulator")
         );
         await _isolatedFunc.StartAsync();
 
@@ -43,22 +44,23 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
         Client = new HttpClient { BaseAddress = uri };
     }
 
-    private string GetServiceBusConnectionString() => _serviceBusContainer.GetConnectionString();
-
-    private static async Task ProvisionQueues(AzuriteContainer azurite, params string[] queueNames)
+    private string GetServiceBusConnectionString(string? networkAlias = null)
     {
-        await azurite.StartAsync();
+        var connectionString = _serviceBusContainer.GetConnectionString();
+        if (string.IsNullOrWhiteSpace(networkAlias))
+        {
+            return connectionString;
+        }
 
-        var qsClient = new QueueServiceClient(
-            azurite.GetConnectionString(),
-            new QueueClientOptions { MessageEncoding = QueueMessageEncoding.Base64 }
-        );
-        foreach (var queueName in queueNames)
-            await qsClient.GetQueueClient(queueName).CreateIfNotExistsAsync();
+        var hostServiceBusPort = _serviceBusContainer.GetMappedPublicPort(ServiceBusBuilder.ServiceBusPort);
+        var hostHttpPort = _serviceBusContainer.GetMappedPublicPort(ServiceBusBuilder.ServiceBusHttpPort);
+        return connectionString
+            .Replace(_serviceBusContainer.Hostname, networkAlias)
+            .Replace(hostServiceBusPort.ToString(), ServiceBusBuilder.ServiceBusPort.ToString())
+            .Replace(hostHttpPort.ToString(), ServiceBusBuilder.ServiceBusHttpPort.ToString());
     }
 
     private async Task<IContainer> GetFunctionContainer(
-        string imageName,
         string dockerfileDirectory,
         INetwork network,
         (AzuriteContainer Azurite, string NetworkAlias) azuriteData,
@@ -66,23 +68,33 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
     )
     {
         // Creating the function image from the Dockerfile
-        var functionImage = new ImageFromDockerfileBuilder()
+        _functionImage = new ImageFromDockerfileBuilder()
             .WithDockerfileDirectory(CommonDirectoryPath.GetSolutionDirectory(), dockerfileDirectory)
-            .WithName(imageName)
             .WithCleanUp(true)
             .Build();
 
-        await functionImage.CreateAsync();
+        await _functionImage.CreateAsync();
 
+        var azuriteBlobPort = azuriteData.Azurite.GetMappedPublicPort(AzuriteBuilder.BlobPort);
+        var azuriteQueuePort = azuriteData.Azurite.GetMappedPublicPort(AzuriteBuilder.QueuePort);
+        var azuriteTablePort = azuriteData.Azurite.GetMappedPublicPort(AzuriteBuilder.TablePort);
         var dnsAzuriteConnectionString = azuriteData
             .Azurite.GetConnectionString()
-            .Replace(azuriteData.Azurite.Hostname, azuriteData.NetworkAlias);
+            .Replace(azuriteData.Azurite.Hostname, azuriteData.NetworkAlias)
+            .Replace(azuriteBlobPort.ToString(), AzuriteBuilder.BlobPort.ToString())
+            .Replace(azuriteQueuePort.ToString(), AzuriteBuilder.QueuePort.ToString())
+            .Replace(azuriteTablePort.ToString(), AzuriteBuilder.TablePort.ToString());
+
+        var hostServiceBusPort = _serviceBusContainer.GetMappedPublicPort(ServiceBusBuilder.ServiceBusPort);
+        var hostHttpPort = _serviceBusContainer.GetMappedPublicPort(ServiceBusBuilder.ServiceBusHttpPort);
         var dnsServiceBusConnectionString = serviceBusData
             .Container.GetConnectionString()
-            .Replace(serviceBusData.Container.Hostname, serviceBusData.NetworkAlias);
+            .Replace(_serviceBusContainer.Hostname, serviceBusData.NetworkAlias)
+            .Replace(hostServiceBusPort.ToString(), ServiceBusBuilder.ServiceBusPort.ToString())
+            .Replace(hostHttpPort.ToString(), ServiceBusBuilder.ServiceBusHttpPort.ToString());
 
         var container = new ContainerBuilder()
-            .WithImage(functionImage)
+            .WithImage(_functionImage)
             .WithNetwork(network)
             .WithAutoRemove(true)
             .WithEnvironment("AzureWebJobsStorage", dnsAzuriteConnectionString)
@@ -99,22 +111,16 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
         return container;
     }
 
-    private static async Task<(AzuriteContainer Container, string NetworkAlias)> GetAzuriteContainer(
-        INetwork network,
-        params string[] queueNames
-    )
+    private static async Task<AzuriteContainer> GetAzuriteContainer(INetwork network, string networkAlias, params string[] queueNames)
     {
-        const string networkAlias = "azurite";
-
         var container = new AzuriteBuilder()
             .WithImage("mcr.microsoft.com/azure-storage/azurite")
             .WithNetwork(network)
             .WithNetworkAliases(networkAlias)
             .WithAutoRemove(true)
-            .WithPortBinding(10000) // Blob service
-            .WithPortBinding(10001) // Queue service
-            .WithPortBinding(10002) // Table service
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(10000).UntilPortIsAvailable(10001).UntilPortIsAvailable(10002))
+            .WithPortBinding(10000, true) // Blob service
+            .WithPortBinding(10001, true) // Queue service
+            .WithPortBinding(10002, true) // Table service
             .Build();
 
         await container.StartAsync();
@@ -124,9 +130,11 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
             new QueueClientOptions { MessageEncoding = QueueMessageEncoding.Base64 }
         );
         foreach (var queueName in queueNames)
+        {
             await qsClient.GetQueueClient(queueName).CreateIfNotExistsAsync();
+        }
 
-        return (container, networkAlias);
+        return container;
     }
 
     public HttpClient Client { get; private set; }
@@ -139,23 +147,23 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
         params (string Key, object Value)[] additionalProperties
     )
     {
-        var serviceBusConnectionString = GetServiceBusConnectionString();
+        var serviceBusConnectionString = _serviceBusContainer.GetConnectionString();
         var serviceBusClient = new ServiceBusClient(serviceBusConnectionString);
-        // Create a sender for the "orders" queue
         var sender = serviceBusClient.CreateSender(publishTo);
 
         var serviceBusMessage = new ServiceBusMessage(BinaryData.FromObjectAsJson(message, serializerOptions));
         foreach (var additionalProperty in additionalProperties)
+        {
             serviceBusMessage.ApplicationProperties.Add(additionalProperty.Key, additionalProperty.Value);
+        }
 
         return sender.SendMessageAsync(serviceBusMessage, token);
     }
 
     public Task<(string StdOut, string StdError)> GetFunctionLogs() => _isolatedFunc.GetLogsAsync();
 
-    public async Task<(ServiceBusContainer Container, string NetworkAlias)> GetServiceBusContainer(INetwork network)
+    public async Task<ServiceBusContainer> GetServiceBusContainer(INetwork network, string networkAlias, string serviceBusConfigFullPath)
     {
-        const string networkAlias = "sb-emulator";
         // MSSQL container
         var sqlContainer = new MsSqlBuilder()
             .WithPassword("YourStr0ng@Passw0rd")
@@ -170,26 +178,26 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
             .WithMsSqlContainer(network, sqlContainer, "db", "YourStr0ng@Passw0rd")
             .WithNetworkAliases(networkAlias)
             .WithAutoRemove(true)
-            .WithPortBinding(ServiceBusBuilder.ServiceBusPort) // AMQP port
-            .WithPortBinding(ServiceBusBuilder.ServiceBusHttpPort) // HTTP port
-            .WithBindMount(Path.GetFullPath("Config.json"), "/ServiceBus_Emulator/ConfigFiles/Config.json")
+            .WithPortBinding(ServiceBusBuilder.ServiceBusPort, true) // AMQP port
+            .WithPortBinding(ServiceBusBuilder.ServiceBusHttpPort, true) // HTTP port
+            .WithBindMount(serviceBusConfigFullPath, "/ServiceBus_Emulator/ConfigFiles/Config.json")
             .WithEnvironment("ACCEPT_EULA", "Y")
             .WithEnvironment("SQL_SERVER", "db")
             .WithEnvironment("MSSQL_SA_PASSWORD", "YourStr0ng@Passw0rd")
-            .DependsOn(sqlContainer)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Emulator Service is Successfully Up"))
             .Build();
 
         await serviceBus.StartAsync();
 
         _serviceBusContainer = serviceBus;
-        return (serviceBus, networkAlias);
+        return serviceBus;
     }
 
     public async Task DisposeAsync()
     {
         await _isolatedFunc.StopAsync();
         await _isolatedFunc.DisposeAsync();
+        await _functionImage.DeleteAsync();
     }
 }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
