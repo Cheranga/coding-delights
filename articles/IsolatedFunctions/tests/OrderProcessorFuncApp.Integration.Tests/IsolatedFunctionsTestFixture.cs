@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Security.Cryptography;
+using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using Azure.Storage.Queues;
 using DotNet.Testcontainers.Builders;
@@ -139,9 +140,10 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
 
     private static async Task<ServiceBusContainer> SetupServiceBusContainer(INetwork network, string serviceBusConfigFullPath)
     {
+        var dbPassword = $"pwd{RandomNumberGenerator.GetHexString(6)}-666";
         // MSSQL container
         var sqlContainer = new MsSqlBuilder()
-            .WithPassword("YourStr0ng@Passw0rd")
+            .WithPassword(dbPassword)
             .WithNetwork(network)
             .WithNetworkAliases("db")
             .WithAutoRemove(true)
@@ -150,7 +152,7 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
         await sqlContainer.StartAsync();
 
         var serviceBus = new ServiceBusBuilder()
-            .WithMsSqlContainer(network, sqlContainer, SqlServerAlias, "YourStr0ng@Passw0rd")
+            .WithMsSqlContainer(network, sqlContainer, SqlServerAlias, dbPassword)
             .WithNetworkAliases(ServiceBusAlias)
             .WithAutoRemove(true)
             .WithPortBinding(ServiceBusBuilder.ServiceBusPort, true) // AMQP port
@@ -158,7 +160,7 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
             .WithBindMount(serviceBusConfigFullPath, "/ServiceBus_Emulator/ConfigFiles/Config.json")
             .WithEnvironment("ACCEPT_EULA", "Y")
             .WithEnvironment("SQL_SERVER", SqlServerAlias)
-            .WithEnvironment("MSSQL_SA_PASSWORD", "YourStr0ng@Passw0rd")
+            .WithEnvironment("MSSQL_SA_PASSWORD", dbPassword)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Emulator Service is Successfully Up"))
             .Build();
 
