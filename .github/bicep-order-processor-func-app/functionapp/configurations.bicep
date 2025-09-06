@@ -19,10 +19,10 @@ resource app 'Microsoft.Web/sites@2022-03-01' existing = {
 
 var appSettings = {
   AzureWebJobsStorage__accountName: storageName  
-  WEBSITE_CONTENTAZUREFILECONNECTIONSTRING: storageAccountConnectionStringSecretUri
+  WEBSITE_CONTENTAZUREFILECONNECTIONSTRING: '@Microsoft.KeyVault(SecretUri=${storageAccountConnectionStringSecretUri})'
   WEBSITE_CONTENTSHARE: toLower(appName)
   FUNCTIONS_EXTENSION_VERSION: '~4'
-  APPLICATIONINSIGHTS_CONNECTION_STRING: appInsightsKeySecretUri
+  APPLICATIONINSIGHTS_CONNECTION_STRING: '@Microsoft.KeyVault(SecretUri=${appInsightsKeySecretUri})'
   FUNCTIONS_WORKER_RUNTIME: 'dotnet-isolated'
   FUNCTIONS_WORKER_RUNTIME_VERSION: '8.0'
   WEBSITE_TIME_ZONE: timeZone
@@ -34,8 +34,8 @@ var appSettings = {
 //   Source__Container: 'sample-work'
 //   Source__Table: 'samplework'
 //   AzureWebJobsSourceConnection : storageAccountConnectionStringSecretUri
-  AzureWebJobsQueueConnection: storageAccountConnectionStringSecretUri
-  AzureWebJobsAsbConnection: sbQConnectionStringSecretUri
+  AzureWebJobsQueueConnection: '@Microsoft.KeyVault(SecretUri=${storageAccountConnectionStringSecretUri})'
+  AzureWebJobsAsbConnection: '@Microsoft.KeyVault(SecretUri=${sbQConnectionStringSecretUri})'
 }
 
 resource productionSlotAppSettings 'Microsoft.Web/sites/config@2021-02-01' = {

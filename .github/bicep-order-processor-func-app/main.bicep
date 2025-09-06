@@ -137,6 +137,7 @@ module funcAppSettings 'functionapp/configurations.bicep' = {
     sbQConnectionStringSecretUri: kvPolicies.outputs.sbQConnectionSecretUri
   }
   dependsOn: [
+    app
     keyVault
     rbacSetting
   ]

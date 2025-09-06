@@ -73,7 +73,7 @@ resource qConnectionStringSecret 'Microsoft.KeyVault/vaults/secrets@2022-07-01' 
   name: 'qConnectionString'
   parent: kv
   properties: {
-    value: sbQueueAuthRule.listkeys().primaryConnectionString
+    value: sbQueueAuthRule.listKeys().primaryConnectionString
   }
 }
 
