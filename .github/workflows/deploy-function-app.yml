@@ -44,13 +44,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4        
+        uses: actions/checkout@v4
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-          
+
       - name: Set Version from Input
         if: inputs.version_number != ''
         run: echo "BUILD_VERSION=${{ inputs.version_number }}" >> $GITHUB_ENV
@@ -82,6 +82,10 @@ jobs:
             version=${{ env.BUILD_VERSION }}
             environment=${{ inputs.environment }}
             location=australiasoutheast
+            sbRGName=cchat-rg-shared-infra
+            sbNamespace=cchat-sbns-shared
+            sbQName=temp-orders
+            sbQAuthRuleName=ReadWrite
 
       - name: Show files in published folder
         run: ls -R ${{ env.BUILD_VERSION }}/
@@ -90,8 +94,8 @@ jobs:
         uses: Azure/functions-action@v1
         with:
           app-name: ${{ inputs.function_app_name }}
-          slot-name: 'Production'
-          package: '${{ env.BUILD_VERSION }}'
+          slot-name: "Production"
+          package: "${{ env.BUILD_VERSION }}"
 
       - name: Logout from Azure
         run: az logout
