@@ -1,0 +1,55 @@
+﻿name: NonProd Release
+concurrency: NonProd Release
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci-application.yml
+    with:
+      project-path: articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Tests/OrderProcessorFuncApp.Tests.csproj
+
+  release:
+    name: Version and Release
+    needs:
+      - ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compute version number
+        id: version
+        run: echo "versionId=$(date -u +'%Y%m%d%H%M')" >> "$GITHUB_OUTPUT"
+
+    outputs:
+      VersionNumber: ${{ steps.version.outputs.versionId }}
+
+  deploy_to_non_prod:
+    name: Deploy to ${{ matrix.env }}
+    needs:
+      - release
+      - ci
+    strategy:
+      matrix:
+        env: [dev, qa]
+    uses: ./.github/workflows/deploy-function-app.yml
+    with:
+      version_number: ${{ needs.release.outputs.VersionNumber }}
+      environment: ${{ matrix.env }}
+      app_name: funky-opf
+      deployment_name: funky-opf-${{ matrix.env }}
+      function_app_name: cchat-fn-funky-opf-${{ matrix.env }}
+      project_path: articles/IsolatedFunctions/src/OrderProcessorFuncApp/OrderProcessorFuncApp.csproj
+      deploy_templates_path: .github/bicep-order-processor-func-app
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}

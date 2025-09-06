@@ -1,13 +1,13 @@
-﻿name: release_order-processor_func_app
-concurrency: release_order-processor_func_app
+﻿name: Gold Release
+concurrency: Gold Release
 
 on:
   workflow_dispatch:
     inputs:
       release_type:
-        description: 'Release type'
+        description: "Release type"
         required: true
-        default: 'patch'
+        default: "patch"
         type: choice
         options:
           - patch
@@ -20,7 +20,7 @@ jobs:
     uses: ./.github/workflows/ci-application.yml
     with:
       project-path: articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Tests/OrderProcessorFuncApp.Tests.csproj
-      
+
   release:
     name: Tag and Release
     needs:
@@ -32,39 +32,35 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
-      - name: Compute version number
-        id: version
-        run: echo "versionId=$(date -u +'%Y%m%d%H%M')" >> "$GITHUB_OUTPUT"      
-      
-#      - name: Bump version and push tag
-#        id: bump
-#        uses: anothrNick/github-tag-action@v1
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#          WITH_V: true
-#          DEFAULT_BRANCH: main
-#          DEFAULT_BUMP: ${{ inputs.release_type }}
-#          
-#      - name: Generate release notes with Release Drafter
-#        id: generate_release_notes
-#        uses: release-drafter/release-drafter@v6
-#        with:
-#          tag: ${{ steps.bump.outputs.new_tag }}
-#          version: ${{ steps.bump.outputs.new_tag }}
-#          config-name: release-drafter.yml
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
-#
-#      - name: Create Release
-#        uses: ncipollo/release-action@v1
-#        with:
-#          generateReleaseNotes: false
-#          tag: ${{ steps.bump.outputs.new_tag }}
-#          body: ${{ steps.generate_release_notes.outputs.body }}
+
+      - name: Bump version and push tag
+        id: bump
+        uses: anothrNick/github-tag-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: true
+          DEFAULT_BRANCH: main
+          DEFAULT_BUMP: ${{ inputs.release_type }}
+
+      - name: Generate release notes with Release Drafter
+        id: generate_release_notes
+        uses: release-drafter/release-drafter@v6
+        with:
+          tag: ${{ steps.bump.outputs.new_tag }}
+          version: ${{ steps.bump.outputs.new_tag }}
+          config-name: release-drafter.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          generateReleaseNotes: false
+          tag: ${{ steps.bump.outputs.new_tag }}
+          body: ${{ steps.generate_release_notes.outputs.body }}
     outputs:
       VersionNumber: ${{ steps.version.outputs.versionId }}
-  
+
   deploy_to_non_prod:
     name: Deploy to ${{ matrix.env }}
     needs:
@@ -75,7 +71,7 @@ jobs:
         env: [dev, qa]
     uses: ./.github/workflows/deploy-function-app.yml
     with:
-      version_number: ${{ needs.release.outputs.VersionNumber }} # don't pass a version number to non-prod environments, it will be auto generated
+      version_number: ${{ needs.release.outputs.VersionNumber }}
       environment: ${{ matrix.env }}
       app_name: funky-opf
       deployment_name: funky-opf-${{ matrix.env }}
@@ -85,7 +81,7 @@ jobs:
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
-      
+
   deploy_to_prod:
     name: Deploy to PROD
     needs:
@@ -102,4 +98,4 @@ jobs:
       deploy_templates_path: .github/bicep-order-processor-func-app
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-      SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}      
+      SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
