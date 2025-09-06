@@ -23,7 +23,6 @@
         <PackageReference Include="Moq"/>
         <PackageReference Include="AutoBogus"/>
         <PackageReference Include="BunsenBurner"/>
-        <PackageReference Include="Microsoft.Azure.Functions.Worker.Core"/>
     </ItemGroup>
 
     <ItemGroup>

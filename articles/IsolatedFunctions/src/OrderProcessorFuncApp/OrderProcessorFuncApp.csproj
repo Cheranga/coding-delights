@@ -9,11 +9,15 @@
         <WarningsAsErrors>true</WarningsAsErrors>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <UserSecretsId>16e3d9c7-e050-43ca-96e4-671700be6dad</UserSecretsId>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="AsyncFixer"/>
         <PackageReference Include="Meziantou.Analyzer"/>
+        <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.ServiceBus" />
+        <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage.Queues" />
+        <PackageReference Include="Microsoft.Net.Http.Headers" />
         <PackageReference Include="Roslynator.Analyzers"/>
         <PackageReference Include="SonarAnalyzer.CSharp"/>
 
@@ -49,9 +53,20 @@
             <_Parameter1>OrderProcessorFuncApp.Tests</_Parameter1>
         </AssemblyAttribute>
     </ItemGroup>
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>OrderProcessorFuncApp.Integration.Tests</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
 
     <ItemGroup>
       <Compile Remove="Core\Http\IHttpRequestReader.cs" />
       <Compile Remove="Core\Http\HttpRequestReader.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
     </ItemGroup>
 </Project>

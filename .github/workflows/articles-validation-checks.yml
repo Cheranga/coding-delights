@@ -5,6 +5,7 @@ on:
     
 permissions: 
   contents: read
+  packages: read
 
 jobs:
   checklist:
@@ -17,6 +18,7 @@ jobs:
             - articles/BunsenBurner/tests/ToDoApi.Tests/ToDoApi.Tests.csproj
             - articles/ResilientHttpClients/tests/ResilientHttpClients.Services.Tests/ResilientHttpClients.Services.Tests.csproj
             - articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Tests/OrderProcessorFuncApp.Tests.csproj
+            - articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Integration.Tests/OrderProcessorFuncApp.Integration.Tests.csproj
     steps:
       - name: Checkout
         uses: actions/checkout@v4
