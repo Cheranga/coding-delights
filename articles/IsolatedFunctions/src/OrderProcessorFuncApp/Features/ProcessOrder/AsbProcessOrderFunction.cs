@@ -28,7 +28,7 @@ public class AsbProcessOrderFunction
         var dto = message.Body.ToObjectFromJson<CreateOrderRequestDto>(_serializerOptions);
         await Task.Delay(TimeSpan.FromSeconds(1));
         _logger.LogInformation("Order Id: {Id}", dto!.OrderId);
-        _logger.LogInformation("{FunctionName} processing message body: {@OrderMessage}", nameof(AsbProcessOrderFunction), message.Body);
+        _logger.LogInformation("{FunctionName} processing message body: {@OrderMessage}", nameof(AsbProcessOrderFunction), dto);
         _logger.LogInformation("Message Content-Type: {ContentType}", message.ContentType);
 
         // Complete the message
