@@ -33,33 +33,37 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         
-      - name: Bump version and push tag
-        id: bump
-        uses: anothrNick/github-tag-action@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WITH_V: true
-          DEFAULT_BRANCH: main
-          DEFAULT_BUMP: ${{ inputs.release_type }}
-          
-      - name: Generate release notes with Release Drafter
-        id: generate_release_notes
-        uses: release-drafter/release-drafter@v6
-        with:
-          tag: ${{ steps.bump.outputs.new_tag }}
-          version: ${{ steps.bump.outputs.new_tag }}
-          config-name: release-drafter.yml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
-
-      - name: Create Release
-        uses: ncipollo/release-action@v1
-        with:
-          generateReleaseNotes: false
-          tag: ${{ steps.bump.outputs.new_tag }}
-          body: ${{ steps.generate_release_notes.outputs.body }}
+      - name: Compute version number
+        id: version
+        run: echo "versionId=$(date -u +'%Y%m%d%H%M')" >> "$GITHUB_OUTPUT"      
+      
+#      - name: Bump version and push tag
+#        id: bump
+#        uses: anothrNick/github-tag-action@v1
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#          WITH_V: true
+#          DEFAULT_BRANCH: main
+#          DEFAULT_BUMP: ${{ inputs.release_type }}
+#          
+#      - name: Generate release notes with Release Drafter
+#        id: generate_release_notes
+#        uses: release-drafter/release-drafter@v6
+#        with:
+#          tag: ${{ steps.bump.outputs.new_tag }}
+#          version: ${{ steps.bump.outputs.new_tag }}
+#          config-name: release-drafter.yml
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
+#
+#      - name: Create Release
+#        uses: ncipollo/release-action@v1
+#        with:
+#          generateReleaseNotes: false
+#          tag: ${{ steps.bump.outputs.new_tag }}
+#          body: ${{ steps.generate_release_notes.outputs.body }}
     outputs:
-      VersionNumber: ${{ steps.bump.outputs.new_tag }}
+      VersionNumber: ${{ steps.version.outputs.versionId }}
   
   deploy_to_non_prod:
     name: Deploy to ${{ matrix.env }}
