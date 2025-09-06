@@ -29,7 +29,7 @@ var appSettings = {
   WEBSITE_ADD_SITENAME_BINDINGS_IN_APPHOST_CONFIG: '1'
   SCM_DO_BUILD_DURING_DEPLOYMENT: 'true'
   StorageConfig__ProcessingQueueName: 'processing-queue'
-  ServiceBusConfig__ProcessingQueueName: 'temp-order'
+  ServiceBusConfig__ProcessingQueueName: 'temp-orders'
 //   Source__Queue: 'sample-work'
 //   Source__Container: 'sample-work'
 //   Source__Table: 'samplework'
