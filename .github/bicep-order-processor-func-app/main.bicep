@@ -131,11 +131,12 @@ module funcAppSettings 'functionapp/configurations.bicep' = {
   name: toLower('${environment}-${version}-fn-settings')
   params: {
     appName: funcAppName
-    kvName: kvName
     storageName: sgName
+    appInsightsKeySecretUri: kvPolicies.outputs.appInsightsSecretUri
+    storageAccountConnectionStringSecretUri: kvPolicies.outputs.storageConnectionSecretUri
+    sbQConnectionStringSecretUri: kvPolicies.outputs.sbQConnectionSecretUri
   }
   dependsOn: [
-    app
     keyVault
     rbacSetting
   ]

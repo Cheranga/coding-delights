@@ -12,10 +12,19 @@
 
     <ItemGroup>
         <PackageReference Include="AsyncFixer"/>
-        <PackageReference Include="Meziantou.Analyzer"/>
-        <PackageReference Include="Roslynator.Analyzers"/>
+        <PackageReference Include="Meziantou.Analyzer">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Roslynator.Analyzers">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="ShotCaller.Azure.ServiceBus.Messaging" />
-        <PackageReference Include="SonarAnalyzer.CSharp"/>
+        <PackageReference Include="SonarAnalyzer.CSharp">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="AutoBogus"/>
         <PackageReference Include="Azure.Messaging.ServiceBus"/>
         <PackageReference Include="Microsoft.Extensions.Hosting"/>

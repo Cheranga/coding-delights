@@ -81,7 +81,7 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
             .WithEnvironment("StorageConfig__ProcessingQueueName", "processing-queue")
             .WithEnvironment("ServiceBusConfig__ProcessingQueueName", "temp-orders")
             .WithPortBinding(80, true)
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(80).UntilMessageIsLogged("Application started"))
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilInternalTcpPortIsAvailable(80).UntilMessageIsLogged("Application started"))
             .Build();
 
         return container;
@@ -147,7 +147,7 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
             .WithNetwork(network)
             .WithNetworkAliases("db")
             .WithAutoRemove(true)
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(MsSqlBuilder.MsSqlPort))
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilInternalTcpPortIsAvailable(MsSqlBuilder.MsSqlPort))
             .Build();
         await sqlContainer.StartAsync();
 

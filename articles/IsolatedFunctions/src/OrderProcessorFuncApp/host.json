@@ -11,19 +11,5 @@
       "maxDequeueCount": 2,
       "messageEncoding": "base64"
     }
-  },
-  "logging": {
-    "applicationInsights": {
-      "samplingSettings": {
-        "isEnabled": true,
-        "maxTelemetryItemsPerSecond": 5
-      }
-    },
-    "logLevel": {
-      "default": "Information",
-      "Function.*": "Information",
-      "Host.*": "Error",
-      "Azure.*": "Error"
-    }
   }
 }

@@ -23,6 +23,10 @@ public class ProcessOrderFunction
         var processOrderMessage = message.Body.ToObjectFromJson<ProcessOrderMessage>(_serializerOptions);
         ArgumentNullException.ThrowIfNull(processOrderMessage);
         await Task.Delay(TimeSpan.FromSeconds(1));
-        _logger.LogInformation("Processing order message: {ReferenceId}", processOrderMessage.ReferenceId);
+        _logger.LogInformation(
+            "Processing order message: {ReferenceId} with {@Message}",
+            processOrderMessage.ReferenceId,
+            processOrderMessage
+        );
     }
 }

@@ -99,7 +99,7 @@ public static class Bootstrapper
                     var serilogLogger = new LoggerConfiguration().ReadFrom.Configuration(context.Configuration).CreateLogger();
                     Log.Logger = serilogLogger;
 
-                    logging.AddSerilog(Log.Logger, true);
+                    logging.ClearProviders().AddSerilog(Log.Logger, true);
 
                     logging.Services.Configure<LoggerFilterOptions>(options =>
                     {
