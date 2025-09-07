@@ -13,6 +13,9 @@ jobs:
   ci:
     name: CI
     uses: ./.github/workflows/ci-application.yml
+    permissions: 
+      contents: read
+      packages: read
     with:
       project-path: articles/IsolatedFunctions/tests/OrderProcessorFuncApp.Tests/OrderProcessorFuncApp.Tests.csproj
 
@@ -37,6 +40,9 @@ jobs:
 
   deploy_to_non_prod:
     name: Deploy to ${{ matrix.env }}
+    permissions: 
+      contents: read
+      deployments: write
     needs:
       - release
       - ci
