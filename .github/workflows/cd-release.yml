@@ -59,7 +59,7 @@ jobs:
           tag: ${{ steps.bump.outputs.new_tag }}
           body: ${{ steps.generate_release_notes.outputs.body }}
     outputs:
-      VersionNumber: ${{ steps.version.outputs.versionId }}
+      VersionNumber: ${{ steps.bump.outputs.new_tag }}
 
   deploy_to_non_prod:
     name: Deploy to ${{ matrix.env }}

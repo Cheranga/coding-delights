@@ -1,5 +1,7 @@
 ﻿name: NonProd Release
-concurrency: NonProd Release
+concurrency:
+  group: nonprod-release-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 on:
   workflow_dispatch:
