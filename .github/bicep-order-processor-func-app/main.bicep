@@ -4,6 +4,11 @@ param appName string
 param version string
 param location string
 
+param sbRGName string
+param sbNamespace string
+param sbQName string
+param sbQAuthRuleName string
+
 
 @allowed([
   'dev'
@@ -105,6 +110,10 @@ module kvPolicies 'keyvault/policies.bicep' = {
     appInsightsName: appInsName
     kvName: kvName
     storageName: sgName
+    sbRGName: sbRGName    
+    sbNamespace: sbNamespace
+    sbQName: sbQName
+    sbQAuthRuleName: sbQAuthRuleName
   }
   dependsOn: [
     appInsights
@@ -137,7 +146,6 @@ module funcAppSettings 'functionapp/configurations.bicep' = {
     sbQConnectionStringSecretUri: kvPolicies.outputs.sbQConnectionSecretUri
   }
   dependsOn: [
-    app
     keyVault
     rbacSetting
   ]
