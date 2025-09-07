@@ -6,6 +6,13 @@ concurrency:
 on:
   workflow_dispatch:
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+    branches:
+      - main
+  push:
     branches:
       - main
 
@@ -13,7 +20,7 @@ jobs:
   ci:
     name: CI
     uses: ./.github/workflows/ci-application.yml
-    permissions: 
+    permissions:
       contents: read
       packages: read
     with:
@@ -40,7 +47,7 @@ jobs:
 
   deploy_to_non_prod:
     name: Deploy to ${{ matrix.env }}
-    permissions: 
+    permissions:
       contents: read
       deployments: write
     needs:
@@ -48,7 +55,7 @@ jobs:
       - ci
     strategy:
       matrix:
-        env: [dev, qa]
+        env: [ dev, qa ]
     uses: ./.github/workflows/deploy-function-app.yml
     with:
       version_number: ${{ needs.release.outputs.VersionNumber }}
