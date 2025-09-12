@@ -39,7 +39,7 @@ internal sealed class DtoRequestValidationMiddleware<TDto>(ILogger<DtoRequestVal
                     logger.LogError("Received null DTO in request for {DtoType}", typeof(TDto).Name);
                     var badDataResponse = req.CreateResponse(HttpStatusCode.BadRequest);
                     await badDataResponse.WriteAsJsonAsync(
-                        ErrorResponse.New(ErrorCodes.InvalidDataInRequest, ErrorMessages.InvalidDataInRequest),
+                        ErrorResponse.New(ErrorCodes.InvalidRequestSchema, ErrorMessages.InvalidRequestSchema),
                         cancellationToken: context.CancellationToken
                     );
                     context.GetInvocationResult().Value = badDataResponse;
@@ -70,7 +70,7 @@ internal sealed class DtoRequestValidationMiddleware<TDto>(ILogger<DtoRequestVal
                 logger.LogError(exception, "Invalid data received for {DtoType}", typeof(TDto).Name);
                 var exceptionResponse = req.CreateResponse(HttpStatusCode.BadRequest);
                 await exceptionResponse.WriteAsJsonAsync(
-                    ErrorResponse.New(ErrorCodes.InvalidDataInRequest, ErrorMessages.InvalidDataInRequest),
+                    ErrorResponse.New(ErrorCodes.InvalidRequestSchema, ErrorMessages.InvalidRequestSchema),
                     cancellationToken: context.CancellationToken
                 );
                 context.GetInvocationResult().Value = exceptionResponse;
