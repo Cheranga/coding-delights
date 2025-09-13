@@ -28,7 +28,6 @@ public static class Bootstrapper
             {
                 builder.UseMiddleware<PerformanceMonitoringMiddleware>();
                 builder.UseMiddleware<EnrichmentMiddleware>();
-
                 var services = builder.Services;
                 services.Configure<JsonSerializerOptions>(options =>
                 {
