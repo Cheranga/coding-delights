@@ -9,7 +9,10 @@ using OrderProcessorFuncApp.Infrastructure.Http;
 
 namespace OrderProcessorFuncApp.Features.CreateOrder;
 
-internal sealed class CreateOrderEndPointFunction(IValidator<CreateOrderRequestDto> validator, ILogger<CreateOrderEndPointFunction> logger)
+internal sealed class CreateOrderEndPointFunction(
+    IApiRequestReader<CreateOrderRequestDto, CreateOrderRequestDto.Validator> requestReader,
+    ILogger<CreateOrderEndPointFunction> logger
+)
 {
     [Function(nameof(CreateOrderEndPointFunction))]
     public async Task<OrderAcceptedResponse> Run(
@@ -19,28 +22,14 @@ internal sealed class CreateOrderEndPointFunction(IValidator<CreateOrderRequestD
     {
         logger.LogInformation("starting to process order");
         var token = context.CancellationToken;
-        var dto = await req.ReadFromJsonAsync<CreateOrderRequestDto>(token);
-        if (dto is null)
+        var readOperation = await requestReader.ReadRequestAsync(req, token);
+        if (readOperation.Result is FailedResult failedResult)
         {
-            var invalidDtoSchemaResponse = req.CreateResponse(HttpStatusCode.BadRequest);
-            await invalidDtoSchemaResponse.WriteAsJsonAsync(
-                ErrorResponse.New(ErrorCodes.InvalidRequestSchema, ErrorMessages.InvalidRequestSchema),
-                token
-            );
-            return new OrderAcceptedResponse { HttpResponse = invalidDtoSchemaResponse };
+            var errorResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await errorResponse.WriteAsJsonAsync(failedResult.Error, token);
+            return new OrderAcceptedResponse { HttpResponse = errorResponse };
         }
-
-        var validationResult = await validator.ValidateAsync(dto, token);
-        if (!validationResult.IsValid)
-        {
-            var invalidDtoResponse = req.CreateResponse(HttpStatusCode.BadRequest);
-            await invalidDtoResponse.WriteAsJsonAsync(
-                ErrorResponse.New(ErrorCodes.InvalidDataInRequest, ErrorMessages.InvalidDataInRequest, validationResult),
-                token
-            );
-            return new OrderAcceptedResponse { HttpResponse = invalidDtoResponse };
-        }
-
+        var dto = readOperation.MapSuccess();
         var response = await ProcessOrderAsync(req, dto, context.CancellationToken);
         logger.LogInformation("finished processing order");
         return response;
