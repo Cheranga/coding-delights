@@ -9,6 +9,7 @@ using DotNet.Testcontainers.Networks;
 using Testcontainers.Azurite;
 using Testcontainers.MsSql;
 using Testcontainers.ServiceBus;
+
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
 namespace OrderProcessorFuncApp.Integration.Tests;
@@ -80,7 +81,7 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
             .WithEnvironment("StorageConfig__Connection", dnsAzuriteConnectionString)
             .WithEnvironment("StorageConfig__ProcessingQueueName", "processing-queue")
             .WithEnvironment("ServiceBusConfig__ProcessingQueueName", "temp-orders")
-            .WithPortBinding(80, true)
+            .WithPortBinding(80, assignRandomHostPort: true)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilInternalTcpPortIsAvailable(80).UntilMessageIsLogged("Application started"))
             .Build();
 
@@ -94,9 +95,9 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
             .WithNetwork(network)
             .WithNetworkAliases(AzuriteAlias)
             .WithAutoRemove(true)
-            .WithPortBinding(10000, true) // Blob service
-            .WithPortBinding(10001, true) // Queue service
-            .WithPortBinding(10002, true) // Table service
+            .WithPortBinding(10000, assignRandomHostPort: true) // Blob service
+            .WithPortBinding(10001, assignRandomHostPort: true) // Queue service
+            .WithPortBinding(10002, assignRandomHostPort: true) // Table service
             .Build();
 
         await container.StartAsync();
@@ -155,8 +156,8 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
             .WithMsSqlContainer(network, sqlContainer, SqlServerAlias, dbPassword)
             .WithNetworkAliases(ServiceBusAlias)
             .WithAutoRemove(true)
-            .WithPortBinding(ServiceBusBuilder.ServiceBusPort, true) // AMQP port
-            .WithPortBinding(ServiceBusBuilder.ServiceBusHttpPort, true) // HTTP port
+            .WithPortBinding(ServiceBusBuilder.ServiceBusPort, assignRandomHostPort: true) // AMQP port
+            .WithPortBinding(ServiceBusBuilder.ServiceBusHttpPort, assignRandomHostPort: true) // HTTP port
             .WithBindMount(serviceBusConfigFullPath, "/ServiceBus_Emulator/ConfigFiles/Config.json")
             .WithEnvironment("ACCEPT_EULA", "Y")
             .WithEnvironment("SQL_SERVER", SqlServerAlias)
