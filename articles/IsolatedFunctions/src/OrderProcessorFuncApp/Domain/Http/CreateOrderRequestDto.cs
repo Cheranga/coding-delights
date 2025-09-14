@@ -2,7 +2,7 @@
 using OrderProcessorFuncApp.Domain.Models;
 using OrderProcessorFuncApp.Infrastructure.Http;
 
-namespace OrderProcessorFuncApp.Features.CreateOrder;
+namespace OrderProcessorFuncApp.Domain.Http;
 
 public sealed record CreateOrderRequestDto : IApiRequestDto<CreateOrderRequestDto, CreateOrderRequestDto.Validator>
 {

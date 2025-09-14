@@ -1,4 +1,5 @@
-﻿using OrderProcessorFuncApp.Domain.Messaging;
+﻿using OrderProcessorFuncApp.Domain.Http;
+using OrderProcessorFuncApp.Domain.Messaging;
 
 namespace OrderProcessorFuncApp.Features.CreateOrder;
 

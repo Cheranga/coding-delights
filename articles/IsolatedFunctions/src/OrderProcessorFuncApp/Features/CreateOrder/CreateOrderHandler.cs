@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using OrderProcessorFuncApp.Core;
 using OrderProcessorFuncApp.Domain;
+using OrderProcessorFuncApp.Domain.Http;
 using OrderProcessorFuncApp.Infrastructure.StorageQueues;
 
 namespace OrderProcessorFuncApp.Features.CreateOrder;
