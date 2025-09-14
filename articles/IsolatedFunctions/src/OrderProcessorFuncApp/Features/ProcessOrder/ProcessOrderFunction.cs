@@ -20,7 +20,7 @@ public class ProcessOrderFunction(IStorageQueueReader<ProcessOrderMessage> queue
         if (readMessageOperation.Result is FailedResult failedResult)
         {
             logger.LogError("Failed to read message from queue. {@FailedResult}", failedResult);
-            return;
+            throw new InvalidOperationException("Failed to read message from queue");
         }
 
         var processOrderMessage = readMessageOperation.MapSuccess();
