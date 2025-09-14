@@ -2,7 +2,7 @@
 using Azure.Messaging.ServiceBus;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using OrderProcessorFuncApp.Features.CreateOrder;
+using OrderProcessorFuncApp.Domain.Http;
 
 namespace OrderProcessorFuncApp.Features.ProcessOrder;
 

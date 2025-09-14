@@ -1,10 +1,9 @@
 ﻿using System.Net;
-using FluentValidation;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using OrderProcessorFuncApp.Core;
-using OrderProcessorFuncApp.Domain;
+using OrderProcessorFuncApp.Domain.Http;
 using OrderProcessorFuncApp.Infrastructure.Http;
 
 namespace OrderProcessorFuncApp.Features.CreateOrder;

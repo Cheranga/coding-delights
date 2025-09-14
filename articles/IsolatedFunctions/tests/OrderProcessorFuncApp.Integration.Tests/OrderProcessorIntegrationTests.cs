@@ -6,8 +6,8 @@ using System.Text.Json;
 using AutoBogus;
 using OrderProcessorFuncApp.Core;
 using OrderProcessorFuncApp.Domain;
+using OrderProcessorFuncApp.Domain.Http;
 using OrderProcessorFuncApp.Domain.Models;
-using OrderProcessorFuncApp.Features.CreateOrder;
 using OrderProcessorFuncApp.Features.ProcessOrder;
 
 namespace OrderProcessorFuncApp.Integration.Tests;

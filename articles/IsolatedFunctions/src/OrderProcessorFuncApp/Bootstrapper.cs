@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Storage.Queues;
 using FluentValidation;
 using Microsoft.Azure.Functions.Worker;
@@ -8,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OrderProcessorFuncApp.Configs;
+using OrderProcessorFuncApp.Domain.Models;
 using OrderProcessorFuncApp.Features.CreateOrder;
 using OrderProcessorFuncApp.Infrastructure.Http;
 using OrderProcessorFuncApp.Infrastructure.StorageQueues;
@@ -18,6 +20,15 @@ namespace OrderProcessorFuncApp;
 
 public static class Bootstrapper
 {
+    private static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = false,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        PropertyNameCaseInsensitive = true,
+        TypeInfoResolverChain = { AppJsonContext.Default, new DefaultJsonTypeInfoResolver() },
+    };
+
     public static IHost GetHost(
         Action<HostBuilderContext, IServiceCollection>? customRegistrations = null,
         Action<HostBuilderContext, IConfigurationBuilder>? customConfigurations = null
@@ -31,10 +42,10 @@ public static class Bootstrapper
                 var services = builder.Services;
                 services.Configure<JsonSerializerOptions>(options =>
                 {
-                    options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-                    options.PropertyNameCaseInsensitive = true;
-                    options.WriteIndented = false;
-                    options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                    options.PropertyNamingPolicy = DefaultJsonSerializerOptions.PropertyNamingPolicy;
+                    options.PropertyNameCaseInsensitive = DefaultJsonSerializerOptions.PropertyNameCaseInsensitive;
+                    options.WriteIndented = DefaultJsonSerializerOptions.WriteIndented;
+                    options.DefaultIgnoreCondition = DefaultJsonSerializerOptions.DefaultIgnoreCondition;
                 });
             })
             .ConfigureAppConfiguration(
@@ -49,15 +60,9 @@ public static class Bootstrapper
             .ConfigureServices(
                 (context, services) =>
                 {
-                    services.AddSingleton(
-                        new JsonSerializerOptions
-                        {
-                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                            WriteIndented = false,
-                            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                        }
-                    );
+                    services.AddSingleton(DefaultJsonSerializerOptions);
                     services.AddSingleton(typeof(IApiRequestReader<,>), typeof(ApiRequestReader<,>));
+                    services.AddSingleton(typeof(IStorageQueueReader<>), typeof(StorageQueueReader<>));
                     services.AddSingleton<IOrderApiResponseGenerator, OrderApiResponseGenerator>();
                     services.AddSingleton<ICreateOrderHandler, CreateOrderHandler>();
                     services.AddValidatorsFromAssembly(typeof(Program).Assembly);
