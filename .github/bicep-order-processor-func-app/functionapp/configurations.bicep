@@ -28,12 +28,9 @@ var appSettings = {
   WEBSITE_TIME_ZONE: timeZone
   WEBSITE_ADD_SITENAME_BINDINGS_IN_APPHOST_CONFIG: '1'
   SCM_DO_BUILD_DURING_DEPLOYMENT: 'true'
+  AZURE_FUNCTIONS_ENVIRONMENT: 'Production'
   StorageConfig__ProcessingQueueName: 'processing-queue'
   ServiceBusConfig__ProcessingQueueName: 'temp-orders'
-//   Source__Queue: 'sample-work'
-//   Source__Container: 'sample-work'
-//   Source__Table: 'samplework'
-//   AzureWebJobsSourceConnection : storageAccountConnectionStringSecretUri
   AzureWebJobsQueueConnection: '@Microsoft.KeyVault(SecretUri=${storageAccountConnectionStringSecretUri})'
   AzureWebJobsAsbConnection: '@Microsoft.KeyVault(SecretUri=${sbQConnectionStringSecretUri})'
 }

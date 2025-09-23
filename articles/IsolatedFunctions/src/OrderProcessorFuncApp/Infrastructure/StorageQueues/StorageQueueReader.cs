@@ -10,25 +10,26 @@ internal sealed class StorageQueueReader<TMessage>(JsonSerializerOptions seriali
     : IStorageQueueReader<TMessage>
     where TMessage : class
 {
-    public Task<OperationResponse<FailedResult, SuccessResult<TMessage>>> ReadMessageAsync(QueueMessage message, CancellationToken token)
+    public async Task<OperationResponse<FailedResult, SuccessResult<TMessage>>> ReadMessageAsync(
+        QueueMessage message,
+        CancellationToken token
+    )
     {
         try
         {
-            var data = JsonSerializer.Deserialize<TMessage>(message.MessageText, serializerOptions);
+            var data = await JsonSerializer.DeserializeAsync<TMessage>(message.Body.ToStream(), serializerOptions, token);
             if (data is not null)
             {
-                return Task.FromResult<OperationResponse<FailedResult, SuccessResult<TMessage>>>(SuccessResult<TMessage>.New(data));
+                return SuccessResult<TMessage>.New(data);
             }
 
             var failedResult = FailedResult.New(ErrorCodes.InvalidMessageSchema, ErrorMessages.InvalidMessageSchema);
-            return Task.FromResult<OperationResponse<FailedResult, SuccessResult<TMessage>>>(failedResult);
+            return failedResult;
         }
         catch (Exception exception)
         {
             logger.LogWarning(exception, "An error occurred while deserializing the message");
-            return Task.FromResult<OperationResponse<FailedResult, SuccessResult<TMessage>>>(
-                FailedResult.New(ErrorCodes.InvalidMessageSchema, ErrorMessages.InvalidMessageSchema)
-            );
+            return FailedResult.New(ErrorCodes.InvalidMessageSchema, ErrorMessages.InvalidMessageSchema);
         }
     }
 }

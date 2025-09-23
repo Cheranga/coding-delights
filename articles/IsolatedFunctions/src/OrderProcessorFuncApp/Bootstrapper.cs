@@ -1,16 +1,13 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
-using Azure.Storage.Queues;
 using FluentValidation;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using OrderProcessorFuncApp.Configs;
 using OrderProcessorFuncApp.Domain.Models;
-using OrderProcessorFuncApp.Features.CreateOrder;
 using OrderProcessorFuncApp.Infrastructure.Http;
 using OrderProcessorFuncApp.Infrastructure.StorageQueues;
 using OrderProcessorFuncApp.Middlewares;
@@ -64,34 +61,10 @@ public static class Bootstrapper
                     services.AddSingleton(typeof(IApiRequestReader<,>), typeof(ApiRequestReader<,>));
                     services.AddSingleton(typeof(IStorageQueueReader<>), typeof(StorageQueueReader<>));
                     services.AddSingleton<IOrderApiResponseGenerator, OrderApiResponseGenerator>();
-                    services.AddSingleton<ICreateOrderHandler, CreateOrderHandler>();
                     services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
                     services.AddApplicationInsightsTelemetryWorkerService();
                     services.ConfigureFunctionsApplicationInsights();
-
-                    services.AddKeyedSingleton<IStorageQueuePublisher>(
-                        "process-order",
-                        (provider, _) =>
-                        {
-                            var storageConfig = context.Configuration.GetSection(nameof(StorageConfig)).Get<StorageConfig>();
-                            ArgumentException.ThrowIfNullOrWhiteSpace(storageConfig?.Connection);
-
-                            var serializerOptions = provider.GetRequiredService<JsonSerializerOptions>();
-
-                            var qServiceClient = new QueueServiceClient(
-                                storageConfig.Connection,
-                                new QueueClientOptions { MessageEncoding = QueueMessageEncoding.Base64 }
-                            );
-                            var qClient = qServiceClient.GetQueueClient(storageConfig.ProcessingQueueName);
-
-                            return new StorageQueuePublisher(
-                                qClient,
-                                serializerOptions,
-                                provider.GetRequiredService<ILoggerFactory>().CreateLogger<StorageQueuePublisher>()
-                            );
-                        }
-                    );
 
                     customRegistrations?.Invoke(context, services);
                 }
