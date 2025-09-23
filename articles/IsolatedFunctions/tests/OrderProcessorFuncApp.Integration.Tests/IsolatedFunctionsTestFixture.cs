@@ -77,7 +77,7 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
         var hostHttpPort = serviceBusContainer.GetMappedPublicPort(ServiceBusBuilder.ServiceBusHttpPort);
         var dnsServiceBusConnectionString = serviceBusContainer
             .GetConnectionString()
-            .Replace(_serviceBusContainer.Hostname, ServiceBusAlias)
+            .Replace(serviceBusContainer.Hostname, ServiceBusAlias)
             .Replace(hostServiceBusPort.ToString(), ServiceBusBuilder.ServiceBusPort.ToString())
             .Replace(hostHttpPort.ToString(), ServiceBusBuilder.ServiceBusHttpPort.ToString());
 
