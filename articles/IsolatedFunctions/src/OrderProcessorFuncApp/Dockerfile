@@ -11,6 +11,5 @@ RUN dotnet publish "./OrderProcessorFuncApp.csproj" -c $BUILD_CONFIGURATION -o /
 FROM base AS final
 WORKDIR /home/site/wwwroot
 COPY --from=build /app/publish .
-ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
-    AzureFunctionsJobHost__Logging__Console__IsEnabled=true \
+ENV AzureFunctionsJobHost__Logging__Console__IsEnabled=true
     

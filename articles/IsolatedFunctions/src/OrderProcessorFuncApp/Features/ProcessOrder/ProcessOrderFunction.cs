@@ -20,6 +20,10 @@ public class ProcessOrderFunction(IStorageQueueReader<ProcessOrderMessage> queue
         if (readMessageOperation.Result is FailedResult failedResult)
         {
             logger.LogError("Failed to read message from queue. {@FailedResult}", failedResult);
+            //
+            // Unlike in service bus, we don't have control of the message actions.
+            // So you must throw here to ensure the message ends up in the DLQ.
+            //
             throw new InvalidOperationException("Failed to read message from queue");
         }
 

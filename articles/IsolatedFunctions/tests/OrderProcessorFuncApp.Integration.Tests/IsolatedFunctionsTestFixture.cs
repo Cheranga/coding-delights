@@ -22,7 +22,6 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
     private IContainer _isolatedFunc;
     private IFutureDockerImage _functionImage;
     private ServiceBusContainer _serviceBusContainer;
-    private AzuriteContainer _azuriteContainer;
 
     public async Task InitializeAsync()
     {
@@ -30,20 +29,31 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
         var network = new NetworkBuilder().Build();
         await network.CreateAsync();
 
+        // provisioning MSSQL container
+        var (mssqlContainer, dbPassword) = GetMSSqlContainer(network);
+
         // provisioning Azure Service Bus container
-        _serviceBusContainer = await SetupServiceBusContainer(network, Path.GetFullPath("Config.json"));
+        _serviceBusContainer = SetupServiceBusContainer(network, mssqlContainer, dbPassword, Path.GetFullPath("Config.json"));
 
         // provisioning Azurite container for Azure Storage emulation
-        _azuriteContainer = await SetupAzuriteContainer(network, queueNames: "processing-queue");
+        var azuriteContainer = await SetupAzuriteContainer(network, queueNames: "processing-queue");
+        await mssqlContainer.StartAsync();
+        await _serviceBusContainer.StartAsync();
 
-        _isolatedFunc = await SetupFunctionContainer("src/OrderProcessorFuncApp", network);
+        // provisioning the isolated function container
+        _isolatedFunc = await SetupFunctionContainer("src/OrderProcessorFuncApp", network, azuriteContainer, _serviceBusContainer);
         await _isolatedFunc.StartAsync();
 
         var uri = new UriBuilder("http", _isolatedFunc.Hostname, _isolatedFunc.GetMappedPublicPort(80)).Uri;
         Client = new HttpClient { BaseAddress = uri };
     }
 
-    private async Task<IContainer> SetupFunctionContainer(string dockerfileDirectory, INetwork network)
+    private async Task<IContainer> SetupFunctionContainer(
+        string dockerfileDirectory,
+        INetwork network,
+        AzuriteContainer azuriteContainer,
+        ServiceBusContainer serviceBusContainer
+    )
     {
         // Creating the function image from the Dockerfile
         _functionImage = new ImageFromDockerfileBuilder()
@@ -53,21 +63,21 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
 
         await _functionImage.CreateAsync();
 
-        var azuriteBlobPort = _azuriteContainer.GetMappedPublicPort(AzuriteBuilder.BlobPort);
-        var azuriteQueuePort = _azuriteContainer.GetMappedPublicPort(AzuriteBuilder.QueuePort);
-        var azuriteTablePort = _azuriteContainer.GetMappedPublicPort(AzuriteBuilder.TablePort);
-        var dnsAzuriteConnectionString = _azuriteContainer
+        var azuriteBlobPort = azuriteContainer.GetMappedPublicPort(AzuriteBuilder.BlobPort);
+        var azuriteQueuePort = azuriteContainer.GetMappedPublicPort(AzuriteBuilder.QueuePort);
+        var azuriteTablePort = azuriteContainer.GetMappedPublicPort(AzuriteBuilder.TablePort);
+        var dnsAzuriteConnectionString = azuriteContainer
             .GetConnectionString()
-            .Replace(_azuriteContainer.Hostname, AzuriteAlias)
+            .Replace(azuriteContainer.Hostname, AzuriteAlias)
             .Replace(azuriteBlobPort.ToString(), AzuriteBuilder.BlobPort.ToString())
             .Replace(azuriteQueuePort.ToString(), AzuriteBuilder.QueuePort.ToString())
             .Replace(azuriteTablePort.ToString(), AzuriteBuilder.TablePort.ToString());
 
-        var hostServiceBusPort = _serviceBusContainer.GetMappedPublicPort(ServiceBusBuilder.ServiceBusPort);
-        var hostHttpPort = _serviceBusContainer.GetMappedPublicPort(ServiceBusBuilder.ServiceBusHttpPort);
-        var dnsServiceBusConnectionString = _serviceBusContainer
+        var hostServiceBusPort = serviceBusContainer.GetMappedPublicPort(ServiceBusBuilder.ServiceBusPort);
+        var hostHttpPort = serviceBusContainer.GetMappedPublicPort(ServiceBusBuilder.ServiceBusHttpPort);
+        var dnsServiceBusConnectionString = serviceBusContainer
             .GetConnectionString()
-            .Replace(_serviceBusContainer.Hostname, ServiceBusAlias)
+            .Replace(serviceBusContainer.Hostname, ServiceBusAlias)
             .Replace(hostServiceBusPort.ToString(), ServiceBusBuilder.ServiceBusPort.ToString())
             .Replace(hostHttpPort.ToString(), ServiceBusBuilder.ServiceBusHttpPort.ToString());
 
@@ -78,7 +88,7 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
             .WithEnvironment("AzureWebJobsStorage", dnsAzuriteConnectionString)
             .WithEnvironment("AzureWebJobsQueueConnection", dnsAzuriteConnectionString)
             .WithEnvironment("AzureWebJobsAsbConnection", dnsServiceBusConnectionString)
-            .WithEnvironment("StorageConfig__Connection", dnsAzuriteConnectionString)
+            .WithEnvironment("AZURE_FUNCTIONS_ENVIRONMENT", "Development")
             .WithEnvironment("StorageConfig__ProcessingQueueName", "processing-queue")
             .WithEnvironment("ServiceBusConfig__ProcessingQueueName", "temp-orders")
             .WithPortBinding(80, assignRandomHostPort: true)
@@ -139,10 +149,9 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
 
     public Task<(string StdOut, string StdError)> GetFunctionLogs() => _isolatedFunc.GetLogsAsync();
 
-    private static async Task<ServiceBusContainer> SetupServiceBusContainer(INetwork network, string serviceBusConfigFullPath)
+    private static (MsSqlContainer Container, string Password) GetMSSqlContainer(INetwork network)
     {
         var dbPassword = $"pwd{RandomNumberGenerator.GetHexString(6)}-666";
-        // MSSQL container
         var sqlContainer = new MsSqlBuilder()
             .WithPassword(dbPassword)
             .WithNetwork(network)
@@ -150,8 +159,16 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
             .WithAutoRemove(true)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilInternalTcpPortIsAvailable(MsSqlBuilder.MsSqlPort))
             .Build();
-        await sqlContainer.StartAsync();
+        return (sqlContainer, dbPassword);
+    }
 
+    private static ServiceBusContainer SetupServiceBusContainer(
+        INetwork network,
+        MsSqlContainer sqlContainer,
+        string dbPassword,
+        string serviceBusConfigFullPath
+    )
+    {
         var serviceBus = new ServiceBusBuilder()
             .WithMsSqlContainer(network, sqlContainer, SqlServerAlias, dbPassword)
             .WithNetworkAliases(ServiceBusAlias)
@@ -164,8 +181,6 @@ public sealed class IsolatedFunctionsTestFixture : IAsyncLifetime
             .WithEnvironment("MSSQL_SA_PASSWORD", dbPassword)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Emulator Service is Successfully Up"))
             .Build();
-
-        await serviceBus.StartAsync();
         return serviceBus;
     }
 
