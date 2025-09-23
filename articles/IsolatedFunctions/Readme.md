@@ -123,7 +123,7 @@ RUN dotnet publish "./OrderProcessorFuncApp.csproj" -c $BUILD_CONFIGURATION -o /
 FROM base AS final
 WORKDIR /home/site/wwwroot
 COPY --from=build /app/publish .
-ENV AzureFunctionsJobHost__Logging__Console__IsEnabled=true \
+ENV AzureFunctionsJobHost__Logging__Console__IsEnabled=true
 ```
 
 The .NET8 SDK is used to build the project, and create the published artifact.
@@ -338,7 +338,7 @@ By design, the emulator does not support management operations, according to the
 * In the Azure Service Bus Emulator, it only supports data plane operations such as sending and receiving messages
 * It does not support management operations such as creating queues, topics, or subscriptions
 * So to create the service bus resources, you need to use a configuration file,
-  * https://learn.microsoft.com/en-us/azure/service-bus-messaging/test-locally-with-service-bus-emulator?tabs=automated-script#interact-with-the-emulator 
+  * [Interact with the emulator using a configuration file](https://learn.microsoft.com/en-us/azure/service-bus-messaging/test-locally-with-service-bus-emulator?tabs=automated-script#interact-with-the-emulator) 
 
 ### Installing Azurite
 
